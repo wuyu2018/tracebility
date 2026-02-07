@@ -1,0 +1,16 @@
+# 可选：需要先创建 Dockerfile 后使用
+# 开发环境建议直接运行：后端 mvn spring-boot:run，前端 npm run dev
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
