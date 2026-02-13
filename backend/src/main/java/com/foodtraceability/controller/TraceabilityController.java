@@ -1,6 +1,5 @@
 package com.foodtraceability.controller;
 
-import com.foodtraceability.dto.TraceInfoDTO;
 import com.foodtraceability.dto.VerifyRequest;
 import com.foodtraceability.service.TraceabilityService;
 import jakarta.validation.Valid;

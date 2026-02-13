@@ -6,6 +6,7 @@
         <span class="logo-text">食品溯源</span>
       </router-link>
       <nav class="nav">
+        <button class="complaint-btn" @click="goToComplaint">📝 投诉该产品</button>
         <router-link to="/purchase" class="btn-purchase">采购联系</router-link>
         <div class="dropdown" ref="dropdownRef">
           <button class="dropdown-trigger" @click="toggleDropdown" :class="{ active: isOpen }">
@@ -48,6 +49,11 @@ const goToPurchase = () => {
 const goToIntro = () => {
   isOpen.value = false
   router.push('/intro')
+}
+
+const goToComplaint = () => {
+    isOpen.value =false
+    router.push('/complaint')
 }
 
 const handleClickOutside = (e) => {
@@ -143,6 +149,24 @@ onUnmounted(() => {
 .btn-purchase:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+.complaint-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background 0.2s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.complaint-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 
 @media (max-width: 480px) {
   .btn-purchase {

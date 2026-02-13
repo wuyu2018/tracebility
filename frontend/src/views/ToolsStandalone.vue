@@ -1,51 +1,71 @@
 <template>
   <div class="tools-standalone">
-    <div class="tools-page">
-      <h1>防伪工具</h1>
-      <p class="tools-desc">生成防伪验证二维码及防伪码</p>
+    <!-- 添加标签页切换 -->
+    <el-tabs v-model="activeTab" class="tools-tabs">
+      <el-tab-pane label="防伪工具" name="security">
+        <div class="tools-page">
+          <h1>防伪工具</h1>
+          <p class="tools-desc">生成防伪验证二维码及防伪码</p>
 
-      <section class="tool-card">
-        <h2>防伪验证二维码</h2>
-        <p class="card-desc">扫描此二维码可直达防伪验证页面</p>
-        <div class="qr-wrap">
-          <canvas ref="qrCanvas" class="qr-canvas"></canvas>
-        </div>
-        <p class="qr-url">{{ verifyUrl }}</p>
-        <button type="button" class="btn-download" @click="downloadQr">下载二维码</button>
-      </section>
+          <section class="tool-card">
+            <h2>防伪验证二维码</h2>
+            <p class="card-desc">扫描此二维码可直达防伪验证页面</p>
+            <div class="qr-wrap">
+              <canvas ref="qrCanvas" class="qr-canvas"></canvas>
+            </div>
+            <p class="qr-url">{{ verifyUrl }}</p>
+            <button type="button" class="btn-download" @click="downloadQr">下载二维码</button>
+          </section>
 
-      <section class="tool-card">
-        <h2>防伪码生成器</h2>
-        <p class="card-desc">生成12-20位防伪码，格式：AF + 年份 + 6位序号</p>
-        <div class="gen-form">
-          <div class="form-row">
-            <label>生成数量</label>
-            <input v-model.number="genCount" type="number" min="1" max="100" />
-          </div>
-          <div class="form-row">
-            <label>起始序号</label>
-            <input v-model.number="startSeq" type="number" min="1" />
-          </div>
-          <button type="button" class="btn-generate" @click="generate">生成防伪码</button>
+          <section class="tool-card">
+            <h2>防伪码生成器</h2>
+            <p class="card-desc">生成12-20位防伪码，格式：AF + 年份 + 6位序号</p>
+            <div class="gen-form">
+              <div class="form-row">
+                <label>生成数量</label>
+                <input v-model.number="genCount" type="number" min="1" max="100" />
+              </div>
+              <div class="form-row">
+                <label>起始序号</label>
+                <input v-model.number="startSeq" type="number" min="1" />
+              </div>
+              <button type="button" class="btn-generate" @click="generate">生成防伪码</button>
+            </div>
+            <div v-if="generatedCodes.length" class="codes-output">
+              <div class="codes-header">
+                <span>已生成 {{ generatedCodes.length }} 个防伪码</span>
+                <button type="button" class="btn-copy" @click="copyCodes">复制全部</button>
+              </div>
+              <div class="codes-list">
+                <div v-for="(code, i) in generatedCodes" :key="i" class="code-item">{{ code }}</div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div v-if="generatedCodes.length" class="codes-output">
-          <div class="codes-header">
-            <span>已生成 {{ generatedCodes.length }} 个防伪码</span>
-            <button type="button" class="btn-copy" @click="copyCodes">复制全部</button>
-          </div>
-          <div class="codes-list">
-            <div v-for="(code, i) in generatedCodes" :key="i" class="code-item">{{ code }}</div>
-          </div>
-        </div>
-      </section>
-    </div>
+      </el-tab-pane>
+
+      <!-- ✅ 新增：投诉管理工具标签页 -->
+      <el-tab-pane label="投诉管理" name="complaint">
+        <ComplaintAdminTool />
+      </el-tab-pane>
+
+      <!-- ✅ 新增：数据录入标签页 -->
+      <el-tab-pane label="数据录入" name="insert">
+        <InsertDataTool />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
+import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
+import InsertDataTool from '../components/InsertDataTool.vue';
 
+const activeTab = ref('security')  // 默认显示防伪工具
+
+// 原有的防伪工具代码保持不变
 const qrCanvas = ref(null)
 const genCount = ref(5)
 const startSeq = ref(1)
@@ -275,5 +295,21 @@ onMounted(() => {
   .tools-standalone {
     padding: 1rem 0.875rem;
   }
+}
+
+/*标签页样式 */
+.tools-tabs {
+  width: 100%;
+  max-width: 1200px;  /* 投诉管理表格较宽，需要更大宽度 */
+}
+
+/* 覆盖 Element Plus 标签页样式 */
+.tools-tabs :deep(.el-tabs__header) {
+  margin-bottom: 1.5rem;
+}
+
+.tools-tabs :deep(.el-tabs__item) {
+  font-size: 1rem;
+  padding: 0 20px;
 }
 </style>

@@ -21,3 +21,38 @@ export async function listAllProducts() {
   const { data } = await api.post('/products/list')
   return data
 }
+
+export async function createComplaint(data) {
+  const { data: responseData } = await api.post('/complaint', data)
+  return responseData
+}
+
+export async function getAllComplaintInfo() {
+  const { data } = await api.get('/getAllComplaintInfo')
+  return data
+}
+
+export async function createProduct(data) {
+  const { data: responseData } = await api.post('/insert/products', data);
+  return responseData;
+}
+
+export async function createMaterialPurchase(data) {
+  const { data: responseData } = await api.post('/insert/material-purchase', data);
+  return responseData;
+}
+
+export async function createInspection(data) {
+  const { data: responseData } = await api.post('/insert/inspection', data);
+  return responseData;
+}
+
+export async function createStorage(data) {
+  const { data: responseData } = await api.post('/insert/storage', data);
+  return responseData;
+}
+
+export async function createTransportSale(data) {
+  const { data: responseData } = await api.post('/insert/transport-sale', data);
+  return responseData;
+}
