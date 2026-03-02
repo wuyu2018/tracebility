@@ -22,7 +22,6 @@ public class MaterialPurchase {
     @Column(name = "producer_address", length = 255)
     private String producerAddress;
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getProductId() { return productId; }

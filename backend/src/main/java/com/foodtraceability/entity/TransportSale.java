@@ -23,7 +23,6 @@ public class TransportSale {
     @Column
     private LocalDateTime time;
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getProductId() { return productId; }

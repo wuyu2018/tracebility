@@ -15,7 +15,6 @@ public class ComplaintDTO {
 
     private LocalDateTime complaintTime;
 
-    // 构造方法
     public ComplaintDTO() {}
 
     public ComplaintDTO(Long id, Long productId, String complaintReason, LocalDateTime complaintTime) {
@@ -25,7 +24,6 @@ public class ComplaintDTO {
         this.complaintTime = complaintTime;
     }
 
-    // Getter 和 Setter 方法保持不变
     public Long getId() {
         return id;
     }

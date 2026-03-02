@@ -157,7 +157,6 @@ import {
   deleteComplaintInfo
 } from '../services/api'
 
-// 响应式数据
 const loading = ref(false)
 const complaints = ref([])
 const searchKeyword = ref('')
@@ -169,7 +168,6 @@ const deleteDialogVisible = ref(false)
 const selectedComplaint = ref(null)
 const deletingId = ref(null)
 
-// 计算属性：过滤后的投诉列表（带分页）
 const filteredComplaints = computed(() => {
   let result = [...complaints.value]
 
@@ -190,7 +188,6 @@ const filteredComplaints = computed(() => {
   return result.slice(start, end)
 })
 
-// 计算属性：总条数（用于分页）
 const totalComplaints = computed(() => {
   let result = [...complaints.value]
 
@@ -209,12 +206,10 @@ const totalComplaints = computed(() => {
   return result.length
 })
 
-// 页面加载时获取数据
 onMounted(() => {
   fetchComplaints()
 })
 
-// 获取投诉列表
 const fetchComplaints = async () => {
   loading.value = true
   try {
@@ -242,7 +237,6 @@ const fetchComplaints = async () => {
         label: product.name || product.productName || `产品${product.id}`
       }))
 
-      // 去重
       const uniqueOptions = []
       const valueSet = new Set()
       productOptions.value.forEach(option => {
@@ -257,7 +251,6 @@ const fetchComplaints = async () => {
       console.warn('获取产品列表失败:', productError)
     }
 
-    // 获取投诉列表
     const response = await getAllComplaintInfo()
     console.log('投诉列表返回:', response)
 
@@ -283,7 +276,6 @@ const fetchComplaints = async () => {
         }
       })
 
-      // 补充产品选项
       const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
       complaintProductNames.forEach(productName => {
         if (!productOptions.value.some(opt => opt.value === productName)) {
@@ -309,7 +301,6 @@ const fetchComplaints = async () => {
   }
 }
 
-// 处理删除 - 打开确认对话框
 const handleDelete = (row) => {
   console.log('删除按钮点击:', row)
   selectedComplaint.value = row
@@ -325,11 +316,9 @@ const confirmDelete = async () => {
   try {
     console.log('正在删除投诉，ID:', complaint.complaintId)
 
-    // 调用删除API
     const response = await deleteComplaintInfo(complaint.complaintId)
     console.log('删除响应:', response)
 
-    // 从列表中移除该投诉
     const index = complaints.value.findIndex(item => item.complaintId === complaint.complaintId)
     if (index !== -1) {
       complaints.value.splice(index, 1)
@@ -338,26 +327,20 @@ const confirmDelete = async () => {
     ElMessage.success('删除成功')
     deleteDialogVisible.value = false
 
-    // 如果当前页没有数据了，切换到上一页
     if (filteredComplaints.value.length === 0 && currentPage.value > 1) {
       currentPage.value--
     }
 
-    // 刷新产品选项
     refreshProductOptions()
 
   } catch (error) {
     console.error('删除投诉失败:', error)
 
-    // 详细的错误处理
     if (error.response) {
-      // 服务器返回了错误状态码
       ElMessage.error('删除失败: ' + (error.response.data || error.response.statusText))
     } else if (error.request) {
-      // 请求发送了但没有收到响应
       ElMessage.error('删除失败: 服务器无响应')
     } else {
-      // 其他错误
       ElMessage.error('删除失败: ' + error.message)
     }
   } finally {
@@ -366,17 +349,11 @@ const confirmDelete = async () => {
   }
 }
 
-// 刷新产品选项
 const refreshProductOptions = () => {
-  // 从现有投诉数据中提取产品名称
   const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
-
-  // 过滤掉已不存在的产品
   productOptions.value = productOptions.value.filter(opt =>
     complaintProductNames.includes(opt.value)
   )
-
-  // 添加新的产品名称
   complaintProductNames.forEach(productName => {
     if (!productOptions.value.some(opt => opt.value === productName)) {
       productOptions.value.push({
@@ -389,7 +366,6 @@ const refreshProductOptions = () => {
   productOptions.value.sort((a, b) => a.label.localeCompare(b.label))
 }
 
-// 搜索和筛选
 const handleSearch = () => {
   currentPage.value = 1
 }
@@ -398,7 +374,6 @@ const handleFilter = () => {
   currentPage.value = 1
 }
 
-// 分页
 const handleSizeChange = (size) => {
   pageSize.value = size
   currentPage.value = 1
@@ -408,7 +383,6 @@ const handleCurrentChange = (page) => {
   currentPage.value = page
 }
 
-// 排序
 const handleSortChange = ({ prop, order }) => {
   if (!order) return
 
@@ -429,7 +403,6 @@ const handleSortChange = ({ prop, order }) => {
   })
 }
 
-// 工具函数
 const truncateContent = (content, maxLength) => {
   if (!content) return ''
   return content.length > maxLength

@@ -38,7 +38,6 @@ public class Product {
     @Column(name = "contact_email", length = 100)
     private String contactEmail;
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getAntiFakeCode() { return antiFakeCode; }

@@ -17,7 +17,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Product createProduct(ProductDTO dto) {
-        // 防伪码唯一性校验
         if (repository.existsByAntiFakeCode(dto.getAntiFakeCode())) {
             throw new RuntimeException("防伪码已存在，请勿重复录入！");
         }

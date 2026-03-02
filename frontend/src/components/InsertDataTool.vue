@@ -305,12 +305,11 @@ import {
   createTransportSale
 } from '../services/api'
 
-// 提交状态、消息
+
 const submitting = ref(false)
 const resultMessage = ref('')
 const resultType = ref('success')
 
-// 当前激活的标签页
 const activeEntity = ref('transportSale')
 
 const entityLabels = {
@@ -322,7 +321,6 @@ const entityLabels = {
 }
 const currentEntityLabel = computed(() => entityLabels[activeEntity.value])
 
-// ---------- 各实体表单数据对象 ----------
 const productForm = reactive({
   antiFakeCode: '',
   name: '',
@@ -364,7 +362,6 @@ const transportForm = reactive({
   time: ''
 })
 
-// ---------- 字段配置 ----------
 const productFields = [
   { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入12-20位防伪码', tip: '12-20位' },
   { prop: 'name', label: '产品名称', required: true, type: 'text', placeholder: '例：有机大米' },
@@ -399,7 +396,6 @@ const storageFields = [
   { prop: 'unit', label: '单位', required: false, type: 'text', placeholder: '例：千克' }
 ]
 
-// ---------- 提交处理 ----------
 async function handleSubmit() {
   let isValid = true
   let errorMsg = ''
@@ -507,14 +503,12 @@ async function handleSubmit() {
     resultMessage.value = '操作成功完成'
     resultType.value = 'success'
 
-    // 提交成功后重置表单
     resetForm()
 
   } catch (error) {
     console.error('提交失败:', error)
     console.error('错误响应:', error.response?.data)
 
-    // 更详细的错误提示
     let errorMessage = '提交失败'
     if (error.response?.data) {
       if (typeof error.response.data === 'string') {
@@ -534,7 +528,6 @@ async function handleSubmit() {
   }
 }
 
-// 获取当前激活的表单数据对象
 function getCurrentForm() {
   const map = {
     product: productForm,
@@ -546,7 +539,6 @@ function getCurrentForm() {
   return map[activeEntity.value]
 }
 
-// 重置当前表单
 function resetForm() {
   const form = getCurrentForm()
   Object.keys(form).forEach(key => {
@@ -557,12 +549,10 @@ function resetForm() {
   ElMessage.success('表单已重置')
 }
 
-// “+” 按钮交互
 function handlePlus(field) {
   ElMessage.info(`功能开发中: ${field.label} 附加操作`)
 }
 
-// 调试辅助：打印当前表单数据
 function debugForm() {
   console.log('当前实体:', activeEntity.value)
   console.log('表单数据:', getCurrentForm())

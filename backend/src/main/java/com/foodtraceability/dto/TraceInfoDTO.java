@@ -13,7 +13,6 @@ public class TraceInfoDTO {
     private List<TransportSaleDTO> transportSales;
     private List<ComplaintDTO> complaints;
 
-    // Product info nested
     public static class ProductInfo {
         private Long id;
         private String antiFakeCode;
@@ -104,7 +103,6 @@ public class TraceInfoDTO {
         public void setComplaintTime(LocalDateTime complaintTime) { this.complaintTime = complaintTime; }
     }
 
-    // Getters and Setters for TraceInfoDTO
     public ProductInfo getProduct() { return product; }
     public void setProduct(ProductInfo product) { this.product = product; }
     public List<MaterialPurchaseDTO> getMaterialPurchases() { return materialPurchases; }

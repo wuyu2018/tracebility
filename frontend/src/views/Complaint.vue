@@ -70,17 +70,14 @@ import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 
-// 表单引用
 const complaintFormRef = ref()
 
-// 表单数据
 const complaintForm = reactive({
   productId: '',
   complaintReason: '',
   complaintTime: ''
 })
 
-// 表单验证规则
 const complaintRules = {
   productId: [
     { required: true, message: '产品ID不能为空', trigger: 'blur' },
@@ -116,50 +113,41 @@ const complaintRules = {
   ]
 }
 
-// 状态变量
 const submitting = ref(false)
 const errorMessage = ref('')
 
-// API配置
 const API_BASE_URL = 'http://localhost:8080/api'
 const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
-// 提交投诉
 const submitComplaint = async () => {
   try {
-    // 验证表单
     const valid = await complaintFormRef.value.validate()
     if (!valid) return
 
     submitting.value = true
     errorMessage.value = ''
 
-    // 准备请求数据
     const requestData = {
       productId: Number(complaintForm.productId),
       complaintReason: complaintForm.complaintReason.trim()
     }
 
-    // 如果有时间，添加时间字段
     if (complaintForm.complaintTime) {
       requestData.complaintTime = complaintForm.complaintTime
     }
 
-    // 发送请求
     const response = await axios.post(COMPLAINT_API, requestData, {
       headers: {
         'Content-Type': 'application/json'
       }
     })
 
-    // 处理成功响应
     if (response.status === 200 || response.status === 201) {
       ElMessage.success({
         message: '投诉提交成功！',
         duration: 3000
       })
 
-      // 显示成功详情
       await ElMessageBox.alert(
         `投诉已成功提交！\n投诉ID: ${response.data.id || 'N/A'}\n处理时间: ${new Date().toLocaleString()}`,
         '提交成功',
@@ -169,26 +157,21 @@ const submitComplaint = async () => {
         }
       )
 
-      // 重置表单
       resetForm()
     }
   } catch (error) {
-    // 处理错误响应
     handleApiError(error)
   } finally {
     submitting.value = false
   }
 }
 
-// 处理API错误
 const handleApiError = (error) => {
   if (error.response) {
-    // 服务器返回的错误
     const { status, data } = error.response
 
     switch (status) {
       case 400:
-        // 处理验证错误
         if (data && data.errors) {
           const errorMessages = data.errors
             .map(err => `${err.field}: ${err.message}`)
@@ -217,21 +200,16 @@ const handleApiError = (error) => {
         errorMessage.value = `请求失败：${status} ${data?.message || error.message || '未知错误'}`
     }
   } else if (error.request) {
-    // 请求已发送但无响应
     errorMessage.value = '服务器无响应，请检查网络连接'
   } else {
-    // 请求配置错误
     errorMessage.value = `请求配置错误：${error.message || '未知配置错误'}`
   }
-
-  // 显示错误提示
   ElMessage.error({
     message: errorMessage.value,
     duration: 5000
   })
 }
 
-// 重置表单
 const resetForm = () => {
   if (complaintFormRef.value) {
     complaintFormRef.value.resetFields()
@@ -240,7 +218,6 @@ const resetForm = () => {
   complaintForm.complaintTime = ''
 }
 
-// 可选：如果需要从URL获取产品ID
 const props = defineProps({
   productId: {
     type: Number,
@@ -248,7 +225,6 @@ const props = defineProps({
   }
 })
 
-// 如果传入了productId，自动填充
 if (props.productId) {
   complaintForm.productId = props.productId
 }
@@ -290,7 +266,6 @@ if (props.productId) {
   margin-top: 20px;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
   .complaint-container {
     padding: 10px;

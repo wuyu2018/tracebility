@@ -24,40 +24,32 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Override
     @Transactional
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
-        // 创建新的投诉实体
+
         Complaint complaint = new Complaint();
         complaint.setProductId(complaintDTO.getProductId());
         complaint.setComplaintReason(complaintDTO.getComplaintReason());
         complaint.setComplaintTime(LocalDateTime.now());
 
-        // 保存到数据库
         Complaint savedComplaint = complaintRepository.save(complaint);
 
-        // 转换为DTO返回
         return convertToDTO(savedComplaint);
     }
 
     @Override
     @Transactional
     public ComplaintDTO updateComplaintReason(Long id, String complaintReason ) {
-        // 查找现有的投诉记录
+
         Complaint complaint = complaintRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("投诉记录不存在，ID: " + id));
 
-        // 更新投诉信息
         complaint.setComplaintReason(complaintReason);
         complaint.setComplaintTime(LocalDateTime.now());
 
-        // 保存更新
         Complaint updatedComplaint = complaintRepository.save(complaint);
 
-        // 转换为DTO返回
         return convertToDTO(updatedComplaint);
     }
 
-    /**
-     * 将实体对象转换为DTO对象
-     */
     private ComplaintDTO convertToDTO(Complaint complaint) {
         ComplaintDTO dto = new ComplaintDTO();
         dto.setId(complaint.getId());

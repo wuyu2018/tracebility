@@ -44,12 +44,12 @@
         </div>
       </el-tab-pane>
 
-      <!-- ✅ 新增：投诉管理工具标签页 -->
+      <!--投诉管理工具标签页 -->
       <el-tab-pane label="投诉管理" name="complaint">
         <ComplaintAdminTool />
       </el-tab-pane>
 
-      <!-- ✅ 新增：数据录入标签页 -->
+      <!--数据录入标签页 -->
       <el-tab-pane label="数据录入" name="insert">
         <InsertDataTool />
       </el-tab-pane>
@@ -63,9 +63,8 @@ import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
 import InsertDataTool from '../components/InsertDataTool.vue';
 
-const activeTab = ref('security')  // 默认显示防伪工具
+const activeTab = ref('security')
 
-// 原有的防伪工具代码保持不变
 const qrCanvas = ref(null)
 const genCount = ref(5)
 const startSeq = ref(1)
@@ -297,13 +296,11 @@ onMounted(() => {
   }
 }
 
-/*标签页样式 */
 .tools-tabs {
   width: 100%;
-  max-width: 1200px;  /* 投诉管理表格较宽，需要更大宽度 */
+  max-width: 1200px;
 }
 
-/* 覆盖 Element Plus 标签页样式 */
 .tools-tabs :deep(.el-tabs__header) {
   margin-bottom: 1.5rem;
 }

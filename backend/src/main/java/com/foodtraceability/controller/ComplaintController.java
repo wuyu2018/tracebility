@@ -25,9 +25,6 @@ public class ComplaintController {
         this.complaintService = complaintService;
     }
 
-    /**
-     * 创建投诉
-     */
     @PostMapping("/complaint")
     public ResponseEntity<?> createComplaint(@Valid @RequestBody ComplaintDTO complaintDTO) {
 
@@ -35,9 +32,6 @@ public class ComplaintController {
         return new ResponseEntity<>(createdComplaint, HttpStatus.CREATED);
     }
 
-    /**
-     * 处理验证异常 - 本地异常处理器
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(
             MethodArgumentNotValidException ex) {

@@ -2,7 +2,6 @@ package com.foodtraceability.controller;
 
 import com.foodtraceability.dto.ComplaintInfoDTO;
 import com.foodtraceability.service.GetAllComplaintInfoService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,7 +54,6 @@ public class GetAllComplaintInfoController {
         }
     }
 
-    // 可选：批量删除
     @DeleteMapping("/deleteComplaintInfo/batch")
     public ResponseEntity<?> deleteComplaintInfoBatch(@RequestBody List<Long> ids) {
         try {

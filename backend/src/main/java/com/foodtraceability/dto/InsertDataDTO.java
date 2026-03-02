@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 public class InsertDataDTO {
 
-    // ---------- 原材料采购 ----------
     public static class MaterialPurchaseDTO {
         @NotNull(message = "产品ID不能为空")
         private Long productId;
@@ -18,7 +17,6 @@ public class InsertDataDTO {
         @Size(max = 255, message = "生产商地址长度不能超过255")
         private String producerAddress;
 
-        // Getters and Setters
         public Long getProductId() { return productId; }
         public void setProductId(Long productId) { this.productId = productId; }
         public String getMaterialName() { return materialName; }
@@ -29,7 +27,6 @@ public class InsertDataDTO {
         public void setProducerAddress(String producerAddress) { this.producerAddress = producerAddress; }
     }
 
-    // ---------- 检验检测 ----------
     public static class InspectionDTO {
         @NotNull(message = "产品ID不能为空")
         private Long productId;
@@ -40,7 +37,6 @@ public class InsertDataDTO {
         @Size(max = 100, message = "样品规格长度不能超过100")
         private String sampleSpecification;
 
-        // Getters and Setters
         public Long getProductId() { return productId; }
         public void setProductId(Long productId) { this.productId = productId; }
         public String getSampleName() { return sampleName; }
@@ -51,7 +47,6 @@ public class InsertDataDTO {
         public void setSampleSpecification(String sampleSpecification) { this.sampleSpecification = sampleSpecification; }
     }
 
-    // ---------- 产品 ----------
     public static class ProductDTO {
         @NotBlank(message = "防伪码不能为空")
         @Size(max = 20, message = "防伪码长度不能超过20")
@@ -75,7 +70,6 @@ public class InsertDataDTO {
         @Size(max = 100, message = "邮箱长度不能超过100")
         private String contactEmail;
 
-        // Getters and Setters
         public String getAntiFakeCode() { return antiFakeCode; }
         public void setAntiFakeCode(String antiFakeCode) { this.antiFakeCode = antiFakeCode; }
         public String getName() { return name; }
@@ -96,7 +90,6 @@ public class InsertDataDTO {
         public void setContactEmail(String contactEmail) { this.contactEmail = contactEmail; }
     }
 
-    // ---------- 仓储 ----------
     public static class StorageDTO {
         @NotNull(message = "产品ID不能为空")
         private Long productId;
@@ -107,7 +100,6 @@ public class InsertDataDTO {
         @Size(max = 20, message = "单位长度不能超过20")
         private String unit;
 
-        // Getters and Setters
         public Long getProductId() { return productId; }
         public void setProductId(Long productId) { this.productId = productId; }
         public LocalDateTime getStorageTime() { return storageTime; }
@@ -120,7 +112,6 @@ public class InsertDataDTO {
         public void setUnit(String unit) { this.unit = unit; }
     }
 
-    // ---------- 运输销售 ----------
     public static class TransportSaleDTO {
         @NotNull(message = "产品ID不能为空")
         private Long productId;
@@ -128,7 +119,6 @@ public class InsertDataDTO {
         private Double productTemperature;
         private LocalDateTime time;
 
-        // Getters and Setters
         public Long getProductId() { return productId; }
         public void setProductId(Long productId) { this.productId = productId; }
         public Double getEnvironmentTemperature() { return environmentTemperature; }

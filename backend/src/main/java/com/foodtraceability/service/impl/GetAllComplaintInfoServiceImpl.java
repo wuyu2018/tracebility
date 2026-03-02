@@ -31,7 +31,6 @@ public class GetAllComplaintInfoServiceImpl implements GetAllComplaintInfoServic
     @Override
     public boolean deleteComplaintInfo(Long id) {
         try {
-            // 检查投诉是否存在
             if (complaintRepository.existsById(id)) {
                 complaintRepository.deleteById(id);
                 return true;
