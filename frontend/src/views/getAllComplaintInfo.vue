@@ -78,6 +78,21 @@
             {{ formatDateTime(row.complaintTime) }}
           </template>
         </el-table-column>
+
+        <!-- 操作列 - 删除按钮 -->
+        <el-table-column label="操作" width="100" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              type="danger"
+              size="small"
+              :icon="Delete"
+              @click="handleDelete(row)"
+              :loading="deletingId === row.complaintId"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <!-- 分页 -->
@@ -93,6 +108,36 @@
         />
       </div>
     </div>
+
+    <!-- 删除确认对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title="确认删除"
+      width="400px"
+      center
+    >
+      <div class="delete-confirm-content">
+        <el-icon class="warning-icon"><WarningFilled /></el-icon>
+        <p>确定要删除这条投诉信息吗？</p>
+        <p class="delete-detail" v-if="selectedComplaint">
+          投诉编号：{{ selectedComplaint.complaintId }}<br>
+          产品名称：{{ selectedComplaint.productName }}
+        </p>
+        <p class="delete-warning">此操作不可恢复，请谨慎操作！</p>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button
+            type="danger"
+            @click="confirmDelete"
+            :loading="deletingId === selectedComplaint?.complaintId"
+          >
+            确认删除
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -101,13 +146,15 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   Refresh,
-  Search
+  Search,
+  Delete,
+  WarningFilled
 } from '@element-plus/icons-vue'
 
-// 导入API
 import {
   getAllComplaintInfo,
-  listAllProducts
+  listAllProducts,
+  deleteComplaintInfo
 } from '../services/api'
 
 // 响应式数据
@@ -118,12 +165,14 @@ const filterProduct = ref('')
 const productOptions = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
+const deleteDialogVisible = ref(false)
+const selectedComplaint = ref(null)
+const deletingId = ref(null)
 
 // 计算属性：过滤后的投诉列表（带分页）
 const filteredComplaints = computed(() => {
   let result = [...complaints.value]
 
-  // 关键词搜索
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(item =>
@@ -132,12 +181,10 @@ const filteredComplaints = computed(() => {
     )
   }
 
-  // 产品名称筛选
   if (filterProduct.value) {
     result = result.filter(item => item.productName === filterProduct.value)
   }
 
-  // 分页处理
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return result.slice(start, end)
@@ -171,7 +218,6 @@ onMounted(() => {
 const fetchComplaints = async () => {
   loading.value = true
   try {
-    // 先获取所有产品信息，用于映射产品名称
     let productMap = {}
     try {
       const productsResponse = await listAllProducts()
@@ -184,7 +230,6 @@ const fetchComplaints = async () => {
         products = productsResponse.data
       }
 
-      // 构建产品映射和产品选项
       productMap = products.reduce((map, product) => {
         const productId = product.id
         const productName = product.name || product.productName || `产品${product.id}`
@@ -192,7 +237,6 @@ const fetchComplaints = async () => {
         return map
       }, {})
 
-      // 生成产品筛选选项
       productOptions.value = products.map(product => ({
         value: product.name || product.productName || `产品${product.id}`,
         label: product.name || product.productName || `产品${product.id}`
@@ -226,21 +270,20 @@ const fetchComplaints = async () => {
 
     if (complaintList.length > 0) {
       complaints.value = complaintList.map((item, index) => {
-        const complaintId = item.complaintId || item.id || `C${Date.now()}-${index}`
+        const complaintId = item.id || item.complaintId || `C${Date.now()}-${index}`
         const productId = item.productId || item.product_id
 
         return {
           complaintId: complaintId,
           productId: productId,
-          productName: productMap[productId] || (productId ? `${productId}` : '未知产品'),
+          productName: productMap[productId] || (productId ? `产品${productId}` : '未知产品'),
           complaintContent: item.complaintReason || item.complaint_content || item.complaint_reason || item.complaintContent || '',
           complaintTime: item.complaintTime || item.complaint_time || new Date().toISOString(),
-          status: item.status || 'PENDING',
           rawData: item
         }
       })
 
-      // 从已有投诉数据中提取产品名称，补充产品选项
+      // 补充产品选项
       const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
       complaintProductNames.forEach(productName => {
         if (!productOptions.value.some(opt => opt.value === productName)) {
@@ -251,7 +294,6 @@ const fetchComplaints = async () => {
         }
       })
 
-      // 按产品名称排序
       productOptions.value.sort((a, b) => a.label.localeCompare(b.label))
 
       ElMessage.success(`加载成功，共 ${complaints.value.length} 条投诉`)
@@ -265,6 +307,86 @@ const fetchComplaints = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 处理删除 - 打开确认对话框
+const handleDelete = (row) => {
+  console.log('删除按钮点击:', row)
+  selectedComplaint.value = row
+  deleteDialogVisible.value = true
+}
+
+const confirmDelete = async () => {
+  if (!selectedComplaint.value) return
+
+  const complaint = selectedComplaint.value
+  deletingId.value = complaint.complaintId
+
+  try {
+    console.log('正在删除投诉，ID:', complaint.complaintId)
+
+    // 调用删除API
+    const response = await deleteComplaintInfo(complaint.complaintId)
+    console.log('删除响应:', response)
+
+    // 从列表中移除该投诉
+    const index = complaints.value.findIndex(item => item.complaintId === complaint.complaintId)
+    if (index !== -1) {
+      complaints.value.splice(index, 1)
+    }
+
+    ElMessage.success('删除成功')
+    deleteDialogVisible.value = false
+
+    // 如果当前页没有数据了，切换到上一页
+    if (filteredComplaints.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
+
+    // 刷新产品选项
+    refreshProductOptions()
+
+  } catch (error) {
+    console.error('删除投诉失败:', error)
+
+    // 详细的错误处理
+    if (error.response) {
+      // 服务器返回了错误状态码
+      ElMessage.error('删除失败: ' + (error.response.data || error.response.statusText))
+    } else if (error.request) {
+      // 请求发送了但没有收到响应
+      ElMessage.error('删除失败: 服务器无响应')
+    } else {
+      // 其他错误
+      ElMessage.error('删除失败: ' + error.message)
+    }
+  } finally {
+    deletingId.value = null
+    selectedComplaint.value = null
+  }
+}
+
+// 刷新产品选项
+const refreshProductOptions = () => {
+  // 从现有投诉数据中提取产品名称
+  const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
+
+  // 过滤掉已不存在的产品
+  productOptions.value = productOptions.value.filter(opt =>
+    complaintProductNames.includes(opt.value)
+  )
+
+  // 添加新的产品名称
+  complaintProductNames.forEach(productName => {
+    if (!productOptions.value.some(opt => opt.value === productName)) {
+      productOptions.value.push({
+        value: productName,
+        label: productName
+      })
+    }
+  })
+
+  productOptions.value.sort((a, b) => a.label.localeCompare(b.label))
 }
 
 // 搜索和筛选
@@ -396,5 +518,39 @@ const formatDateTime = (dateString) => {
 
 :deep(.el-table .cell) {
   padding: 8px 12px;
+}
+
+.delete-confirm-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.warning-icon {
+  font-size: 48px;
+  color: #f56c6c;
+  margin-bottom: 16px;
+}
+
+.delete-detail {
+  background-color: #f5f7fa;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: #606266;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.delete-warning {
+  color: #f56c6c;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 </style>

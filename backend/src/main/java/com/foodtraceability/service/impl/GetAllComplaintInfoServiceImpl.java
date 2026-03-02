@@ -28,6 +28,20 @@ public class GetAllComplaintInfoServiceImpl implements GetAllComplaintInfoServic
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean deleteComplaintInfo(Long id) {
+        try {
+            // 检查投诉是否存在
+            if (complaintRepository.existsById(id)) {
+                complaintRepository.deleteById(id);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new RuntimeException("删除投诉失败: " + e.getMessage());
+        }
+    }
+
     private ComplaintInfoDTO.ComplaintInfo convertToComplaintInfoDTO(Complaint complaint) {
         ComplaintInfoDTO.ComplaintInfo info = new ComplaintInfoDTO.ComplaintInfo();
 

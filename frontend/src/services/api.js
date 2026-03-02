@@ -37,6 +37,11 @@ export async function createProduct(data) {
   return responseData;
 }
 
+export async function deleteComplaintInfo(id) {
+  const { data } = await api.delete(`/deleteComplaintInfo/${id}`)
+  return data
+}
+
 export async function createMaterialPurchase(data) {
   const { data: responseData } = await api.post('/insert/material-purchase', data);
   return responseData;
