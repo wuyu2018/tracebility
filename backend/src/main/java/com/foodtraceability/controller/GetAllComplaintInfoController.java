@@ -24,7 +24,7 @@ public class GetAllComplaintInfoController {
     @GetMapping("/getAllComplaintInfo")
     public ResponseEntity<?> getAllComplaintInfo( ComplaintInfoDTO complaintInfoDTO ) {
         try {
-            // 调用服务层获取数据
+
             List<ComplaintInfoDTO.ComplaintInfo> result = getAllComplaintInfo.getAllComplaintInfo();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
