@@ -19,15 +19,15 @@
 
           <section class="tool-card">
             <h2>防伪码生成器</h2>
-            <p class="card-desc">生成12-20位防伪码，格式：AF + 年份 + 6位序号</p>
+            <p class="card-desc">生成12-20位防伪码</p>
             <div class="gen-form">
               <div class="form-row">
                 <label>生成数量</label>
                 <input v-model.number="genCount" type="number" min="1" max="100" />
               </div>
               <div class="form-row">
-                <label>起始序号</label>
-                <input v-model.number="startSeq" type="number" min="1" />
+                <label>密码长度</label>
+                <input v-model="length" type="number" min="12" />
               </div>
               <button type="button" class="btn-generate" @click="generate">生成防伪码</button>
             </div>
@@ -37,7 +37,9 @@
                 <button type="button" class="btn-copy" @click="copyCodes">复制全部</button>
               </div>
               <div class="codes-list">
-                <div v-for="(code, i) in generatedCodes" :key="i" class="code-item">{{ code }}</div>
+                <div v-for="(code, i) in generatedCodes" :key="i" class="code-item">
+                  {{ code }}
+                </div>
               </div>
             </div>
           </section>
@@ -61,7 +63,13 @@
 import { ref, onMounted, computed } from 'vue'
 import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
+import { ElMessage } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
+
+
+const length = ref(16)
+const loading = ref(false)
+const lastClickTime = ref(0)
 
 const activeTab = ref('security')
 
@@ -99,16 +107,43 @@ function downloadQr() {
   })
 }
 
-function generate() {
-  const count = Math.min(Math.max(1, genCount.value || 1), 100)
-  const start = Math.max(1, startSeq.value || 1)
-  const year = new Date().getFullYear()
-  const codes = []
-  for (let i = 0; i < count; i++) {
-    const seq = String(start + i).padStart(6, '0')
-    codes.push(`AF${year}${seq}`)
+const generate = async () => {
+  const now = Date.now()
+  if (now - lastClickTime.value < 1000) {
+    ElMessage.warning('操作太频繁，请稍后再试')
+    return
   }
-  generatedCodes.value = codes
+
+  lastClickTime.value = now
+  loading.value = true
+  generatedCodes.value = []
+
+  try {
+    const baseParams = new URLSearchParams({
+      length: length.value.toString()
+    })
+    baseParams.append('numbers', '')
+    baseParams.append('uppercase', '')
+    baseParams.append('lowercase', '')
+
+    const baseUrl = 'https://60s.viki.moe/v2/password'
+    const requestUrl = `${baseUrl}?${baseParams.toString()}`
+
+    const requests = Array(genCount.value).fill().map(() =>
+      fetch(requestUrl).then(res => res.json())
+    )
+
+    const results = await Promise.all(requests)
+    generatedCodes.value = results.map(item => item.data.password)
+
+    ElMessage.success(`成功生成 ${genCount.value} 个防伪码`)
+
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('获取失败，请重试')
+  } finally {
+    loading.value = false
+  }
 }
 
 function copyCodes() {
