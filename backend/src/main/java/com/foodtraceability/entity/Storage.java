@@ -1,10 +1,16 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "storage")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Storage {
 
     @Id
@@ -25,17 +31,4 @@ public class Storage {
 
     @Column(length = 20)
     private String unit;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public LocalDateTime getStorageTime() { return storageTime; }
-    public void setStorageTime(LocalDateTime storageTime) { this.storageTime = storageTime; }
-    public LocalDateTime getOutboundTime() { return outboundTime; }
-    public void setOutboundTime(LocalDateTime outboundTime) { this.outboundTime = outboundTime; }
-    public Double getQuantity() { return quantity; }
-    public void setQuantity(Double quantity) { this.quantity = quantity; }
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
 }

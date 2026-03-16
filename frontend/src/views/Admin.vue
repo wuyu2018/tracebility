@@ -1,68 +1,70 @@
 <template>
-  <div class="login-card">
-    <div class="login-header">
-      <h2>{{ '🔐 后台管理' }}</h2>
-      <span class="role-badge">管理员</span>
-    </div>
-
-    <div v-if="loginSuccess" class="success-message">
-      <span>✅</span> 登录成功！欢迎回来，管理员 {{ adminUsername }}
-    </div>
-
-    <template v-else>
-      <div class="input-group">
-        <label>👤 管理员账号</label>
-        <input
-          type="text"
-          class="input-field"
-          v-model="credentials.username"
-          autocomplete="off"
-          ref="usernameInput"
-          @keyup.enter="handleLogin"
-        />
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>{{ '🔐 后台管理' }}</h2>
+        <span class="role-badge">管理员</span>
       </div>
 
-      <div class="input-group">
-        <label>🔑 密码</label>
-        <input
-          type="password"
-          class="input-field"
-          v-model="credentials.password"
-          autocomplete="off"
-          @keyup.enter="handleLogin"
-        />
+      <div v-if="loginSuccess" class="success-message">
+        <span>✅</span> 登录成功！欢迎回来，管理员 {{ adminUsername }}
       </div>
 
-      <div class="input-group">
-        <label>📷 验证码</label>
-        <div class="captcha-row">
+      <template v-else>
+        <div class="input-group">
+          <label>👤 管理员账号</label>
           <input
             type="text"
             class="input-field"
-            v-model="credentials.captchaInput"
-            maxlength="6"
+            v-model="credentials.username"
+            autocomplete="off"
+            ref="usernameInput"
+            @keyup.enter="handleLogin"
+          />
+        </div>
+
+        <div class="input-group">
+          <label>🔑 密码</label>
+          <input
+            type="password"
+            class="input-field"
+            v-model="credentials.password"
             autocomplete="off"
             @keyup.enter="handleLogin"
-            placeholder="请输入验证码"
           />
-          <div class="captcha-box" @click="generateCaptcha" title="点击刷新验证码">
-            {{ currentCaptcha }}
+        </div>
+
+        <div class="input-group">
+          <label>📷 验证码</label>
+          <div class="captcha-row">
+            <input
+              type="text"
+              class="input-field"
+              v-model="credentials.captchaInput"
+              maxlength="6"
+              autocomplete="off"
+              @keyup.enter="handleLogin"
+              placeholder="请输入验证码"
+            />
+            <div class="captcha-box" @click="generateCaptcha" title="点击刷新验证码">
+              {{ currentCaptcha }}
+            </div>
           </div>
         </div>
+
+        <div v-if="errorMsg" class="error-message">
+          <span>⚠️</span> {{ errorMsg }}
+        </div>
+
+        <button type="button" class="login-btn" :disabled="loading" @click="handleLogin">
+          <span v-if="loading">⏳ 处理中...</span>
+          <span v-else>🚀 安全登录</span>
+        </button>
+      </template>
+
+      <div class="footer-note">
+        <strong>⚠️ 仅限管理员登录</strong>
       </div>
-
-      <div v-if="errorMsg" class="error-message">
-        <span>⚠️</span> {{ errorMsg }}
-      </div>
-
-      <button type="button" class="login-btn" :disabled="loading" @click="handleLogin">
-        <span v-if="loading">⏳ 处理中...</span>
-        <span v-else>🚀 安全登录</span>
-      </button>
-    </template>
-
-    <div class="footer-note">
-      <strong>⚠️ 仅限管理员登录</strong>
     </div>
   </div>
 </template>
@@ -168,8 +170,32 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, var(--color-bg) 0%, #e8efe9 100%);
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 1rem 0.875rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+}
+
 .login-card {
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
@@ -180,10 +206,18 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .login-card {
     padding: 2rem 1.5rem;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem 1.25rem;
     max-width: 100%;
+    border-radius: var(--radius);
   }
 }
 
@@ -207,6 +241,7 @@ onMounted(() => {
 @media (max-width: 480px) {
   .login-header h2 {
     font-size: 1.25rem;
+    gap: 0.35rem;
   }
 }
 
@@ -218,6 +253,13 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 600;
   border: 1px solid #b9d3f0;
+}
+
+@media (max-width: 480px) {
+  .role-badge {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+  }
 }
 
 .input-group {

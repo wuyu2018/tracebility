@@ -2,8 +2,14 @@ package com.foodtraceability.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ComplaintDTO {
     private Long id;
 
@@ -14,45 +20,4 @@ public class ComplaintDTO {
     private String complaintReason;
 
     private LocalDateTime complaintTime;
-
-    public ComplaintDTO() {}
-
-    public ComplaintDTO(Long id, Long productId, String complaintReason, LocalDateTime complaintTime) {
-        this.id = id;
-        this.productId = productId;
-        this.complaintReason = complaintReason;
-        this.complaintTime = complaintTime;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public String getComplaintReason() {
-        return complaintReason;
-    }
-
-    public void setComplaintReason(String complaintReason) {
-        this.complaintReason = complaintReason;
-    }
-
-    public LocalDateTime getComplaintTime() {
-        return complaintTime;
-    }
-
-    public void setComplaintTime(LocalDateTime complaintTime) {
-        this.complaintTime = complaintTime;
-    }
 }

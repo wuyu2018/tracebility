@@ -1,10 +1,16 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "product")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
 
     @Id
@@ -37,27 +43,6 @@ public class Product {
 
     @Column(name = "contact_email", length = 100)
     private String contactEmail;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getAntiFakeCode() { return antiFakeCode; }
-    public void setAntiFakeCode(String antiFakeCode) { this.antiFakeCode = antiFakeCode; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getSpecification() { return specification; }
-    public void setSpecification(String specification) { this.specification = specification; }
-    public String getBatchNumber() { return batchNumber; }
-    public void setBatchNumber(String batchNumber) { this.batchNumber = batchNumber; }
-    public LocalDate getProductionDate() { return productionDate; }
-    public void setProductionDate(LocalDate productionDate) { this.productionDate = productionDate; }
-    public String getShelfLife() { return shelfLife; }
-    public void setShelfLife(String shelfLife) { this.shelfLife = shelfLife; }
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    public String getContactPhone() { return contactPhone; }
-    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
-    public String getContactEmail() { return contactEmail; }
-    public void setContactEmail(String contactEmail) { this.contactEmail = contactEmail; }
 }
 
 

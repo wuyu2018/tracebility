@@ -1,10 +1,16 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "complaint")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Complaint {
 
     @Id
@@ -19,13 +25,4 @@ public class Complaint {
 
     @Column(name = "complaint_time")
     private LocalDateTime complaintTime;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public String getComplaintReason() { return complaintReason; }
-    public void setComplaintReason(String complaintReason) { this.complaintReason = complaintReason; }
-    public LocalDateTime getComplaintTime() { return complaintTime; }
-    public void setComplaintTime(LocalDateTime complaintTime) { this.complaintTime = complaintTime; }
 }

@@ -1,9 +1,15 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "inspection")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Inspection {
 
     @Id
@@ -21,15 +27,4 @@ public class Inspection {
 
     @Column(name = "sample_specification", length = 100)
     private String sampleSpecification;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public String getSampleName() { return sampleName; }
-    public void setSampleName(String sampleName) { this.sampleName = sampleName; }
-    public Integer getSampleQuantity() { return sampleQuantity; }
-    public void setSampleQuantity(Integer sampleQuantity) { this.sampleQuantity = sampleQuantity; }
-    public String getSampleSpecification() { return sampleSpecification; }
-    public void setSampleSpecification(String sampleSpecification) { this.sampleSpecification = sampleSpecification; }
 }

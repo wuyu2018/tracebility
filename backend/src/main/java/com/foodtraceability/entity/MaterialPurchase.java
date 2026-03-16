@@ -1,9 +1,15 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "material_purchase")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MaterialPurchase {
 
     @Id
@@ -21,15 +27,4 @@ public class MaterialPurchase {
 
     @Column(name = "producer_address", length = 255)
     private String producerAddress;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
-    public String getMaterialName() { return materialName; }
-    public void setMaterialName(String materialName) { this.materialName = materialName; }
-    public String getProducerName() { return producerName; }
-    public void setProducerName(String producerName) { this.producerName = producerName; }
-    public String getProducerAddress() { return producerAddress; }
-    public void setProducerAddress(String producerAddress) { this.producerAddress = producerAddress; }
 }
