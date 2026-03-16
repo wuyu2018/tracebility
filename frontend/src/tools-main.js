@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
-import ToolsPage from './views/ToolsStandalone.vue'
+import ToolsPage from './views/Admin.vue'
 import './assets/css/main.css'
+import router from './router'
 
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -14,6 +15,7 @@ app.use(ElementPlus, {
   locale: zhCn,
   size: 'default'
 })
+.use(router)
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

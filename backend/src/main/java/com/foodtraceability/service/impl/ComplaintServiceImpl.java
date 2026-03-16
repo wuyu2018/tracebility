@@ -1,7 +1,6 @@
 package com.foodtraceability.service.impl;
 
 import com.foodtraceability.dto.ComplaintDTO;
-import com.foodtraceability.dto.PurchaseInfoDTO;
 import com.foodtraceability.entity.Complaint;
 import com.foodtraceability.repository.ComplaintRepository;
 import com.foodtraceability.service.ComplaintService;
@@ -9,8 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ComplaintServiceImpl implements ComplaintService {

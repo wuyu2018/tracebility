@@ -30,6 +30,11 @@ const routes = [
     path: '/getAllComplaintInfo',
     name: 'getAllComplaintInfo',
     component: () => import('../views/getAllComplaintInfo.vue'),
+  },
+  {
+    path: '/ToolsStandalone',
+    name: 'ToolsStandalone',
+    component: () => import('../views/ToolsStandalone.vue'),
   }
 ]
 

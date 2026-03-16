@@ -216,9 +216,9 @@ const fetchComplaints = async () => {
     let productMap = {}
     try {
       const productsResponse = await listAllProducts()
-      console.log('产品列表返回:', productsResponse)
 
       let products = []
+
       if (Array.isArray(productsResponse)) {
         products = productsResponse
       } else if (productsResponse?.data && Array.isArray(productsResponse.data)) {
