@@ -13,11 +13,11 @@ import java.util.List;
 public class TraceInfoDTO {
 
     private ProductInfo product;
-    private List<MaterialPurchaseInfo> materialPurchases;
-    private List<StorageInfo> storages;
-    private List<InspectionInfo> inspections;
-    private List<TransportSaleInfo> transportSales;
-    private List<ComplaintInfo> complaints;
+    private List<MaterialPurchaseDTO> materialPurchases;
+    private List<StorageDTO> storages;
+    private List<InspectionDTO> inspections;
+    private List<TransportSaleDTO> transportSales;
+    private List<ComplaintDTO> complaints;
 
     @Data
     @NoArgsConstructor
@@ -35,7 +35,7 @@ public class TraceInfoDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MaterialPurchaseInfo {
+    public static class MaterialPurchaseDTO {
         private String materialName;
         private String producerName;
         private String producerAddress;
@@ -44,7 +44,7 @@ public class TraceInfoDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class StorageInfo {
+    public static class StorageDTO {
         private LocalDateTime storageTime;
         private LocalDateTime outboundTime;
         private Double quantity;
@@ -54,7 +54,7 @@ public class TraceInfoDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class InspectionInfo {
+    public static class InspectionDTO {
         private String sampleName;
         private Integer sampleQuantity;
         private String sampleSpecification;
@@ -63,7 +63,7 @@ public class TraceInfoDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class TransportSaleInfo {
+    public static class TransportSaleDTO {
         private Double environmentTemperature;
         private Double productTemperature;
         private LocalDateTime time;
@@ -72,7 +72,7 @@ public class TraceInfoDTO {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ComplaintInfo {
+    public static class ComplaintDTO {
         private String complaintReason;
         private LocalDateTime complaintTime;
     }
