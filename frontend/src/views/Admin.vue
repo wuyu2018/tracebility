@@ -1,6 +1,6 @@
 <template>
   <div class="login-card">
-    <div class="flex-row">
+    <div class="login-header">
       <h2>{{ '🔐 后台管理' }}</h2>
       <span class="role-badge">管理员</span>
     </div>
@@ -48,8 +48,6 @@
           <div class="captcha-box" @click="generateCaptcha" title="点击刷新验证码">
             {{ currentCaptcha }}
           </div>
-        </div>
-        <div class="captcha-refresh-hint">
         </div>
       </div>
 
@@ -170,74 +168,95 @@ onMounted(() => {
 </script>
 
 <style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 .login-card {
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 32px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(156,163,175,0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 440px;
-  padding: 40px 32px;
+  padding: 2.5rem 2rem;
   transition: all 0.2s ease;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-h2 {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #0a1e2f;
-  margin-bottom: 8px;
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+}
+
+.login-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.login-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .login-header h2 {
+    font-size: 1.25rem;
+  }
+}
+
+.role-badge {
+  background: #f4f8ff;
+  color: #1e4a8b;
+  padding: 0.35rem 1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #b9d3f0;
 }
 
 .input-group {
-  margin-bottom: 22px;
+  margin-bottom: 1.25rem;
 }
 
-label {
+.input-group label {
   display: block;
-  font-size: 13px;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: #1e3a5f;
-  margin-bottom: 6px;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
   letter-spacing: 0.3px;
 }
 
 .input-field {
   width: 100%;
-  padding: 14px 16px;
+  padding: 1rem 1.25rem;
   background-color: white;
-  border: 1.5px solid #dde3e9;
-  border-radius: 18px;
-  font-size: 15px;
-  transition: all 0.2s;
+  border: 2px solid #e0e6e1;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .input-field:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.15);
 }
 
 .input-field::placeholder {
-  color: #9ca3af;
-  font-size: 14px;
+  color: #9ca89e;
+  font-size: 0.95rem;
 }
 
 .captcha-row {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
   align-items: center;
 }
 
@@ -246,142 +265,112 @@ label {
 }
 
 .captcha-box {
-  background: linear-gradient(135deg, #2b3c58, #1b2b41);
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
   color: white;
   font-weight: 700;
-  font-size: 26px;
-  letter-spacing: 10px;
+  font-size: 1.5rem;
+  letter-spacing: 0.25em;
   text-align: center;
-  padding: 8px 10px;
+  padding: 0.75rem 1rem;
   min-width: 120px;
-  border-radius: 18px;
+  border-radius: var(--radius);
   font-family: 'Courier New', monospace;
   box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
-  border: 2px solid #ffffff30;
-  text-shadow: 2px 2px 0 #00000040;
+  border: 2px solid rgba(255,255,255,0.2);
   cursor: pointer;
   user-select: none;
-  transition: 0.15s;
-  line-height: 1.2;
+  transition: transform 0.15s, box-shadow 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1.2;
 }
 
 .captcha-box:hover {
-  background: linear-gradient(135deg, #345, #1f2e44);
-  transform: scale(1.01);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
 }
 
 .captcha-box:active {
   transform: scale(0.98);
 }
 
-.captcha-refresh-hint {
-  font-size: 11px;
-  color: #64748b;
-  margin-top: 6px;
-  text-align: right;
-}
-
 .error-message {
-  color: #b91c1c;
-  font-size: 13px;
-  margin-top: 6px;
-  margin-bottom: 16px;
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.35rem;
   background: #fee2e2;
-  padding: 8px 16px;
-  border-radius: 30px;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
   width: fit-content;
 }
 
 .success-message {
   color: #065f46;
   background: #d1fae5;
-  padding: 16px 20px;
-  border-radius: 40px;
-  font-size: 15px;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
   font-weight: 500;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.5rem;
   border: 1px solid #a7f3d0;
 }
 
 .login-btn {
   width: 100%;
-  background: #1e3a5f;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
   border: none;
-  padding: 16px 20px;
-  font-size: 16px;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: 40px;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: 0.15s;
-  box-shadow: 0 10px 20px -8px #1e3a5f70;
-  margin-top: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-md);
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .login-btn:hover:not(:disabled) {
-  background: #143049;
   transform: translateY(-2px);
-  box-shadow: 0 15px 25px -10px #0f2b44;
+  box-shadow: var(--shadow-lg);
 }
 
 .login-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
-  box-shadow: none;
-  background: #6b7b8f;
 }
 
 .login-btn:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 0 5px 12px -6px #1e3a5f;
+  transform: translateY(0);
 }
 
 .footer-note {
-  margin-top: 32px;
-  font-size: 13px;
-  color: #6d7b8c;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
   text-align: center;
-  border-top: 1px dashed #cbd5e1;
-  padding-top: 22px;
+  border-top: 1px dashed #e0e6e1;
+  padding-top: 1.25rem;
 }
 
 .footer-note strong {
-  color: #1e3a5f;
+  color: var(--color-primary-dark);
   font-weight: 600;
-  background: #f0f4f9;
-  padding: 4px 14px;
-  border-radius: 30px;
-  font-size: 12px;
-  display: inline-block;
-}
-
-.flex-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.role-badge {
-  background: #f4f8ff;
-  color: #1e4a8b;
-  padding: 6px 16px;
+  background: var(--color-bg);
+  padding: 0.25rem 0.875rem;
   border-radius: 50px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid #b9d3f0;
+  font-size: 0.8rem;
+  display: inline-block;
 }
 </style>

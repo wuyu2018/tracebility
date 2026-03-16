@@ -170,6 +170,12 @@ onMounted(() => {
   padding: 2rem 1rem;
 }
 
+@media (max-width: 480px) {
+  .tools-standalone {
+    padding: 1rem 0.875rem;
+  }
+}
+
 .tools-page {
   max-width: 500px;
   width: 100%;
@@ -193,7 +199,7 @@ onMounted(() => {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-sm);
-  border: 1px solid rgba(45, 90, 61, 0.08);
+  border: 1px solid rgba(45, 90, 61, 0.06);
 }
 
 .tool-card h2 {
@@ -229,16 +235,18 @@ onMounted(() => {
 .btn-download {
   width: 100%;
   padding: 0.75rem;
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
   border-radius: var(--radius);
   font-weight: 500;
   border: none;
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .btn-download:hover {
-  background: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .gen-form {
@@ -256,27 +264,37 @@ onMounted(() => {
 .form-row label {
   min-width: 80px;
   font-size: 0.95rem;
+  color: var(--color-text);
 }
 
 .form-row input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e6e1;
-  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e6e1;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-row input:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 .btn-generate {
   padding: 0.75rem;
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
   border-radius: var(--radius);
   font-weight: 500;
   border: none;
   cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .btn-generate:hover {
-  background: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .codes-output {
@@ -290,6 +308,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 
 .btn-copy {
@@ -300,6 +320,7 @@ onMounted(() => {
   font-size: 0.875rem;
   border: none;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .btn-copy:hover {
@@ -309,13 +330,13 @@ onMounted(() => {
 .codes-list {
   max-height: 200px;
   overflow-y: auto;
-  background: #f8faf8;
-  border-radius: 6px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
   padding: 0.5rem;
 }
 
 .code-item {
-  font-family: monospace;
+  font-family: 'Courier New', monospace;
   font-size: 0.9rem;
   padding: 0.35rem 0;
   border-bottom: 1px solid #eee;
@@ -323,12 +344,6 @@ onMounted(() => {
 
 .code-item:last-child {
   border-bottom: none;
-}
-
-@media (max-width: 480px) {
-  .tools-standalone {
-    padding: 1rem 0.875rem;
-  }
 }
 
 .tools-tabs {
@@ -342,6 +357,6 @@ onMounted(() => {
 
 .tools-tabs :deep(.el-tabs__item) {
   font-size: 1rem;
-  padding: 0 20px;
+  padding: 0 1.25rem;
 }
 </style>

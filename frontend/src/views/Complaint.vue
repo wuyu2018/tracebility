@@ -233,12 +233,36 @@ if (props.productId) {
 <style scoped>
 .complaint-container {
   max-width: 800px;
-  margin: 20px auto;
-  padding: 20px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 768px) {
+  .complaint-container {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .complaint-container {
+    padding: 1rem 0.875rem 2.5rem;
+  }
 }
 
 .complaint-card {
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+:deep(.el-card__header) {
+  background: var(--color-primary);
+  color: white;
+  padding: 1.25rem 1.5rem;
+}
+
+:deep(.el-card__body) {
+  padding: 1.5rem;
 }
 
 .card-header {
@@ -249,36 +273,36 @@ if (props.productId) {
 
 .card-header h2 {
   margin: 0;
-  color: #333;
+  font-size: 1.25rem;
+  color: white;
 }
 
 .complaint-form {
-  margin-top: 20px;
+  margin-top: 1.25rem;
 }
 
 .form-tip {
-  font-size: 12px;
-  color: #999;
-  margin-top: 5px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 0.35rem;
 }
 
 .error-alert {
-  margin-top: 20px;
+  margin-top: 1.25rem;
 }
 
 @media (max-width: 768px) {
   .complaint-container {
-    padding: 10px;
-    margin: 10px;
+    padding: 1rem;
   }
 
   :deep(.el-form-item) {
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
   }
 
   :deep(.el-form-item__label) {
     text-align: left !important;
-    padding-right: 10px;
+    padding-right: 0.5rem;
   }
 }
 </style>

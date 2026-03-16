@@ -563,113 +563,175 @@ function debugForm() {
 .insert-data-tool {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.25rem;
 }
+
 .tool-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
+
 .main-title {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--color-primary-dark);
   line-height: 1.2;
 }
+
 .sub-title {
-  margin: 4px 0 0;
-  font-size: 1.2rem;
+  margin: 0.25rem 0 0;
+  font-size: 1rem;
   font-weight: 500;
-  color: #3a4a5a;
+  color: var(--color-text-muted);
 }
+
 .header-tips {
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
+
 .required-tip {
-  display: block;
-  color: #e6a23c;
+  color: var(--color-accent);
   font-size: 0.9rem;
-  margin-bottom: 4px;
 }
+
 .type-tip {
-  color: #909399;
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
 }
+
 .entity-tabs {
-  margin-top: 16px;
+  margin-top: 1rem;
 }
+
 .table-wrapper {
   overflow-x: auto;
-  padding: 8px 0;
+  padding: 0.5rem 0;
 }
+
 .data-entry-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 0.95rem;
 }
+
 .data-entry-table td {
-  padding: 12px 8px;
+  padding: 0.75rem 0.5rem;
   border-bottom: 1px solid #ebeef5;
   vertical-align: middle;
 }
+
 .field-label {
   width: 120px;
   font-weight: 500;
-  color: #606266;
+  color: var(--color-text);
   white-space: nowrap;
 }
+
 .field-label.required::before {
   content: '*';
-  color: #f56c6c;
-  margin-right: 4px;
+  color: var(--color-danger);
+  margin-right: 0.25rem;
 }
+
 .field-icon {
   width: 40px;
   text-align: center;
-  color: #909399;
+  color: var(--color-text-muted);
 }
+
 .field-input {
   min-width: 200px;
 }
+
 .field-action {
   width: 50px;
   text-align: center;
 }
+
 .field-unit {
   width: 100px;
-  color: #909399;
-  font-size: 12px;
-  padding-left: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  padding-left: 0.75rem;
 }
+
 .field-tip {
-  color: #909399;
-  font-size: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
 }
+
 .submit-area {
-  margin-top: 30px;
+  margin-top: 1.75rem;
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 1.25rem;
+  flex-wrap: wrap;
 }
+
 .result-alert {
-  margin-top: 20px;
+  margin-top: 1.25rem;
 }
+
 .el-input-number {
   width: 100%;
 }
+
 .el-date-editor {
-  width: 100%;
+  width: 100% !important;
 }
+
+@media (max-width: 768px) {
+  .insert-data-tool {
+    padding: 1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+  }
+
+  .header-tips {
+    text-align: left;
+  }
+
+  .data-entry-table {
+    font-size: 0.875rem;
+  }
+
+  .field-label {
+    width: 100px;
+  }
+
+  .field-input {
+    min-width: 150px;
+  }
+
+  .submit-area {
+    flex-direction: column;
+  }
+
+  .submit-area .el-button {
+    width: 100%;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .tool-card {
     background: #1e1e1e;
     border-color: #333;
   }
+
   .data-entry-table td {
     border-bottom-color: #3a3a3a;
   }

@@ -430,36 +430,46 @@ const formatDateTime = (dateString) => {
 
 <style scoped>
 .complaint-admin-container {
-  padding: 20px;
-  background-color: #f5f7fa;
-  min-height: calc(100vh - 84px);
+  padding: 1.25rem;
+  background: var(--color-bg);
+  min-height: calc(100vh - 120px);
+}
+
+@media (max-width: 768px) {
+  .complaint-admin-container {
+    padding: 1rem;
+  }
 }
 
 .complaint-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .complaint-header h2 {
   margin: 0;
-  color: #303133;
+  font-size: 1.25rem;
+  color: var(--color-primary-dark);
 }
 
 .filter-section {
-  background-color: white;
-  padding: 20px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-card);
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .table-section {
-  background-color: white;
-  padding: 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-card);
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .content-truncate {
@@ -470,60 +480,72 @@ const formatDateTime = (dateString) => {
 }
 
 .pagination-section {
-  margin-top: 20px;
+  margin-top: 1.25rem;
   display: flex;
   justify-content: flex-end;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
-}
-
-.el-row {
-  margin-bottom: 0;
+  gap: 0.5rem;
 }
 
 :deep(.el-table th) {
-  background-color: #fafafa;
+  background: var(--color-bg) !important;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 :deep(.el-table .cell) {
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
 }
 
 .delete-confirm-content {
   text-align: center;
-  padding: 20px 0;
+  padding: 1.25rem 0;
 }
 
 .warning-icon {
-  font-size: 48px;
-  color: #f56c6c;
-  margin-bottom: 16px;
+  font-size: 3rem;
+  color: var(--color-danger);
+  margin-bottom: 1rem;
 }
 
 .delete-detail {
-  background-color: #f5f7fa;
-  padding: 12px;
-  border-radius: 4px;
-  margin: 16px 0;
-  font-size: 14px;
-  color: #606266;
+  background: var(--color-bg);
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--color-text);
   text-align: left;
   line-height: 1.8;
 }
 
 .delete-warning {
-  color: #f56c6c;
-  font-size: 13px;
-  margin-top: 8px;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
 }
 
 .dialog-footer {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .complaint-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-section .el-row {
+    margin-bottom: 0;
+  }
+
+  .filter-section .el-col {
+    margin-bottom: 0.75rem;
+  }
 }
 </style>
