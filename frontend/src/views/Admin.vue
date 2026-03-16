@@ -100,19 +100,46 @@ const generateCaptcha = () => {
   }
   currentCaptcha.value = captcha
   credentials.captchaInput = ''
+  
+  if (credentials.username && credentials.username.trim()) {
+    axios.post(`${API_BASE_URL}/captcha`, {
+      username: credentials.username,
+      captcha: captcha
+    }).catch(err => {
+      console.error('验证码存储失败:', err)
+    })
+  }
 }
 
 generateCaptcha()
 
 const handleLogin = async () => {
+  if (!credentials.username || !credentials.username.trim()) {
+    errorMsg.value = '请输入管理员账号'
+    return
+  }
+  if (!credentials.password || !credentials.password.trim()) {
+    errorMsg.value = '请输入密码'
+    return
+  }
+  if (!credentials.captchaInput || !credentials.captchaInput.trim()) {
+    errorMsg.value = '请输入验证码'
+    return
+  }
 
   loading.value = true
   errorMsg.value = '' 
 
   try {
+    await axios.post(`${API_BASE_URL}/captcha`, {
+      username: credentials.username,
+      captcha: currentCaptcha.value
+    })
+    
     const response = await axios.post(`${API_BASE_URL}/login`, {
-    username: credentials.username,
-    password: credentials.password
+      username: credentials.username,
+      password: credentials.password,
+      captcha: credentials.captchaInput
     })
 
     loginSuccess.value = true

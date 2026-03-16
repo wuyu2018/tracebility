@@ -6,6 +6,7 @@ import com.foodtraceability.entity.Admin;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.AdminRepository;
 import com.foodtraceability.service.AdminService;
+import com.foodtraceability.util.CaptchaStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +27,16 @@ public class AdminServiceImpl implements AdminService {
     public LoginResponseDTO login(AdminLoginDTO loginDTO) {
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
+        String captcha = loginDTO.getCaptcha();
+
+        if (captcha == null || captcha.isEmpty()) {
+            throw new BusinessException("验证码不能为空");
+        }
+
+        String expectedCaptcha = CaptchaStorage.getCaptcha(username);
+        if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
+            throw new BusinessException("验证码错误");
+        }
 
         Optional<Admin> adminOptional = adminRepository.findByUsername(username);
         if (!adminOptional.isPresent()) {
