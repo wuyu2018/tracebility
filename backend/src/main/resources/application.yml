@@ -33,9 +33,10 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
+      encoding: UTF-8
       platform: mysql
-      continue-on-error: true
+      continue-on-error: false
 
 server:
   port: 8080
