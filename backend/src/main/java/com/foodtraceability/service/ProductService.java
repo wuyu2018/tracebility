@@ -5,4 +5,5 @@ import com.foodtraceability.entity.*;
 
 public interface ProductService {
     Product createProduct(ProductDTO dto);
+    Product generateQrCode(Long productId);
 }

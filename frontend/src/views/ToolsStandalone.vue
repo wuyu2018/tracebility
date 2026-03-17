@@ -46,6 +46,58 @@
         </div>
       </el-tab-pane>
 
+      <!-- 防伪码生成管理标签页 -->
+      <el-tab-pane label="防伪码生成" name="qrcode">
+        <div class="tools-page">
+          <h1>防伪码管理</h1>
+          <p class="tools-desc">为已录入的产品生成防伪二维码，下载后贴到对应产品包装上</p>
+
+          <section class="tool-card">
+            <h2>选择产品生成二维码</h2>
+            <div class="qr-gen-form">
+              <div class="form-row">
+                <label>选择产品</label>
+                <el-select v-model="selectedProductId" placeholder="选择产品" filterable @change="onProductChange">
+                  <el-option
+                    v-for="product in productList"
+                    :key="product.id"
+                    :label="`${product.name} (${product.batchNumber})`"
+                    :value="product.id"
+                  />
+                </el-select>
+              </div>
+              <button type="button" class="btn-generate" @click="generateProductQrCode" :disabled="!selectedProductId || generating">
+                {{ generating ? '生成中...' : '生成二维码' }}
+              </button>
+            </div>
+            
+            <div v-if="generatedQrCode" class="qr-display">
+              <h3>{{ selectedProductName }} - {{ selectedBatchNumber }}</h3>
+              <div class="qr-wrap">
+                <img :src="generatedQrCode" alt="产品二维码" class="qr-image" />
+              </div>
+              <p class="qr-code-text">防伪码: {{ selectedAntiFakeCode }}</p>
+              <button type="button" class="btn-download" @click="downloadProductQrCode">下载二维码</button>
+            </div>
+          </section>
+
+          <section class="tool-card">
+            <h2>已生成二维码的产品列表</h2>
+            <el-table :data="productsWithQrCode" style="width: 100%">
+              <el-table-column prop="name" label="产品名称" />
+              <el-table-column prop="batchNumber" label="批号" />
+              <el-table-column prop="antiFakeCode" label="防伪码" />
+              <el-table-column label="操作" width="150">
+                <template #default="scope">
+                  <el-button type="primary" size="small" @click="viewQrCode(scope.row)">查看</el-button>
+                  <el-button type="success" size="small" @click="downloadProductQrCodeFromRow(scope.row)">下载</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </section>
+        </div>
+      </el-tab-pane>
+
       <!--投诉管理工具标签页 -->
       <el-tab-pane label="投诉管理" name="complaint">
         <ComplaintAdminTool />
@@ -65,6 +117,7 @@ import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
 import { ElMessage } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
+import { listAllProducts, generateQrCode } from '../services/api'
 
 
 const length = ref(16)
@@ -77,6 +130,15 @@ const qrCanvas = ref(null)
 const genCount = ref(5)
 const startSeq = ref(1)
 const generatedCodes = ref([])
+
+// 二维码生成相关
+const productList = ref([])
+const selectedProductId = ref(null)
+const selectedProductName = ref('')
+const selectedBatchNumber = ref('')
+const selectedAntiFakeCode = ref('')
+const generatedQrCode = ref('')
+const generating = ref(false)
 
 function getVerifyUrl() {
   if (typeof window === 'undefined') return ''
@@ -155,8 +217,78 @@ function copyCodes() {
   })
 }
 
+async function loadProductList() {
+  try {
+    const data = await listAllProducts()
+    productList.value = data || []
+  } catch (error) {
+    console.error('Failed to load product list:', error)
+  }
+}
+
+const productsWithQrCode = computed(() => {
+  return productList.value.filter(p => p.qrCodeUrl)
+})
+
+function onProductChange() {
+  const product = productList.value.find(p => p.id === selectedProductId.value)
+  if (product) {
+    selectedProductName.value = product.name
+    selectedBatchNumber.value = product.batchNumber
+    selectedAntiFakeCode.value = product.antiFakeCode
+    generatedQrCode.value = product.qrCodeUrl || ''
+  } else {
+    selectedProductName.value = ''
+    selectedBatchNumber.value = ''
+    selectedAntiFakeCode.value = ''
+    generatedQrCode.value = ''
+  }
+}
+
+async function generateProductQrCode() {
+  if (!selectedProductId.value) return
+  
+  generating.value = true
+  try {
+    const result = await generateQrCode(selectedProductId.value)
+    generatedQrCode.value = result.qrCodeUrl
+    ElMessage.success('二维码生成成功')
+    await loadProductList()
+  } catch (error) {
+    console.error('Failed to generate QR code:', error)
+    ElMessage.error('二维码生成失败')
+  } finally {
+    generating.value = false
+  }
+}
+
+function viewQrCode(row) {
+  selectedProductId.value = row.id
+  selectedProductName.value = row.name
+  selectedBatchNumber.value = row.batchNumber
+  selectedAntiFakeCode.value = row.antiFakeCode
+  generatedQrCode.value = row.qrCodeUrl || ''
+}
+
+function downloadProductQrCode() {
+  if (!generatedQrCode.value) return
+  const a = document.createElement('a')
+  a.href = generatedQrCode.value
+  a.download = `防伪码_${selectedAntiFakeCode.value}.png`
+  a.click()
+}
+
+function downloadProductQrCodeFromRow(row) {
+  if (!row.qrCodeUrl) return
+  const a = document.createElement('a')
+  a.href = row.qrCodeUrl
+  a.download = `防伪码_${row.antiFakeCode}.png`
+  a.click()
+}
+
 onMounted(() => {
   drawQr()
+  loadProductList()
 })
 </script>
 
@@ -168,6 +300,10 @@ onMounted(() => {
   align-items: flex-start;
   justify-content: center;
   padding: 2rem 1rem;
+}
+
+.tools-standalone :deep(.el-tabs__content) {
+  overflow: visible;
 }
 
 @media (max-width: 480px) {
@@ -358,5 +494,53 @@ onMounted(() => {
 .tools-tabs :deep(.el-tabs__item) {
   font-size: 1rem;
   padding: 0 1.25rem;
+}
+
+.qr-gen-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.qr-gen-form .form-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qr-gen-form .form-row label {
+  min-width: 80px;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.qr-gen-form .el-select {
+  flex: 1;
+}
+
+.qr-display {
+  margin-top: 2rem;
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+}
+
+.qr-display h3 {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.qr-image {
+  max-width: 250px;
+  border-radius: var(--radius);
+  border: 2px solid #eee;
+}
+
+.qr-code-text {
+  margin: 1rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 </style>

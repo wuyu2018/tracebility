@@ -79,12 +79,33 @@
                   <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-input-number
-                      v-if="field.type === 'number'"
-                      v-model="materialForm[field.prop]"
-                      :min="1"
-                      controls-position="right"
-                    />
+                    <el-select
+                      v-if="field.prop === 'productName'"
+                      v-model="materialForm.productName"
+                      placeholder="选择产品"
+                      filterable
+                      @change="onProductNameChange('material')"
+                    >
+                      <el-option
+                        v-for="product in productList"
+                        :key="product.name"
+                        :label="product.name"
+                        :value="product.name"
+                      />
+                    </el-select>
+                    <el-select
+                      v-else-if="field.prop === 'batchNumber'"
+                      v-model="materialForm.batchNumber"
+                      placeholder="选择批号"
+                      :disabled="!materialForm.productName"
+                    >
+                      <el-option
+                        v-for="batch in getBatchNumbers(materialForm.productName)"
+                        :key="batch"
+                        :label="batch"
+                        :value="batch"
+                      />
+                    </el-select>
                     <el-input v-else v-model="materialForm[field.prop]" :placeholder="field.placeholder" />
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
@@ -100,7 +121,48 @@
           <div class="table-wrapper">
             <table class="data-entry-table">
               <tbody>
-                <tr v-for="field in inspectionFields" :key="field.prop">
+                <tr>
+                  <td class="field-label required">产品名称</td>
+                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
+                  <td class="field-input">
+                    <el-select
+                      v-model="inspectionForm.productName"
+                      placeholder="选择产品"
+                      filterable
+                      @change="onProductNameChange('inspection')"
+                    >
+                      <el-option
+                        v-for="product in productList"
+                        :key="product.name"
+                        :label="product.name"
+                        :value="product.name"
+                      />
+                    </el-select>
+                  </td>
+                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
+                  <td class="field-unit"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">批号</td>
+                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
+                  <td class="field-input">
+                    <el-select
+                      v-model="inspectionForm.batchNumber"
+                      placeholder="选择批号"
+                      :disabled="!inspectionForm.productName"
+                    >
+                      <el-option
+                        v-for="batch in getBatchNumbers(inspectionForm.productName)"
+                        :key="batch"
+                        :label="batch"
+                        :value="batch"
+                      />
+                    </el-select>
+                  </td>
+                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
+                  <td class="field-unit"></td>
+                </tr>
+                <tr v-for="field in inspectionFields.slice(1)" :key="field.prop">
                   <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
@@ -126,15 +188,42 @@
             <table class="data-entry-table">
               <tbody>
                 <tr>
-                  <td class="field-label required">产品ID</td>
+                  <td class="field-label required">产品名称</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-input-number
-                      v-model="storageForm.productId"
-                      :min="1"
-                      controls-position="right"
-                      placeholder="关联产品ID"
-                    />
+                    <el-select
+                      v-model="storageForm.productName"
+                      placeholder="选择产品"
+                      filterable
+                      @change="onProductNameChange('storage')"
+                    >
+                      <el-option
+                        v-for="product in productList"
+                        :key="product.name"
+                        :label="product.name"
+                        :value="product.name"
+                      />
+                    </el-select>
+                  </td>
+                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
+                  <td class="field-unit"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">批号</td>
+                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
+                  <td class="field-input">
+                    <el-select
+                      v-model="storageForm.batchNumber"
+                      placeholder="选择批号"
+                      :disabled="!storageForm.productName"
+                    >
+                      <el-option
+                        v-for="batch in getBatchNumbers(storageForm.productName)"
+                        :key="batch"
+                        :label="batch"
+                        :value="batch"
+                      />
+                    </el-select>
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
@@ -208,15 +297,42 @@
             <table class="data-entry-table">
               <tbody>
                 <tr>
-                  <td class="field-label required">产品ID</td>
+                  <td class="field-label required">产品名称</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-input-number
-                      v-model="transportForm.productId"
-                      :min="1"
-                      controls-position="right"
-                      placeholder="关联产品ID"
-                    />
+                    <el-select
+                      v-model="transportForm.productName"
+                      placeholder="选择产品"
+                      filterable
+                      @change="onProductNameChange('transport')"
+                    >
+                      <el-option
+                        v-for="product in productList"
+                        :key="product.name"
+                        :label="product.name"
+                        :value="product.name"
+                      />
+                    </el-select>
+                  </td>
+                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
+                  <td class="field-unit"></td>
+                </tr>
+                <tr>
+                  <td class="field-label">批号</td>
+                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
+                  <td class="field-input">
+                    <el-select
+                      v-model="transportForm.batchNumber"
+                      placeholder="选择批号"
+                      :disabled="!transportForm.productName"
+                    >
+                      <el-option
+                        v-for="batch in getBatchNumbers(transportForm.productName)"
+                        :key="batch"
+                        :label="batch"
+                        :value="batch"
+                      />
+                    </el-select>
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
@@ -294,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Minus, Clock } from '@element-plus/icons-vue'
 import {
@@ -334,21 +450,24 @@ const productForm = reactive({
 })
 
 const materialForm = reactive({
-  productId: null,
+  productName: '',
+  batchNumber: '',
   materialName: '',
   producerName: '',
   producerAddress: ''
 })
 
 const inspectionForm = reactive({
-  productId: null,
+  productName: '',
+  batchNumber: '',
   sampleName: '',
   sampleQuantity: null,
   sampleSpecification: ''
 })
 
 const storageForm = reactive({
-  productId: null,
+  productName: '',
+  batchNumber: '',
   storageTime: '',
   outboundTime: '',
   quantity: null,
@@ -356,11 +475,55 @@ const storageForm = reactive({
 })
 
 const transportForm = reactive({
-  productId: null,
+  productName: '',
+  batchNumber: '',
   environmentTemperature: null,
   productTemperature: null,
   time: ''
 })
+
+const productList = ref([])
+const productBatchMap = ref({})
+
+async function loadProductList() {
+  try {
+    const response = await fetch('/api/products/list', { method: 'POST' })
+    const data = await response.json()
+    if (data && data.length > 0) {
+      productList.value = data
+      const batchMap = {}
+      data.forEach(product => {
+        if (product.name && product.batchNumber) {
+          if (!batchMap[product.name]) {
+            batchMap[product.name] = []
+          }
+          if (!batchMap[product.name].includes(product.batchNumber)) {
+            batchMap[product.name].push(product.batchNumber)
+          }
+        }
+      })
+      productBatchMap.value = batchMap
+    }
+  } catch (error) {
+    console.error('Failed to load product list:', error)
+  }
+}
+
+function getBatchNumbers(productName) {
+  return productBatchMap.value[productName] || []
+}
+
+function onProductNameChange(formType) {
+  if (formType === 'material') {
+    materialForm.batchNumber = ''
+  } else if (formType === 'inspection') {
+    inspectionForm.batchNumber = ''
+  } else if (formType === 'storage') {
+    storageForm.batchNumber = ''
+  } else if (formType === 'transport') {
+    transportForm.batchNumber = ''
+  }
+}
 
 const productFields = [
   { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入12-20位防伪码', tip: '12-20位' },
@@ -375,21 +538,24 @@ const productFields = [
 ]
 
 const materialFields = [
-  { prop: 'productId', label: '产品ID', required: true, type: 'number' },
+  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
   { prop: 'materialName', label: '原料名称', required: true, type: 'text', placeholder: '例：优质稻谷' },
   { prop: 'producerName', label: '生产商', required: false, type: 'text', placeholder: '可选' },
   { prop: 'producerAddress', label: '生产商地址', required: false, type: 'text', placeholder: '可选' }
 ]
 
 const inspectionFields = [
-  { prop: 'productId', label: '产品ID', required: true, type: 'number' },
+  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
   { prop: 'sampleName', label: '样品名称', required: false, type: 'text' },
   { prop: 'sampleQuantity', label: '样品数量', required: false, type: 'number' },
   { prop: 'sampleSpecification', label: '样品规格', required: false, type: 'text' }
 ]
 
 const storageFields = [
-  { prop: 'productId', label: '产品ID', required: true, type: 'number' },
+  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
   { prop: 'storageTime', label: '入库时间', required: false, type: 'date' },
   { prop: 'outboundTime', label: '出库时间', required: false, type: 'date' },
   { prop: 'quantity', label: '数量', required: false, type: 'number', precision: 2 },
@@ -401,20 +567,20 @@ async function handleSubmit() {
   let errorMsg = ''
 
   if (activeEntity.value === 'transportSale') {
-    if (!transportForm.productId) {
+    if (!transportForm.productName) {
       isValid = false
-      errorMsg = '产品ID不能为空'
+      errorMsg = '产品名称不能为空'
     }
   } else if (activeEntity.value === 'product') {
     if (!productForm.antiFakeCode) { isValid = false; errorMsg = '防伪码不能为空' }
     else if (!productForm.name) { isValid = false; errorMsg = '产品名称不能为空' }
   } else if (activeEntity.value === 'materialPurchase') {
-    if (!materialForm.productId) { isValid = false; errorMsg = '产品ID不能为空' }
+    if (!materialForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
     else if (!materialForm.materialName) { isValid = false; errorMsg = '原料名称不能为空' }
   } else if (activeEntity.value === 'inspection') {
-    if (!inspectionForm.productId) { isValid = false; errorMsg = '产品ID不能为空' }
+    if (!inspectionForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
   } else if (activeEntity.value === 'storage') {
-    if (!storageForm.productId) { isValid = false; errorMsg = '产品ID不能为空' }
+    if (!storageForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
   }
 
   if (!isValid) {
@@ -451,7 +617,8 @@ async function handleSubmit() {
 
       case 'materialPurchase':
         apiPayload = {
-          productId: Number(formData.productId),
+          productName: formData.productName,
+          batchNumber: formData.batchNumber || null,
           materialName: formData.materialName,
           producerName: formData.producerName || null,
           producerAddress: formData.producerAddress || null
@@ -461,7 +628,8 @@ async function handleSubmit() {
 
       case 'inspection':
         apiPayload = {
-          productId: Number(formData.productId),
+          productName: formData.productName,
+          batchNumber: formData.batchNumber || null,
           sampleName: formData.sampleName || null,
           sampleQuantity: formData.sampleQuantity ? Number(formData.sampleQuantity) : null,
           sampleSpecification: formData.sampleSpecification || null
@@ -471,7 +639,8 @@ async function handleSubmit() {
 
       case 'storage':
         apiPayload = {
-          productId: Number(formData.productId),
+          productName: formData.productName,
+          batchNumber: formData.batchNumber || null,
           storageTime: formData.storageTime ? `${formData.storageTime}T00:00:00` : null,
           outboundTime: formData.outboundTime ? `${formData.outboundTime}T00:00:00` : null,
           quantity: formData.quantity !== null && formData.quantity !== ''
@@ -484,10 +653,11 @@ async function handleSubmit() {
 
       case 'transportSale':
         apiPayload = {
-          productId: Number(formData.productId),
+          productName: formData.productName,
+          batchNumber: formData.batchNumber || null,
           environmentTemperature: formData.environmentTemperature !== null ? Number(formData.environmentTemperature) : null,
           productTemperature: formData.productTemperature !== null ? Number(formData.productTemperature) : null,
-          recordTime: formData.time || null  // 如果后端是 recordTime 而不是 time
+          time: formData.time ? `${formData.time}T00:00:00` : null
         }
         console.log('发送运输销售数据:', apiPayload)
         response = await createTransportSale(apiPayload)
@@ -557,6 +727,10 @@ function debugForm() {
   console.log('当前实体:', activeEntity.value)
   console.log('表单数据:', getCurrentForm())
 }
+
+onMounted(() => {
+  loadProductList()
+})
 </script>
 
 <style scoped>

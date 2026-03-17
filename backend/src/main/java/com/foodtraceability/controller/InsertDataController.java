@@ -35,6 +35,12 @@ public class InsertDataController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @PostMapping("/products/{id}/generate-qrcode")
+    public ResponseEntity<Product> generateQrCode(@PathVariable Long id) {
+        Product product = productService.generateQrCode(id);
+        return ResponseEntity.ok(product);
+    }
+
     @PostMapping("/material-purchase")
     public ResponseEntity<MaterialPurchase> createMaterialPurchase(@Valid @RequestBody MaterialPurchaseDTO dto) {
         MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);

@@ -61,3 +61,8 @@ export async function createTransportSale(data) {
   const { data: responseData } = await api.post('/insert/transport-sale', data);
   return responseData;
 }
+
+export async function generateQrCode(productId) {
+  const { data } = await api.post(`/insert/products/${productId}/generate-qrcode`);
+  return data;
+}

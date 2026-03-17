@@ -5,5 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TransportSaleRepository extends JpaRepository<TransportSale, Long> {
-    List<TransportSale> findByProductId(Long productId);
+    List<TransportSale> findByProductNameAndBatchNumber(String productName, String batchNumber);
+    List<TransportSale> findByProductName(String productName);
 }

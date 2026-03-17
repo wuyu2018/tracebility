@@ -66,13 +66,16 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setShelfLife(product.getShelfLife());
         dto.setProduct(productInfo);
 
-        dto.setMaterialPurchases(materialPurchaseRepository.findByProductId(product.getId()).stream()
+        String productName = product.getName();
+        String batchNumber = product.getBatchNumber();
+
+        dto.setMaterialPurchases(materialPurchaseRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
                 .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
-        dto.setStorages(storageRepository.findByProductId(product.getId()).stream()
+        dto.setStorages(storageRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
                 .map(this::toStorageDTO).collect(Collectors.toList()));
-        dto.setInspections(inspectionRepository.findByProductId(product.getId()).stream()
+        dto.setInspections(inspectionRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
                 .map(this::toInspectionDTO).collect(Collectors.toList()));
-        dto.setTransportSales(transportSaleRepository.findByProductId(product.getId()).stream()
+        dto.setTransportSales(transportSaleRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
         dto.setComplaints(complaintRepository.findByProductId(product.getId()).stream()
                 .map(this::toComplaintDTO).collect(Collectors.toList()));
@@ -93,6 +96,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.MaterialPurchaseDTO toMaterialPurchaseDTO(MaterialPurchase mp) {
         TraceInfoDTO.MaterialPurchaseDTO dto = new TraceInfoDTO.MaterialPurchaseDTO();
+        dto.setProductName(mp.getProductName());
+        dto.setBatchNumber(mp.getBatchNumber());
         dto.setMaterialName(mp.getMaterialName());
         dto.setProducerName(mp.getProducerName());
         dto.setProducerAddress(mp.getProducerAddress());
@@ -101,6 +106,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.StorageDTO toStorageDTO(Storage s) {
         TraceInfoDTO.StorageDTO dto = new TraceInfoDTO.StorageDTO();
+        dto.setProductName(s.getProductName());
+        dto.setBatchNumber(s.getBatchNumber());
         dto.setStorageTime(s.getStorageTime());
         dto.setOutboundTime(s.getOutboundTime());
         dto.setQuantity(s.getQuantity());
@@ -110,6 +117,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.InspectionDTO toInspectionDTO(Inspection i) {
         TraceInfoDTO.InspectionDTO dto = new TraceInfoDTO.InspectionDTO();
+        dto.setProductName(i.getProductName());
+        dto.setBatchNumber(i.getBatchNumber());
         dto.setSampleName(i.getSampleName());
         dto.setSampleQuantity(i.getSampleQuantity());
         dto.setSampleSpecification(i.getSampleSpecification());
@@ -118,6 +127,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.TransportSaleDTO toTransportSaleDTO(TransportSale ts) {
         TraceInfoDTO.TransportSaleDTO dto = new TraceInfoDTO.TransportSaleDTO();
+        dto.setProductName(ts.getProductName());
+        dto.setBatchNumber(ts.getBatchNumber());
         dto.setEnvironmentTemperature(ts.getEnvironmentTemperature());
         dto.setProductTemperature(ts.getProductTemperature());
         dto.setTime(ts.getTime());

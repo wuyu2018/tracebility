@@ -9,8 +9,11 @@ public class InsertDataDTO {
 
     @Data
     public static class MaterialPurchaseDTO {
-        @NotNull(message = "产品ID不能为空")
-        private Long productId;
+        @NotBlank(message = "产品名称不能为空")
+        @Size(max = 100, message = "产品名称长度不能超过100")
+        private String productName;
+        @Size(max = 50, message = "批号长度不能超过50")
+        private String batchNumber;
         @NotBlank(message = "原料名称不能为空")
         @Size(max = 100, message = "原料名称长度不能超过100")
         private String materialName;
@@ -22,8 +25,11 @@ public class InsertDataDTO {
 
     @Data
     public static class InspectionDTO {
-        @NotNull(message = "产品ID不能为空")
-        private Long productId;
+        @NotBlank(message = "产品名称不能为空")
+        @Size(max = 100, message = "产品名称长度不能超过100")
+        private String productName;
+        @Size(max = 50, message = "批号长度不能超过50")
+        private String batchNumber;
         @Size(max = 100, message = "样品名称长度不能超过100")
         private String sampleName;
         @Min(value = 0, message = "样品数量不能小于0")
@@ -59,8 +65,11 @@ public class InsertDataDTO {
 
     @Data
     public static class StorageDTO {
-        @NotNull(message = "产品ID不能为空")
-        private Long productId;
+        @NotBlank(message = "产品名称不能为空")
+        @Size(max = 100, message = "产品名称长度不能超过100")
+        private String productName;
+        @Size(max = 50, message = "批号长度不能超过50")
+        private String batchNumber;
         private LocalDateTime storageTime;
         private LocalDateTime outboundTime;
         @Min(value = 0, message = "数量不能小于0")
@@ -71,8 +80,11 @@ public class InsertDataDTO {
 
     @Data
     public static class TransportSaleDTO {
-        @NotNull(message = "产品ID不能为空")
-        private Long productId;
+        @NotBlank(message = "产品名称不能为空")
+        @Size(max = 100, message = "产品名称长度不能超过100")
+        private String productName;
+        @Size(max = 50, message = "批号长度不能超过50")
+        private String batchNumber;
         private Double environmentTemperature;
         private Double productTemperature;
         private LocalDateTime time;

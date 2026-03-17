@@ -46,6 +46,9 @@ server:
       enabled: true
       force: true
 
+app:
+  verify-url: http://localhost:5173
+
 logging:
   level:
     org.springframework.jdbc: DEBUG

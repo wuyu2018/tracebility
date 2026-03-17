@@ -36,6 +36,8 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MaterialPurchaseDTO {
+        private String productName;
+        private String batchNumber;
         private String materialName;
         private String producerName;
         private String producerAddress;
@@ -45,6 +47,8 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class StorageDTO {
+        private String productName;
+        private String batchNumber;
         private LocalDateTime storageTime;
         private LocalDateTime outboundTime;
         private Double quantity;
@@ -55,6 +59,8 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class InspectionDTO {
+        private String productName;
+        private String batchNumber;
         private String sampleName;
         private Integer sampleQuantity;
         private String sampleSpecification;
@@ -64,6 +70,8 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TransportSaleDTO {
+        private String productName;
+        private String batchNumber;
         private Double environmentTemperature;
         private Double productTemperature;
         private LocalDateTime time;

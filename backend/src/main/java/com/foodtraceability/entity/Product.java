@@ -43,6 +43,9 @@ public class Product {
 
     @Column(name = "contact_email", length = 100)
     private String contactEmail;
+
+    @Column(name = "qr_code_url", length = 500)
+    private String qrCodeUrl;
 }
 
 

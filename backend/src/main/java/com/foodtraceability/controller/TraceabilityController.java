@@ -29,6 +29,16 @@ public class TraceabilityController {
                 )));
     }
 
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyByGet(@RequestParam String code) {
+        return traceabilityService.verifyAndGetTraceInfo(code)
+                .map(info -> ResponseEntity.ok(Map.of("valid", true, "data", info)))
+                .orElse(ResponseEntity.ok(Map.of(
+                        "valid", false,
+                        "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
+                )));
+    }
+
     @PostMapping("/products/list")
     public ResponseEntity<?> listAllProducts() {
         return ResponseEntity.ok(traceabilityService.listAllProducts());

@@ -16,8 +16,11 @@ public class MaterialPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", nullable = false)
-    private Long productId;
+    @Column(name = "product_name", nullable = false, length = 100)
+    private String productName;
+
+    @Column(name = "batch_number", length = 50)
+    private String batchNumber;
 
     @Column(name = "material_name", nullable = false, length = 100)
     private String materialName;
