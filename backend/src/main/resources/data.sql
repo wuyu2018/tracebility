@@ -1,6 +1,15 @@
 -- 禁用外键检查，以便安全删除和重建表
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 删除旧表（如果存在）
+DROP TABLE IF EXISTS transport_sale;
+DROP TABLE IF EXISTS storage;
+DROP TABLE IF EXISTS inspection;
+DROP TABLE IF EXISTS material_purchase;
+DROP TABLE IF EXISTS complaint;
+DROP TABLE IF EXISTS product;
+DROP TABLE IF EXISTS admin;
+
 -- 创建 product 表（产品主表）
 CREATE TABLE product (
     id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
