@@ -60,9 +60,9 @@
                 <el-select v-model="selectedProductId" placeholder="选择产品" filterable @change="onProductChange">
                   <el-option
                     v-for="product in productList"
-                    :key="product.id"
+                    :key="product.id || product.productId"
                     :label="`${product.name} (${product.batchNumber})`"
-                    :value="product.id"
+                    :value="product.id || product.productId"
                   />
                 </el-select>
               </div>
@@ -227,11 +227,11 @@ async function loadProductList() {
 }
 
 const productsWithQrCode = computed(() => {
-  return productList.value.filter(p => p.qrCodeUrl)
+  return productList.value.filter(p => p.qrCodeUrl || (p.productId && p.qrCodeUrl))
 })
 
 function onProductChange() {
-  const product = productList.value.find(p => p.id === selectedProductId.value)
+  const product = productList.value.find(p => p.id === selectedProductId.value || p.productId === selectedProductId.value)
   if (product) {
     selectedProductName.value = product.name
     selectedBatchNumber.value = product.batchNumber
@@ -263,7 +263,7 @@ async function generateProductQrCode() {
 }
 
 function viewQrCode(row) {
-  selectedProductId.value = row.id
+  selectedProductId.value = row.id || row.productId
   selectedProductName.value = row.name
   selectedBatchNumber.value = row.batchNumber
   selectedAntiFakeCode.value = row.antiFakeCode
