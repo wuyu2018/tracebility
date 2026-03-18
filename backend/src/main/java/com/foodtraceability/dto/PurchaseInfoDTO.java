@@ -12,6 +12,9 @@ public class PurchaseInfoDTO {
     private Long productId;
     private String name;
     private String specification;
+    private String batchNumber;
+    private String antiFakeCode;
+    private String qrCodeUrl;
     private String imageUrl;
     private String contactPhone;
     private String contactEmail;

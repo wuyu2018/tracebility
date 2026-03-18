@@ -88,6 +88,9 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         dto.setProductId(product.getId());
         dto.setName(product.getName());
         dto.setSpecification(product.getSpecification());
+        dto.setBatchNumber(product.getBatchNumber());
+        dto.setAntiFakeCode(product.getAntiFakeCode());
+        dto.setQrCodeUrl(product.getQrCodeUrl());
         dto.setImageUrl(product.getImageUrl());
         dto.setContactPhone(product.getContactPhone());
         dto.setContactEmail(product.getContactEmail());
