@@ -33,7 +33,7 @@ spring:
 
   sql:
     init:
-      mode: never
+      mode: always
       encoding: UTF-8
       platform: mysql
       continue-on-error: false

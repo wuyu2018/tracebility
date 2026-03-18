@@ -109,5 +109,9 @@ INSERT INTO transport_sale (product_name, batch_number, environment_temperature,
 INSERT INTO complaint (product_name, complaint_reason, complaint_time) VALUES
 ('有机纯牛奶', '包装轻微破损', '2024-02-01 09:30:00');
 
+-- 初始化管理员账号 (BCrypt加密密码: admin123)
+INSERT IGNORE INTO admin (username, password) VALUES
+('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMye0B4z7dFqHqmT5BZBhqLcOqDXqKQ3G8u');
+
 -- 重新启用外键检查
 SET FOREIGN_KEY_CHECKS = 1;
