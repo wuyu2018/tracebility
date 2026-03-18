@@ -17,8 +17,8 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", nullable = false)
-    private Long productId;
+    @Column(name = "product_name", nullable = false, length = 100)
+    private String productName;
 
     @Column(name = "complaint_reason", length = 500)
     private String complaintReason;

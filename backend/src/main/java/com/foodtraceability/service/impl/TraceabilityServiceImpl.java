@@ -77,8 +77,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                 .map(this::toInspectionDTO).collect(Collectors.toList()));
         dto.setTransportSales(transportSaleRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(complaintRepository.findByProductId(product.getId()).stream()
-                .map(this::toComplaintDTO).collect(Collectors.toList()));
+        dto.setComplaints(complaintRepository.findByProductName(product.getName()).stream()
+            .map(this::toComplaintDTO).collect(Collectors.toList()));
 
         return dto;
     }

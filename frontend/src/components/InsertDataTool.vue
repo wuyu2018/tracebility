@@ -93,19 +93,13 @@
                         :value="product.name"
                       />
                     </el-select>
-                    <el-select
+                    <el-input
                       v-else-if="field.prop === 'batchNumber'"
                       v-model="materialForm.batchNumber"
-                      placeholder="选择批号"
+                      placeholder="请输入批号"
                       :disabled="!materialForm.productName"
-                    >
-                      <el-option
-                        v-for="batch in getBatchNumbers(materialForm.productName)"
-                        :key="batch"
-                        :label="batch"
-                        :value="batch"
-                      />
-                    </el-select>
+                      clearable
+                    />
                     <el-input v-else v-model="materialForm[field.prop]" :placeholder="field.placeholder" />
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
@@ -146,18 +140,12 @@
                   <td class="field-label">批号</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-select
+                    <el-input
                       v-model="inspectionForm.batchNumber"
-                      placeholder="选择批号"
+                      placeholder="请输入批号"
                       :disabled="!inspectionForm.productName"
-                    >
-                      <el-option
-                        v-for="batch in getBatchNumbers(inspectionForm.productName)"
-                        :key="batch"
-                        :label="batch"
-                        :value="batch"
-                      />
-                    </el-select>
+                      clearable
+                    />
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
@@ -212,18 +200,12 @@
                   <td class="field-label">批号</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-select
+                    <el-input
                       v-model="storageForm.batchNumber"
-                      placeholder="选择批号"
+                      placeholder="请输入批号"
                       :disabled="!storageForm.productName"
-                    >
-                      <el-option
-                        v-for="batch in getBatchNumbers(storageForm.productName)"
-                        :key="batch"
-                        :label="batch"
-                        :value="batch"
-                      />
-                    </el-select>
+                      clearable
+                    />
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
@@ -321,18 +303,12 @@
                   <td class="field-label">批号</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
-                    <el-select
+                    <el-input
                       v-model="transportForm.batchNumber"
-                      placeholder="选择批号"
+                      placeholder="请输入批号"
                       :disabled="!transportForm.productName"
-                    >
-                      <el-option
-                        v-for="batch in getBatchNumbers(transportForm.productName)"
-                        :key="batch"
-                        :label="batch"
-                        :value="batch"
-                      />
-                    </el-select>
+                      clearable
+                    />
                   </td>
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
@@ -412,7 +388,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Minus, Clock } from '@element-plus/icons-vue'
 import {
   createProduct,
   createMaterialPurchase,
@@ -613,6 +588,7 @@ async function handleSubmit() {
           contactEmail: formData.contactEmail || null
         }
         response = await createProduct(apiPayload)
+        await loadProductList(); 
         break
 
       case 'materialPurchase':
@@ -671,8 +647,6 @@ async function handleSubmit() {
 
     ElMessage.success('提交成功')
     resultMessage.value = '操作成功完成'
-    resultType.value = 'success'
-
     resetForm()
 
   } catch (error) {

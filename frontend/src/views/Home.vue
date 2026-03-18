@@ -6,15 +6,17 @@
     </div>
 
     <div class="verify-section">
-      <VerifyForm
-        ref="verifyFormRef"
-        @verified="onVerified"
-        @invalid="onInvalid"
-      />
-      <button class="btn-scan" @click="startScan">
-        <span class="scan-icon">📷</span>
-        扫码查询
-      </button>
+      <div class="verify-btn-group">
+        <VerifyForm
+          ref="verifyFormRef"
+          @verified="onVerified"
+          @invalid="onInvalid"
+        />
+        <button class="btn-scan btn-verify" @click="startScan">
+          <span class="scan-icon">📷</span>
+          扫码查询
+        </button>
+      </div>
     </div>
 
     <div v-if="showCamera" class="camera-overlay">
@@ -292,6 +294,31 @@ onUnmounted(() => {
   z-index: 9999;
   display: flex;
   align-items: center;
+/* 按钮组样式 */
+.verify-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.btn-scan,
+.btn-verify {
+  padding: 12px 32px;
+  font-size: 20px;
+  border-radius: 8px;
+  background: #409eff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-scan:hover,
+.btn-verify:hover {
+  background: #66b1ff;
+}
   justify-content: center;
 }
 

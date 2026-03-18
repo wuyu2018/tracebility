@@ -15,15 +15,21 @@
         class="complaint-form"
         @submit.prevent="submitComplaint"
       >
-        <el-form-item label="产品ID" prop="productId">
-          <el-input
-            v-model.number="complaintForm.productId"
-            placeholder="请输入产品ID"
-            type="number"
-            min="1"
+        <el-form-item label="产品名称" prop="productName">
+          <el-select
+            v-model="complaintForm.productName"
+            placeholder="请选择产品名称"
+            filterable
             clearable
-          />
-          <div class="form-tip">必填项，请输入有效的产品ID</div>
+          >
+            <el-option
+              v-for="product in productOptions"
+              :key="product.name"
+              :label="product.name"
+              :value="product.name"
+            />
+          </el-select>
+          <div class="form-tip">必填项，请选择产品名称</div>
         </el-form-item>
 
         <el-form-item label="投诉原因" prop="complaintReason">
@@ -66,58 +72,42 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 
 const complaintFormRef = ref()
-
 const complaintForm = reactive({
-  productId: '',
+  productName: '',
   complaintReason: '',
   complaintTime: ''
 })
-
 const complaintRules = {
-  productId: [
-    { required: true, message: '产品ID不能为空', trigger: 'blur' },
-    {
-      type: 'number',
-      message: '产品ID必须为数字',
-      trigger: 'blur',
-      transform: value => Number(value)
-    },
-    {
-      validator: (rule, value, callback) => {
-        if (value <= 0) {
-          callback(new Error('产品ID必须大于0'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
+  productName: [
+    { required: true, message: '产品名称不能为空', trigger: 'change' }
   ],
   complaintReason: [
-    { required: true, message: '投诉原因不能为空', trigger: 'blur' },
-    {
-      min: 5,
-      message: '投诉原因至少5个字符',
-      trigger: 'blur'
-    },
-    {
-      max: 500,
-      message: '投诉原因不能超过500个字符',
-      trigger: 'blur'
-    }
+    { required: true, message: '投诉原因不能为空', trigger: 'blur' }
   ]
 }
-
 const submitting = ref(false)
 const errorMessage = ref('')
-
+const productOptions = ref([])
 const API_BASE_URL = 'http://localhost:8080/api'
 const COMPLAINT_API = `${API_BASE_URL}/complaint`
+
+async function loadProductList() {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/products/list`)
+    productOptions.value = response.data || []
+  } catch (error) {
+    productOptions.value = []
+  }
+}
+
+onMounted(() => {
+  loadProductList()
+})
 
 const submitComplaint = async () => {
   try {
@@ -128,7 +118,7 @@ const submitComplaint = async () => {
     errorMessage.value = ''
 
     const requestData = {
-      productId: Number(complaintForm.productId),
+      productName: complaintForm.productName,
       complaintReason: complaintForm.complaintReason.trim()
     }
 
@@ -185,7 +175,7 @@ const handleApiError = (error) => {
         break
 
       case 404:
-        errorMessage.value = '未找到相关资源，请检查产品ID是否正确'
+        errorMessage.value = '未找到相关资源，请检查产品名称是否正确'
         break
 
       case 409:
@@ -218,16 +208,7 @@ const resetForm = () => {
   complaintForm.complaintTime = ''
 }
 
-const props = defineProps({
-  productId: {
-    type: Number,
-    default: null
-  }
-})
 
-if (props.productId) {
-  complaintForm.productId = props.productId
-}
 </script>
 
 <style scoped>

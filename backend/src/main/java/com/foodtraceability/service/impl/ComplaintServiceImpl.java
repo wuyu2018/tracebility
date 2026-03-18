@@ -23,7 +23,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
 
         Complaint complaint = new Complaint();
-        complaint.setProductId(complaintDTO.getProductId());
+        complaint.setProductName(complaintDTO.getProductName());
         complaint.setComplaintReason(complaintDTO.getComplaintReason());
         complaint.setComplaintTime(LocalDateTime.now());
 
@@ -50,7 +50,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     private ComplaintDTO convertToDTO(Complaint complaint) {
         ComplaintDTO dto = new ComplaintDTO();
         dto.setId(complaint.getId());
-        dto.setProductId(complaint.getProductId());
+        dto.setProductName(complaint.getProductName());
         dto.setComplaintReason(complaint.getComplaintReason());
         dto.setComplaintTime(complaint.getComplaintTime());
         return dto;

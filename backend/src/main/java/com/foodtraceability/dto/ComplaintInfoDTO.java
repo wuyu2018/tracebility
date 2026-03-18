@@ -19,10 +19,8 @@ public class ComplaintInfoDTO {
     @AllArgsConstructor
     public static class ComplaintInfo {
         private Long id;
-
-        @JsonProperty("productId")
-        private Long productId;
-
+        @JsonProperty("productName")
+        private String productName;
         private String complaintReason;
         private LocalDateTime complaintTime;
     }
