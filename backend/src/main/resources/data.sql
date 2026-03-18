@@ -22,6 +22,7 @@ CREATE TABLE product (
     image_url VARCHAR(255) COMMENT '产品图片路径',
     contact_phone VARCHAR(20) COMMENT '联系电话',
     contact_email VARCHAR(100) COMMENT '联系邮箱',
+    qr_code_url VARCHAR(5000) COMMENT '二维码URL',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品信息表';
 
