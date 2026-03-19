@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -118,9 +117,9 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         log.info("[数据库初始化] 出厂检验数据初始化完成");
 
         List<TransportSale> transportSales = new ArrayList<>();
-        transportSales.add(createTransportSale("有机纯牛奶", "BATCH20240101", new BigDecimal("4.0"), new BigDecimal("2.5"), LocalDateTime.of(2024, 1, 20, 10, 0)));
-        transportSales.add(createTransportSale("有机橄榄油", "BATCH20240201", new BigDecimal("18.0"), new BigDecimal("15.0"), LocalDateTime.of(2024, 2, 10, 14, 0)));
-        transportSales.add(createTransportSale("有机蜂蜜", "BATCH20240301", new BigDecimal("22.0"), new BigDecimal("20.0"), LocalDateTime.of(2024, 3, 15, 11, 0)));
+        transportSales.add(createTransportSale("有机纯牛奶", "BATCH20240101", 4.0, 2.5, LocalDateTime.of(2024, 1, 20, 10, 0)));
+        transportSales.add(createTransportSale("有机橄榄油", "BATCH20240201", 18.0, 15.0, LocalDateTime.of(2024, 2, 10, 14, 0)));
+        transportSales.add(createTransportSale("有机蜂蜜", "BATCH20240301", 22.0, 20.0, LocalDateTime.of(2024, 3, 15, 11, 0)));
         transportSaleRepository.saveAll(transportSales);
         log.info("[数据库初始化] 储运销售数据初始化完成");
 
@@ -184,7 +183,7 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     }
 
     private TransportSale createTransportSale(String productName, String batchNumber,
-                                              BigDecimal envTemp, BigDecimal productTemp, LocalDateTime time) {
+                                              Double envTemp, Double productTemp, LocalDateTime time) {
         TransportSale ts = new TransportSale();
         ts.setProductName(productName);
         ts.setBatchNumber(batchNumber);
