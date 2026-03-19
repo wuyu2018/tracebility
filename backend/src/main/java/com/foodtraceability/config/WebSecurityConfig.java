@@ -42,9 +42,7 @@ public class WebSecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
-                .contentTypeOptions(content -> {})
-                .xssProtection(xss -> xss.enable())
-                .cacheControl(cache -> cache.disable())
+                .disable()
             );
 
         return http.build();
