@@ -35,7 +35,7 @@ public class TraceabilityController {
             
             if (result.isPresent()) {
                 log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(antiFakeCode), result.get().getName(), duration);
+                    maskCode(antiFakeCode), result.get().getProduct().getName(), duration);
                 return ResponseEntity.ok(Map.of("valid", true, "data", result.get()));
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
@@ -63,7 +63,7 @@ public class TraceabilityController {
             
             if (result.isPresent()) {
                 log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(code), result.get().getName(), duration);
+                    maskCode(code), result.get().getProduct().getName(), duration);
                 return ResponseEntity.ok(Map.of("valid", true, "data", result.get()));
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
