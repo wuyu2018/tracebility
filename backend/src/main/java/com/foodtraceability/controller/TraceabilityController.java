@@ -1,5 +1,6 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.dto.TraceInfoDTO;
 import com.foodtraceability.dto.VerifyRequest;
 import com.foodtraceability.service.TraceabilityService;
 import jakarta.validation.Valid;
@@ -34,9 +35,10 @@ public class TraceabilityController {
             long duration = System.currentTimeMillis() - startTime;
             
             if (result.isPresent()) {
+                TraceInfoDTO traceInfo = result.get();
                 log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(antiFakeCode), result.get().getProduct().getName(), duration);
-                return ResponseEntity.ok(Map.of("valid", true, "data", result.get()));
+                    maskCode(antiFakeCode), traceInfo.getProduct().getName(), duration);
+                return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
                 return ResponseEntity.ok(Map.of(
@@ -62,9 +64,10 @@ public class TraceabilityController {
             long duration = System.currentTimeMillis() - startTime;
             
             if (result.isPresent()) {
+                TraceInfoDTO traceInfo = result.get();
                 log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(code), result.get().getProduct().getName(), duration);
-                return ResponseEntity.ok(Map.of("valid", true, "data", result.get()));
+                    maskCode(code), traceInfo.getProduct().getName(), duration);
+                return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
                 return ResponseEntity.ok(Map.of(
@@ -99,9 +102,9 @@ public class TraceabilityController {
         try {
             var info = traceabilityService.getPurchaseInfo(antiFakeCode);
             if (info.isPresent()) {
-                log.info("[采购信息] 查找成功 - 防伪码: {}, 产品ID: {}", 
-                    maskCode(antiFakeCode), info.get().getProductId());
-                return ResponseEntity.ok(Map.of("valid", true, "productId", info.get().getProductId(),
+                log.info("[采购信息] 查找成功 - 防伪码: {}", maskCode(antiFakeCode));
+                return ResponseEntity.ok(Map.of("valid", true, 
+                        "productId", info.get().getProductId(),
                         "name", info.get().getName() != null ? info.get().getName() : "",
                         "specification", info.get().getSpecification() != null ? info.get().getSpecification() : "",
                         "imageUrl", info.get().getImageUrl() != null ? info.get().getImageUrl() : "",
