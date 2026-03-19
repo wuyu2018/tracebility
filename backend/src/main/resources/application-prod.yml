@@ -23,7 +23,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
+        format_sql: false
         jdbc:
           batch_size: 20
         order_inserts: true
@@ -56,17 +56,26 @@ app:
 logging:
   level:
     root: INFO
+    com.foodtraceability: INFO
+    org.springframework.web: INFO
+    org.springframework.security: WARN
     org.springframework.jdbc: WARN
     org.hibernate.SQL: WARN
-    org.hibernate.type: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
     com.zaxxer.hikari: WARN
+    org.hibernate.engine.internal: WARN
+    org.hibernate.event.internal: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
   file:
     name: /app/logs/application.log
     max-size: 10MB
     max-history: 30
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      total-size-cap: 500MB
 
 management:
   endpoints:
