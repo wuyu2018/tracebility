@@ -6,7 +6,6 @@ import com.foodtraceability.service.*;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,20 +17,23 @@ public class InsertDataController {
 
     private static final Logger log = LoggerFactory.getLogger(InsertDataController.class);
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
+    private final MaterialPurchaseService materialPurchaseService;
+    private final InspectionService inspectionService;
+    private final StorageService storageService;
+    private final TransportSaleService transportSaleService;
 
-    @Autowired
-    private MaterialPurchaseService materialPurchaseService;
-
-    @Autowired
-    private InspectionService inspectionService;
-
-    @Autowired
-    private StorageService storageService;
-
-    @Autowired
-    private TransportSaleService transportSaleService;
+    public InsertDataController(ProductService productService,
+                               MaterialPurchaseService materialPurchaseService,
+                               InspectionService inspectionService,
+                               StorageService storageService,
+                               TransportSaleService transportSaleService) {
+        this.productService = productService;
+        this.materialPurchaseService = materialPurchaseService;
+        this.inspectionService = inspectionService;
+        this.storageService = storageService;
+        this.transportSaleService = transportSaleService;
+    }
 
     @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductDTO dto) {
