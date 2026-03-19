@@ -170,3 +170,99 @@ curl http://localhost:8080/actuator/health
 ```
 
 格式说明：`时间 [线程名] 级别 logger名 - [模块] 消息`
+
+---
+
+## 正式上线指南
+
+### 购买域名和服务器后的修改
+
+购买域名和服务器后，需修改以下配置文件：
+
+| 文件 | 修改内容 |
+|------|----------|
+| `.env` | 设置 `MYSQL_ROOT_PASSWORD`、`MYSQL_PASSWORD`、`CORS_ALLOWED_ORIGINS=https://你的域名` |
+| `docker-compose.prod.yml` | 修改 `FRONTEND_EXPOSED_PORT` 如需 HTTPS (443) |
+| `frontend/nginx.conf` | `server_name` 改为你的域名 |
+| `backend/src/main/resources/application-prod.yml` | `app.verify-url` 改为你的域名 |
+
+### HTTPS 配置（如需）
+
+如需启用 HTTPS，建议使用 Nginx 作为反向代理：
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name 你的域名;
+    
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+    
+    location / {
+        proxy_pass http://frontend:80;
+    }
+    location /api {
+        proxy_pass http://backend:8080;
+    }
+}
+```
+
+### 一键部署清单
+
+```bash
+# 1. 上传代码到服务器
+git clone 你的仓库
+
+# 2. 配置环境变量
+cp .env.example .env
+vim .env  # 填写实际密码和域名
+
+# 3. 启动服务
+docker-compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
+### 上线后可删除的文件
+
+上线稳定运行后，以下文件可删除以精简项目：
+
+| 文件 | 原因 | 建议 |
+|------|------|------|
+| `docker-compose.yml` | 开发环境用，生产用 `docker-compose.prod.yml` | 可删 |
+| `application.yml` | 开发配置，生产用 `application-prod.yml` | 可删 |
+| `.env.example` | 仅作模板参考，上线后不需要 | 可删 |
+| `init.sql` | 数据库初始化脚本，首次部署后不需要 | 可删 |
+
+### 精简后的项目结构
+
+```
+food-traceability-system/
+├── backend/
+│   ├── src/
+│   ├── pom.xml
+│   ├── Dockerfile
+│   └── src/main/resources/
+│       └── application-prod.yml    # 仅生产配置
+├── frontend/
+│   ├── src/
+│   ├── Dockerfile
+│   └── nginx.conf
+├── scripts/
+│   ├── deploy.sh
+│   ├── backup.sh
+│   └── health-check.sh
+├── docker-compose.prod.yml         # 仅生产配置
+├── .env                           # 敏感配置，不提交
+└── README.md
+```
+
+### .gitignore 追加
+
+上线后可将以下内容追加到 `.gitignore`：
+
+```gitignore
+# 上线后删除
+docker-compose.yml
+.env.example
+init.sql
+backend/src/main/resources/application.yml
+```
