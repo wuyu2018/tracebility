@@ -30,8 +30,8 @@ public class ComplaintController {
 
     @PostMapping("/complaint")
     public ResponseEntity<?> createComplaint(@Valid @RequestBody ComplaintDTO complaintDTO) {
-        log.info("[投诉提交] 新增投诉 - 产品ID: {}, 投诉类型: {}", 
-            complaintDTO.getProductId(), complaintDTO.getComplaintType());
+        log.info("[投诉提交] 新增投诉 - 产品名称: {}, 投诉原因: {}", 
+            complaintDTO.getProductName(), complaintDTO.getComplaintReason());
         long startTime = System.currentTimeMillis();
         
         try {
@@ -41,8 +41,8 @@ public class ComplaintController {
             return new ResponseEntity<>(createdComplaint, HttpStatus.CREATED);
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("[投诉提交] 系统错误 - 产品ID: {}, 错误: {}, 耗时: {}ms", 
-                complaintDTO.getProductId(), e.getMessage(), duration);
+            log.error("[投诉提交] 系统错误 - 产品名称: {}, 错误: {}, 耗时: {}ms", 
+                complaintDTO.getProductName(), e.getMessage(), duration);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "提交失败，请稍后重试"));
         }

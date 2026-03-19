@@ -68,56 +68,56 @@ public class InsertDataController {
 
     @PostMapping("/material-purchase")
     public ResponseEntity<MaterialPurchase> createMaterialPurchase(@Valid @RequestBody MaterialPurchaseDTO dto) {
-        log.info("[原料采购] 录入采购记录 - 产品ID: {}, 原料名称: {}", dto.getProductId(), dto.getMaterialName());
+        log.info("[原料采购] 录入采购记录 - 产品名称: {}, 原料名称: {}", dto.getProductName(), dto.getMaterialName());
         
         try {
             MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
             log.info("[原料采购] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[原料采购] 录入失败 - 产品ID: {}, 错误: {}", dto.getProductId(), e.getMessage());
+            log.error("[原料采购] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/inspection")
     public ResponseEntity<Inspection> createInspection(@Valid @RequestBody InspectionDTO dto) {
-        log.info("[出厂检验] 录入检验记录 - 产品ID: {}, 批次: {}", dto.getProductId(), dto.getBatchNumber());
+        log.info("[出厂检验] 录入检验记录 - 产品名称: {}, 批次: {}", dto.getProductName(), dto.getBatchNumber());
         
         try {
             Inspection created = inspectionService.createInspection(dto);
             log.info("[出厂检验] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[出厂检验] 录入失败 - 产品ID: {}, 错误: {}", dto.getProductId(), e.getMessage());
+            log.error("[出厂检验] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/storage")
     public ResponseEntity<Storage> createStorage(@Valid @RequestBody StorageDTO dto) {
-        log.info("[贮存记录] 录入贮存记录 - 产品ID: {}, 仓库: {}", dto.getProductId(), dto.getWarehouse());
+        log.info("[贮存记录] 录入贮存记录 - 产品名称: {}", dto.getProductName());
         
         try {
             Storage created = storageService.createStorage(dto);
             log.info("[贮存记录] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[贮存记录] 录入失败 - 产品ID: {}, 错误: {}", dto.getProductId(), e.getMessage());
+            log.error("[贮存记录] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/transport-sale")
     public ResponseEntity<TransportSale> createTransportSale(@Valid @RequestBody TransportSaleDTO dto) {
-        log.info("[储运销售] 录入储运记录 - 产品ID: {}, 经销商: {}", dto.getProductId(), dto.getDistributor());
+        log.info("[储运销售] 录入储运记录 - 产品名称: {}", dto.getProductName());
         
         try {
             TransportSale created = transportSaleService.createTransportSale(dto);
             log.info("[储运销售] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[储运销售] 录入失败 - 产品ID: {}, 错误: {}", dto.getProductId(), e.getMessage());
+            log.error("[储运销售] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
             throw e;
         }
     }
