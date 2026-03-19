@@ -49,22 +49,16 @@ server:
 app:
   verify-url: http://localhost:5173
 
+cors:
+  allowed-origins: "*"
+
 logging:
   level:
+    root: INFO
     org.springframework.jdbc: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type: TRACE
     com.zaxxer.hikari: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,mappings,beans,env
-  endpoint:
-    health:
-      show-details: always
-    mappings:
-      enabled: true
+    file: "%d{yyyy-MM-dd HH:mm:ss [%thread] %-5level %logger{36} - %msg%n"

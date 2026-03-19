@@ -1,9 +1,32 @@
+# Build outputs
 **/target/
+**/dist/
 **/.vite/
 frontend/node_modules/
-**/target/
-**/.vite/
-frontend/node_modules/
-**/target/
-**/.vite/
-frontend/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Logs
+**/*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# SSL certificates
+**/*.crt
+**/*.cert
