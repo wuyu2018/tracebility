@@ -8,6 +8,8 @@
 food-traceability-system/
 ├── backend/                    # Spring Boot 后端
 │   ├── src/main/java/         # Java 源代码
+│   │   └── config/
+│   │       └── SmartDatabaseInitializer.java  # 智能数据库初始化器
 │   └── src/main/resources/    # 配置文件
 │       ├── application.yml    # 开发环境配置
 │       ├── application-prod.yml  # 生产环境配置
@@ -20,7 +22,6 @@ food-traceability-system/
 │   ├── backup.sh             # 数据库备份脚本
 │   └── health-check.sh       # 健康检查脚本
 ├── docs/                      # 项目文档
-├── init.sql                   # 数据库初始化脚本
 ├── docker-compose.yml        # 开发环境 Docker 配置
 ├── docker-compose.prod.yml   # 生产环境 Docker 配置
 ├── .env.example              # 环境变量模板
@@ -101,9 +102,30 @@ docker-compose -f docker-compose.prod.yml --env-file .env up -d
 | MYSQL_DATABASE | 数据库名 | food_traceability |
 | MYSQL_USER | 应用数据库用户 | app_user |
 | MYSQL_PASSWORD | 应用数据库密码 | (必填) |
-| SPRING_PROFILES_ACTIVE | Spring  profiles | prod |
+| SPRING_PROFILES_ACTIVE | Spring profiles | prod |
+| SPRING_JPA_HIBERNATE_DDL_AUTO | Hibernate 策略 | update |
 | CORS_ALLOWED_ORIGINS | CORS 允许的来源 | * |
 | FRONTEND_EXPOSED_PORT | 前端端口 | 80 |
+
+### 数据库初始化
+
+系统启动时会自动检测数据库状态：
+
+| 场景 | 行为 |
+|------|------|
+| 数据库不存在或表不存在 | 自动创建表结构并插入初始数据 |
+| 数据库已存在且表完整 | **跳过初始化**，保留现有数据 |
+
+**初始数据包括**：
+- 3 个测试产品（有机纯牛奶、有机橄榄油、有机蜂蜜）
+- 关联的原料采购、贮存、出厂检验、储运销售、投诉数据
+- 管理员账号：`admin` / `admin123`
+
+**Hibernate 策略说明**：
+- `update`：仅更新表结构，不删除现有数据（**推荐**）
+- `validate`：仅验证表结构，不做任何更改
+- `create`：每次启动创建新表（**会清空数据**）
+- `create-drop`：启动时创建，关闭时删除
 
 ### 端口配置
 
@@ -290,7 +312,6 @@ docker-compose -f docker-compose.prod.yml --env-file .env up -d
 | `docker-compose.yml` | 开发环境用，生产用 `docker-compose.prod.yml` | 可删 |
 | `application.yml` | 开发配置，生产用 `application-prod.yml` | 可删 |
 | `.env.example` | 仅作模板参考，上线后不需要 | 可删 |
-| `init.sql` | 数据库初始化脚本，首次部署后不需要 | 可删 |
 
 ### 精简后的项目结构
 
@@ -323,6 +344,5 @@ food-traceability-system/
 # 上线后删除
 docker-compose.yml
 .env.example
-init.sql
 backend/src/main/resources/application.yml
 ```
