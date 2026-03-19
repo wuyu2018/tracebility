@@ -1,0 +1,1 @@
+import e from"./Home-BgTAuONC.js";import{_ as o,c as t,e as r,b as c}from"./index-iFictPGH.js";import"./api-CXNE9n_k.js";import"./index-D5GkNzM3.js";import"./introduction-4r8DmISe.js";const s={class:"verify-view"},_={__name:"Verify",setup(a){return(i,p)=>(c(),t("div",s,[r(e)]))}},u=o(_,[["__scopeId","data-v-dcd47100"]]);export{u as default};

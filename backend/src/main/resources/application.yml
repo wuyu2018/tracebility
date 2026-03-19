@@ -3,9 +3,9 @@ spring:
     name: food-traceability
 
   datasource:
-    url: jdbc:mysql://localhost:3306/food_traceability?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: ''
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/food_traceability?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       connection-timeout: 30000

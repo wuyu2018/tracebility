@@ -6,17 +6,15 @@
     </div>
 
     <div class="verify-section">
-      <div class="verify-btn-group">
-        <VerifyForm
-          ref="verifyFormRef"
-          @verified="onVerified"
-          @invalid="onInvalid"
-        />
-        <button class="btn-scan btn-verify" @click="startScan">
-          <span class="scan-icon">📷</span>
-          扫码查询
-        </button>
-      </div>
+      <VerifyForm
+        ref="verifyFormRef"
+        @verified="onVerified"
+        @invalid="onInvalid"
+      />
+      <button class="btn-scan" @click="startScan">
+        <span class="scan-icon">📷</span>
+        <span>扫码查询</span>
+      </button>
     </div>
 
     <div v-if="showCamera" class="camera-overlay">
@@ -253,17 +251,28 @@ onUnmounted(() => {
 .verify-section {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  align-items: stretch;
+  gap: 0.75rem;
   margin-bottom: 2.5rem;
-  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .verify-section {
+    flex-direction: column;
+    align-items: center;
+  }
+  .verify-section > * {
+    width: 100%;
+    max-width: 480px;
+  }
 }
 
 .btn-scan {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 1rem 1.5rem;
+  padding: 1rem 2rem;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
   font-weight: 600;
@@ -273,6 +282,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   white-space: nowrap;
+  min-width: 100px;
 }
 
 .btn-scan:hover {
@@ -294,31 +304,6 @@ onUnmounted(() => {
   z-index: 9999;
   display: flex;
   align-items: center;
-/* 按钮组样式 */
-.verify-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.btn-scan,
-.btn-verify {
-  padding: 12px 32px;
-  font-size: 20px;
-  border-radius: 8px;
-  background: #409eff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.btn-scan:hover,
-.btn-verify:hover {
-  background: #66b1ff;
-}
   justify-content: center;
 }
 
