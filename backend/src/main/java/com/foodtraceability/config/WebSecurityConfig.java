@@ -40,9 +40,7 @@ public class WebSecurityConfig {
             )
             .formLogin(form -> form.disable())
             .httpBasic(httpBasic -> httpBasic.disable())
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.deny())
-            );
+            .headers(headers -> headers.frameOptions(frame -> frame.deny()));
 
         return http.build();
     }

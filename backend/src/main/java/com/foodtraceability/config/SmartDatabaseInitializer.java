@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -72,7 +73,7 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
 
     private boolean isDatabaseInitialized() {
         try {
-            int count = jdbcTemplate.queryForObject(
+            Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'product'",
                 Integer.class
             );
@@ -84,43 +85,43 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     }
 
     private void initializeData() {
-        Product product1 = createProduct("AF202400012345", "有机纯牛奶", "250ml/盒", "BATCH20240101", 
-            LocalDate.of(2024, 1, 15), "6个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com");
-        Product product2 = createProduct("AF202400067890", "有机橄榄油", "500ml/瓶", "BATCH20240201", 
-            LocalDate.of(2024, 2, 1), "18个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com");
-        Product product3 = createProduct("AF202400099999", "有机蜂蜜", "350g/瓶", "BATCH20240301", 
-            LocalDate.of(2024, 3, 10), "24个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com");
-
-        productRepository.saveAll(List.of(product1, product2, product3));
+        List<Product> products = new ArrayList<>();
+        products.add(createProduct("AF202400012345", "有机纯牛奶", "250ml/盒", "BATCH20240101", 
+            LocalDate.of(2024, 1, 15), "6个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com"));
+        products.add(createProduct("AF202400067890", "有机橄榄油", "500ml/瓶", "BATCH20240201", 
+            LocalDate.of(2024, 2, 1), "18个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com"));
+        products.add(createProduct("AF202400099999", "有机蜂蜜", "350g/瓶", "BATCH20240301", 
+            LocalDate.of(2024, 3, 10), "24个月", "/img/products/placeholder.svg", "18788919351", "2896114330@qq.com"));
+        productRepository.saveAll(products);
         log.info("[数据库初始化] 产品数据初始化完成");
 
-        materialPurchaseRepository.saveAll(List.of(
-            createMaterialPurchase("有机纯牛奶", "BATCH20240101", "有机生牛乳", "绿源有机牧场", "内蒙古呼和浩特市和林格尔县"),
-            createMaterialPurchase("有机纯牛奶", "BATCH20240101", "维生素D3", "华药生物科技", "河北省石家庄市"),
-            createMaterialPurchase("有机橄榄油", "BATCH20240201", "有机橄榄果", "地中海橄榄庄园", "西班牙安达卢西亚"),
-            createMaterialPurchase("有机蜂蜜", "BATCH20240301", "有机蜂蜜原料", "秦岭深山养蜂基地", "陕西省汉中市")
-        ));
+        List<MaterialPurchase> materialPurchases = new ArrayList<>();
+        materialPurchases.add(createMaterialPurchase("有机纯牛奶", "BATCH20240101", "有机生牛乳", "绿源有机牧场", "内蒙古呼和浩特市和林格尔县"));
+        materialPurchases.add(createMaterialPurchase("有机纯牛奶", "BATCH20240101", "维生素D3", "华药生物科技", "河北省石家庄市"));
+        materialPurchases.add(createMaterialPurchase("有机橄榄油", "BATCH20240201", "有机橄榄果", "地中海橄榄庄园", "西班牙安达卢西亚"));
+        materialPurchases.add(createMaterialPurchase("有机蜂蜜", "BATCH20240301", "有机蜂蜜原料", "秦岭深山养蜂基地", "陕西省汉中市"));
+        materialPurchaseRepository.saveAll(materialPurchases);
         log.info("[数据库初始化] 原料采购数据初始化完成");
 
-        storageRepository.saveAll(List.of(
-            createStorage("有机纯牛奶", "BATCH20240101", LocalDateTime.of(2024, 1, 16, 8, 0), LocalDateTime.of(2024, 1, 18, 14, 0), 10000.0, "盒"),
-            createStorage("有机橄榄油", "BATCH20240201", LocalDateTime.of(2024, 2, 5, 10, 0), LocalDateTime.of(2024, 2, 7, 9, 0), 5000.0, "瓶"),
-            createStorage("有机蜂蜜", "BATCH20240301", LocalDateTime.of(2024, 3, 12, 8, 30), LocalDateTime.of(2024, 3, 14, 16, 0), 3000.0, "瓶")
-        ));
+        List<Storage> storages = new ArrayList<>();
+        storages.add(createStorage("有机纯牛奶", "BATCH20240101", LocalDateTime.of(2024, 1, 16, 8, 0), LocalDateTime.of(2024, 1, 18, 14, 0), 10000.0, "盒"));
+        storages.add(createStorage("有机橄榄油", "BATCH20240201", LocalDateTime.of(2024, 2, 5, 10, 0), LocalDateTime.of(2024, 2, 7, 9, 0), 5000.0, "瓶"));
+        storages.add(createStorage("有机蜂蜜", "BATCH20240301", LocalDateTime.of(2024, 3, 12, 8, 30), LocalDateTime.of(2024, 3, 14, 16, 0), 3000.0, "瓶"));
+        storageRepository.saveAll(storages);
         log.info("[数据库初始化] 贮存数据初始化完成");
 
-        inspectionRepository.saveAll(List.of(
-            createInspection("有机纯牛奶", "BATCH20240101", "有机纯牛奶", 50, "250ml/盒"),
-            createInspection("有机橄榄油", "BATCH20240201", "有机橄榄油", 30, "500ml/瓶"),
-            createInspection("有机蜂蜜", "BATCH20240301", "有机蜂蜜", 20, "350g/瓶")
-        ));
+        List<Inspection> inspections = new ArrayList<>();
+        inspections.add(createInspection("有机纯牛奶", "BATCH20240101", "有机纯牛奶", 50, "250ml/盒"));
+        inspections.add(createInspection("有机橄榄油", "BATCH20240201", "有机橄榄油", 30, "500ml/瓶"));
+        inspections.add(createInspection("有机蜂蜜", "BATCH20240301", "有机蜂蜜", 20, "350g/瓶"));
+        inspectionRepository.saveAll(inspections);
         log.info("[数据库初始化] 出厂检验数据初始化完成");
 
-        transportSaleRepository.saveAll(List.of(
-            createTransportSale("有机纯牛奶", "BATCH20240101", new BigDecimal("4.0"), new BigDecimal("2.5"), LocalDateTime.of(2024, 1, 20, 10, 0)),
-            createTransportSale("有机橄榄油", "BATCH20240201", new BigDecimal("18.0"), new BigDecimal("15.0"), LocalDateTime.of(2024, 2, 10, 14, 0)),
-            createTransportSale("有机蜂蜜", "BATCH20240301", new BigDecimal("22.0"), new BigDecimal("20.0"), LocalDateTime.of(2024, 3, 15, 11, 0))
-        ));
+        List<TransportSale> transportSales = new ArrayList<>();
+        transportSales.add(createTransportSale("有机纯牛奶", "BATCH20240101", new BigDecimal("4.0"), new BigDecimal("2.5"), LocalDateTime.of(2024, 1, 20, 10, 0)));
+        transportSales.add(createTransportSale("有机橄榄油", "BATCH20240201", new BigDecimal("18.0"), new BigDecimal("15.0"), LocalDateTime.of(2024, 2, 10, 14, 0)));
+        transportSales.add(createTransportSale("有机蜂蜜", "BATCH20240301", new BigDecimal("22.0"), new BigDecimal("20.0"), LocalDateTime.of(2024, 3, 15, 11, 0)));
+        transportSaleRepository.saveAll(transportSales);
         log.info("[数据库初始化] 储运销售数据初始化完成");
 
         complaintRepository.save(createComplaint("有机纯牛奶", "包装轻微破损", LocalDateTime.of(2024, 2, 1, 9, 30)));
