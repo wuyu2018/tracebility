@@ -42,7 +42,6 @@ public class WebSecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
-                .disable()
             );
 
         return http.build();
