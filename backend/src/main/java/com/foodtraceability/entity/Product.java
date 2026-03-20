@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product")
@@ -46,6 +47,12 @@ public class Product {
 
     @Column(name = "qr_code_url", length = 5000)
     private String qrCodeUrl;
+
+    @Column(name = "last_queried_time")
+    private LocalDateTime lastQueriedTime;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 }
 
 
