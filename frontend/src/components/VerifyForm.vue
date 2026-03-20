@@ -7,12 +7,22 @@
           id="antiFakeCode"
           v-model="antiFakeCode"
           type="text"
-          placeholder="请输入12-20位防伪码"
+          placeholder="防伪码"
           maxlength="20"
           autocomplete="off"
           :disabled="loading"
           @keydown.enter.prevent="handleSubmit"
           ref="inputRef"
+        />
+        <input
+          id="batchNumber"
+          v-model="batchNumber"
+          type="text"
+          placeholder="批次号（选填）"
+          maxlength="50"
+          autocomplete="off"
+          :disabled="loading"
+          @keydown.enter.prevent="handleSubmit"
         />
         <button type="submit" class="btn-submit" :disabled="loading">
           <span v-if="loading" class="loading-spinner"></span>
@@ -22,6 +32,7 @@
             <span class="scan-icon">扫码查询</span>
         </button>
       </div>
+      <p class="form-tip">输入防伪码快速验证，输入防伪码+批次号查看完整溯源信息</p>
       <p v-if="error" class="error-msg">{{ error }}</p>
     </div>
     <div v-if="showCamera" class="camera-overlay">
@@ -42,11 +53,12 @@
 <script setup>
 import { ref } from 'vue'
 import { validateAntiFakeCode } from '../utils/validation'
-import { verifyAntiFakeCode, verifyAntiFakeCodeGet } from '../services/api'
+import { verifyAntiFakeCode, verifyAntiFakeCodeGet, verifyAntiFakeCodeWithBatch } from '../services/api'
 
 const emit = defineEmits(['verified', 'invalid'])
 
 const antiFakeCode = ref('')
+const batchNumber = ref('')
 const loading = ref(false)
 const error = ref('')
 const inputRef = ref(null)
@@ -167,10 +179,21 @@ const handleSubmit = async () => {
   }
   loading.value = true
   try {
-    const result = await verifyAntiFakeCode(antiFakeCode.value.trim())
+    let result
+    if (batchNumber.value && batchNumber.value.trim()) {
+      result = await verifyAntiFakeCodeWithBatch(antiFakeCode.value.trim(), batchNumber.value.trim())
+    } else {
+      result = await verifyAntiFakeCode(antiFakeCode.value.trim())
+    }
 
-    if (result.valid && result.data) {
-      emit('verified', result.data)
+    if (result.valid) {
+      if (result.data) {
+        emit('verified', result.data)
+      } else if (result.productName) {
+        emit('invalid', result.message || '请提供批次号以查看完整溯源信息')
+      } else {
+        emit('invalid', result.message || '产品信息验证通过')
+      }
     } else {
       emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
     }
@@ -212,14 +235,28 @@ defineExpose({ focus: () => inputRef.value?.focus() })
 
 .input-wrap {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   align-items: stretch;
+}
+
+.input-wrap input:first-child {
+  flex: 1;
+  min-width: 150px;
+}
+
+.input-wrap input:nth-child(2) {
+  flex: 1;
+  min-width: 120px;
 }
 
 @media (max-width: 480px) {
   .input-wrap {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  .input-wrap input {
+    width: 100%;
   }
   .btn-submit {
     display: flex;         
@@ -296,6 +333,12 @@ defineExpose({ focus: () => inputRef.value?.focus() })
 .error-msg {
   color: var(--color-danger);
   font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-tip {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
 }
 </style>
