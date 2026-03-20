@@ -115,7 +115,7 @@ public class InsertDataController {
         log.debug("[储运销售] 录入储运记录 - 产品名称: {}", dto.getProductName());
         
         try {
-            Transport created = transportSaleService.createTransportSale(dto);
+            TransportSale created = transportSaleService.createTransportSale(dto);
             log.info("[储运销售] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
