@@ -27,25 +27,26 @@ public class TraceabilityController {
     @PostMapping("/verify")
     public ResponseEntity<?> verify(@Valid @RequestBody VerifyRequest request) {
         String antiFakeCode = request.getAntiFakeCode();
-        boolean fullTrace = request.isFullTrace();
-        log.info("[防伪验证] POST 请求 - 防伪码: {}, 完整溯源: {}", maskCode(antiFakeCode), fullTrace);
+        String batchNumber = request.getBatchNumber();
+        log.info("[防伪验证] POST 请求 - 防伪码: {}, 批次号: {}", maskCode(antiFakeCode), batchNumber != null ? batchNumber : "无");
         long startTime = System.currentTimeMillis();
         
         try {
-            if (fullTrace) {
-                var result = traceabilityService.verifyAndGetTraceInfo(antiFakeCode);
+            if (batchNumber != null && !batchNumber.isBlank()) {
+                var result = traceabilityService.verifyAndGetTraceInfoWithBatch(antiFakeCode, batchNumber);
                 long duration = System.currentTimeMillis() - startTime;
                 
                 if (result.isPresent()) {
                     TraceInfoDTO traceInfo = result.get();
-                    log.info("[防伪验证] 完整溯源查询成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                        maskCode(antiFakeCode), traceInfo.getProduct().getName(), duration);
+                    log.info("[防伪验证] 精确溯源查询成功 - 防伪码: {}, 批次: {}, 产品: {}, 耗时: {}ms", 
+                        maskCode(antiFakeCode), batchNumber, traceInfo.getProduct().getName(), duration);
                     return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
                 } else {
-                    log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
+                    log.warn("[防伪验证] 精确溯源查询失败 - 防伪码: {}, 批次: {}, 耗时: {}ms", 
+                        maskCode(antiFakeCode), batchNumber, duration);
                     return ResponseEntity.ok(Map.of(
                             "valid", false,
-                            "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
+                            "message", "未找到该防伪码和批次对应的产品溯源信息，请核对后重试！"
                     ));
                 }
             } else {
@@ -60,7 +61,7 @@ public class TraceabilityController {
                         "valid", true, 
                         "productName", purchaseInfo.getName() != null ? purchaseInfo.getName() : "",
                         "specification", purchaseInfo.getSpecification() != null ? purchaseInfo.getSpecification() : "",
-                        "message", "产品信息验证通过"
+                        "message", "产品信息验证通过，如需查看完整溯源信息请提供批次号"
                     ));
                 } else {
                     log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
