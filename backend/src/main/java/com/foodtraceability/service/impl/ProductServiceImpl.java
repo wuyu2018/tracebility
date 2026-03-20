@@ -34,7 +34,15 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("防伪码已存在，请勿重复录入！");
         }
         Product entity = new Product();
-        BeanUtils.copyProperties(dto, entity);
+        entity.setAntiFakeCode(dto.getAntiFakeCode());
+        entity.setName(dto.getName());
+        entity.setSpecification(dto.getSpecification());
+        entity.setBatchNumber(dto.getBatchNumber());
+        entity.setProductionDate(dto.getProductionDate());
+        entity.setShelfLife(dto.getShelfLife());
+        entity.setImageUrl(dto.getImageUrl());
+        entity.setContactPhone(dto.getContactPhone());
+        entity.setContactEmail(dto.getContactEmail());
         return repository.save(entity);
     }
 

@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/insert")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -36,7 +38,7 @@ public class InsertDataController {
     }
 
     @PostMapping("/products")
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductDTO dto) {
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO dto) {
         log.debug("[数据录入] 创建产品 - 名称: {}, 批次: {}", dto.getName(), dto.getBatchNumber());
         long startTime = System.currentTimeMillis();
         
@@ -46,11 +48,17 @@ public class InsertDataController {
             log.info("[数据录入] 产品创建成功 - ID: {}, 名称: {}, 耗时: {}ms", 
                 created.getId(), created.getName(), duration);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException e) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.warn("[数据录入] 产品创建失败 - 名称: {}, 错误: {}, 耗时: {}ms", 
+                dto.getName(), e.getMessage(), duration);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[数据录入] 产品创建失败 - 名称: {}, 错误: {}, 耗时: {}ms", 
                 dto.getName(), e.getMessage(), duration);
-            throw e;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "产品创建失败：" + e.getMessage()));
         }
     }
 
