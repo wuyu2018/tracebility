@@ -9,4 +9,6 @@ public interface AdminService {
     LoginResponseDTO login(AdminLoginDTO loginDTO);
 
     Admin findByUsername(String username);
+
+    Admin createAdmin(String username, String password);
 }

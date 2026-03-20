@@ -59,4 +59,17 @@ public class AdminServiceImpl implements AdminService {
     public Admin findByUsername(String username) {
         return adminRepository.findByUsername(username).orElse(null);
     }
+
+    @Override
+    public Admin createAdmin(String username, String password) {
+        Optional<Admin> existingAdmin = adminRepository.findByUsername(username);
+        if (existingAdmin.isPresent()) {
+            throw new BusinessException("管理员已存在");
+        }
+
+        Admin admin = new Admin();
+        admin.setUsername(username);
+        admin.setPassword(passwordEncoder.encode(password));
+        return adminRepository.save(admin);
+    }
 }

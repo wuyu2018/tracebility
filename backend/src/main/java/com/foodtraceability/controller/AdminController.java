@@ -2,6 +2,7 @@ package com.foodtraceability.controller;
 
 import com.foodtraceability.dto.AdminLoginDTO;
 import com.foodtraceability.dto.LoginResponseDTO;
+import com.foodtraceability.entity.Admin;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.service.AdminService;
 import com.foodtraceability.util.CaptchaStorage;
@@ -29,10 +30,8 @@ public class AdminController {
     @PostMapping("/captcha")
     public ResponseEntity<?> storeCaptcha(@RequestBody Map<String, String> request) {
         String username = request.get("username");
-        log.debug("[验证码] 存储验证码 - 用户: {}", username);
         String captcha = request.get("captcha");
         if (username == null || captcha == null) {
-            log.warn("[验证码] 参数错误 - username或captcha为空");
             return ResponseEntity.badRequest().body("username和captcha不能为空");
         }
         CaptchaStorage.setCaptcha(username, captcha);
@@ -57,6 +56,32 @@ public class AdminController {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/admin/register")
+    public ResponseEntity<?> registerAdmin(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("用户名不能为空");
+        }
+        if (password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body("密码不能为空");
+        }
+        if (password.length() < 6) {
+            return ResponseEntity.badRequest().body("密码长度不能少于6位");
+        }
+
+        try {
+            Admin admin = adminService.createAdmin(username, password);
+            log.info("[管理员注册] 创建成功 - 用户名: {}", username);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("message", "管理员创建成功", "username", admin.getUsername()));
+        } catch (BusinessException e) {
+            log.warn("[管理员注册] 创建失败 - 用户名: {}, 原因: {}", username, e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
     }
 }
