@@ -35,7 +35,7 @@ import { ref, onMounted } from 'vue'
 import VerifyForm from '../components/VerifyForm.vue'
 import ResultDisplay from '../components/ResultDisplay.vue'
 import IntroductionSection from '../components/IntroductionSection.vue'
-import { verifyAntiFakeCode } from '../services/api'
+import { verifyAntiFakeCodeGet } from '../services/api'
 
 const verifyFormRef = ref(null)
 const traceData = ref(null)
@@ -66,7 +66,7 @@ onMounted(() => {
 
 async function queryByCode(code) {
   try {
-    const result = await verifyAntiFakeCode(code, true)
+    const result = await verifyAntiFakeCodeGet(code)
     if (result.valid) {
       if (result.data) {
         onVerified(result.data)

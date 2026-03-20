@@ -10,6 +10,8 @@ public interface TraceabilityService {
 
     Optional<TraceInfoDTO> verifyAndGetTraceInfo(String antiFakeCode);
 
+    Optional<TraceInfoDTO> verifyAndGetTraceInfoWithBatch(String antiFakeCode, String batchNumber);
+
     Optional<PurchaseInfoDTO> getPurchaseInfo(String antiFakeCode);
 
     List<PurchaseInfoDTO> listAllProducts();

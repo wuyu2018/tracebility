@@ -42,7 +42,7 @@
 <script setup>
 import { ref } from 'vue'
 import { validateAntiFakeCode } from '../utils/validation'
-import { verifyAntiFakeCode } from '../services/api'
+import { verifyAntiFakeCode, verifyAntiFakeCodeGet } from '../services/api'
 
 const emit = defineEmits(['verified', 'invalid'])
 
@@ -126,7 +126,7 @@ function startQrScan() {
 async function queryByCode(code) {
   loading.value = true
   try {
-    const result = await verifyAntiFakeCode(code, true)
+    const result = await verifyAntiFakeCodeGet(code)
     if (result.valid) {
       if (result.data) {
         emit('verified', result.data)

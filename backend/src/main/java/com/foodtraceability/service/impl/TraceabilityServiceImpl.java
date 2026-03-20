@@ -41,6 +41,13 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     }
 
     @Override
+    public Optional<TraceInfoDTO> verifyAndGetTraceInfoWithBatch(String antiFakeCode, String batchNumber) {
+        return productRepository.findByAntiFakeCode(antiFakeCode)
+                .filter(product -> batchNumber.equals(product.getBatchNumber()))
+                .map(product -> buildTraceInfoDTOWithBatch(product.getName(), batchNumber));
+    }
+
+    @Override
     public Optional<PurchaseInfoDTO> getPurchaseInfo(String antiFakeCode) {
         return productRepository.findByAntiFakeCode(antiFakeCode)
                 .map(this::buildPurchaseInfoDTO);
@@ -51,6 +58,36 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         return productRepository.findAll().stream()
                 .map(this::buildPurchaseInfoDTO)
                 .collect(Collectors.toList());
+    }
+
+    private TraceInfoDTO buildTraceInfoDTOWithBatch(String productName, String batchNumber) {
+        TraceInfoDTO dto = new TraceInfoDTO();
+
+        Product product = productRepository.findByName(productName).orElse(null);
+        if (product != null) {
+            TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
+            productInfo.setId(product.getId());
+            productInfo.setAntiFakeCode(product.getAntiFakeCode());
+            productInfo.setName(product.getName());
+            productInfo.setSpecification(product.getSpecification());
+            productInfo.setBatchNumber(batchNumber);
+            productInfo.setProductionDate(product.getProductionDate());
+            productInfo.setShelfLife(product.getShelfLife());
+            dto.setProduct(productInfo);
+        }
+
+        dto.setMaterialPurchases(materialPurchaseRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+                .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
+        dto.setStorages(storageRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+                .map(this::toStorageDTO).collect(Collectors.toList()));
+        dto.setInspections(inspectionRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+                .map(this::toInspectionDTO).collect(Collectors.toList()));
+        dto.setTransportSales(transportSaleRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+                .map(this::toTransportSaleDTO).collect(Collectors.toList()));
+        dto.setComplaints(complaintRepository.findByProductName(productName).stream()
+            .map(this::toComplaintDTO).collect(Collectors.toList()));
+
+        return dto;
     }
 
     private TraceInfoDTO buildTraceInfoDTO(Product product) {
