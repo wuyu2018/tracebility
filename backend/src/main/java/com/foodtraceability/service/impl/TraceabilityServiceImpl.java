@@ -36,26 +36,27 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     @Override
     public Optional<TraceInfoDTO> verifyAndGetTraceInfo(String antiFakeCode) {
-        return productRepository.findByAntiFakeCode(antiFakeCode)
+        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
                 .map(this::buildTraceInfoDTO);
     }
 
     @Override
     public Optional<TraceInfoDTO> verifyAndGetTraceInfoWithBatch(String antiFakeCode, String batchNumber) {
-        return productRepository.findByAntiFakeCode(antiFakeCode)
+        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
                 .filter(product -> batchNumber.equals(product.getBatchNumber()))
                 .map(product -> buildTraceInfoDTOWithBatch(product.getName(), batchNumber));
     }
 
     @Override
     public Optional<PurchaseInfoDTO> getPurchaseInfo(String antiFakeCode) {
-        return productRepository.findByAntiFakeCode(antiFakeCode)
+        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
                 .map(this::buildPurchaseInfoDTO);
     }
 
     @Override
     public List<PurchaseInfoDTO> listAllProducts() {
         return productRepository.findAll().stream()
+                .filter(p -> !p.getIsDeleted())
                 .map(this::buildPurchaseInfoDTO)
                 .collect(Collectors.toList());
     }

@@ -13,16 +13,6 @@
       />
     </div>
 
-    <div v-if="showQueriedWarning" class="queried-warning">
-      <div class="warning-content">
-        <span class="warning-icon">⚠️</span>
-        <div class="warning-text">
-          <h4>注意：此产品曾被查询过</h4>
-          <p>首次查询时间：{{ previousQueryTime }}</p>
-        </div>
-      </div>
-    </div>
-
     <div v-if="showResult && traceData" class="result-section">
       <ResultDisplay :trace-data="traceData" />
     </div>
@@ -52,15 +42,11 @@ const traceData = ref(null)
 const showResult = ref(false)
 const showFakeAlert = ref(false)
 const fakeAlertMessage = ref('')
-const showQueriedWarning = ref(false)
-const previousQueryTime = ref('')
 
-const onVerified = (data, isQueriedBefore = false, queryTime = '') => {
+const onVerified = (data) => {
   traceData.value = data
   showResult.value = true
   showFakeAlert.value = false
-  showQueriedWarning.value = isQueriedBefore
-  previousQueryTime.value = queryTime
 }
 
 const onInvalid = (message) => {
@@ -68,7 +54,6 @@ const onInvalid = (message) => {
   showFakeAlert.value = true
   showResult.value = false
   traceData.value = null
-  showQueriedWarning.value = false
 }
 
 onMounted(() => {
@@ -84,7 +69,7 @@ async function queryByCode(code) {
     const result = await verifyAntiFakeCodeGet(code)
     if (result.valid) {
       if (result.data) {
-        onVerified(result.data, result.isQueriedBefore || false, result.previousQueryTime || '')
+        onVerified(result.data)
       } else if (result.productName) {
         onVerified({ product: { name: result.productName, specification: result.specification } })
       } else {
@@ -178,40 +163,6 @@ async function queryByCode(code) {
 
 .home-intro {
   margin-top: auto;
-}
-
-.queried-warning {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-}
-
-.warning-content {
-  background: linear-gradient(145deg, #fffbe6 0%, #fff3cc 100%);
-  border: 2px solid #f5c6c0;
-  border-radius: var(--radius-lg);
-  padding: 1rem 1.5rem;
-  max-width: 480px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.warning-icon {
-  font-size: 1.5rem;
-}
-
-.warning-text h4 {
-  color: #856404;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
-}
-
-.warning-text p {
-  color: #856404;
-  font-size: 0.875rem;
-  margin: 0;
 }
 
 .fake-alert {

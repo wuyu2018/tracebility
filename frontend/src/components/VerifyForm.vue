@@ -141,7 +141,7 @@ async function queryByCode(code) {
     const result = await verifyAntiFakeCodeGet(code)
     if (result.valid) {
       if (result.data) {
-        emit('verified', result.data, result.isQueriedBefore || false, result.previousQueryTime || '')
+        emit('verified', result.data)
       } else if (result.productName) {
         emit('verified', { product: { name: result.productName, specification: result.specification } })
       } else {
