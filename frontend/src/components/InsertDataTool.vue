@@ -136,20 +136,6 @@
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
                 </tr>
-                <tr>
-                  <td class="field-label">批号</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input
-                      v-model="inspectionForm.batchNumber"
-                      placeholder="请输入批号"
-                      :disabled="!inspectionForm.productName"
-                      clearable
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
                 <tr v-for="field in inspectionFields.slice(1)" :key="field.prop">
                   <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
@@ -434,7 +420,6 @@ const materialForm = reactive({
 
 const inspectionForm = reactive({
   productName: '',
-  batchNumber: '',
   sampleName: '',
   sampleQuantity: null,
   sampleSpecification: ''
@@ -508,7 +493,6 @@ const productFields = [
   { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入12-20位防伪码', tip: '12-20位' },
   { prop: 'name', label: '产品名称', required: true, type: 'text', placeholder: '例：有机大米' },
   { prop: 'specification', label: '规格', required: false, type: 'text', placeholder: '例：400g、5kg', tip: '请包含单位' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '例：BATCH2024001' },
   { prop: 'productionDate', label: '生产日期', required: false, type: 'date' },
   { prop: 'shelfLife', label: '保质期', required: false, type: 'text', placeholder: '例：12个月', tip: '请包含单位' },
   { prop: 'imageUrl', label: '图片URL', required: false, type: 'text', placeholder: 'http://...', tip: '以http开头' },
@@ -526,7 +510,6 @@ const materialFields = [
 
 const inspectionFields = [
   { prop: 'productName', label: '产品名称', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
   { prop: 'sampleName', label: '样品名称', required: false, type: 'text' },
   { prop: 'sampleQuantity', label: '样品数量', required: false, type: 'number' },
   { prop: 'sampleSpecification', label: '样品规格', required: false, type: 'text' }
@@ -584,7 +567,6 @@ async function handleSubmit() {
           antiFakeCode: formData.antiFakeCode,
           name: formData.name,
           specification: formData.specification || null,
-          batchNumber: formData.batchNumber || null,
           productionDate: formData.productionDate || null,
           shelfLife: formData.shelfLife || null,
           imageUrl: formData.imageUrl || null,
@@ -609,7 +591,6 @@ async function handleSubmit() {
       case 'inspection':
         apiPayload = {
           productName: formData.productName,
-          batchNumber: formData.batchNumber || null,
           sampleName: formData.sampleName || null,
           sampleQuantity: formData.sampleQuantity ? Number(formData.sampleQuantity) : null,
           sampleSpecification: formData.sampleSpecification || null
