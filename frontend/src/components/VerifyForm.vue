@@ -18,8 +18,23 @@
           <span v-if="loading" class="loading-spinner"></span>
           <span v-else>验证</span>
         </button>
+        <button type="button" class="btn-submit" @click="startScan">
+            <span class="scan-icon">扫码查询</span>
+        </button>
       </div>
       <p v-if="error" class="error-msg">{{ error }}</p>
+    </div>
+    <div v-if="showCamera" class="camera-overlay">
+      <div class="camera-container">
+        <video ref="videoRef" class="camera-video" autoplay></video>
+        <div class="scan-frame">
+          <div class="scan-corner top-left"></div>
+          <div class="scan-corner top-right"></div>
+          <div class="scan-corner bottom-left"></div>
+          <div class="scan-corner bottom-right"></div>
+        </div>
+        <button class="btn-close-camera" @click="stopCamera">关闭</button>
+      </div>
     </div>
   </form>
 </template>
@@ -36,19 +51,121 @@ const loading = ref(false)
 const error = ref('')
 const inputRef = ref(null)
 
+const showCamera = ref(false)
+const videoRef = ref(null)
+let stream = null
+let scanInterval = null
+let jsQR = null
+
+async function loadJsQR() {
+  if (jsQR) return jsQR
+  const module = await import('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/+esm')
+  jsQR = module.default
+  return jsQR
+}
+
+async function startScan() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    })
+    showCamera.value = true
+
+    await loadJsQR()
+
+    setTimeout(() => {
+      if (videoRef.value) {
+        videoRef.value.srcObject = stream
+        startQrScan()
+      }
+    }, 100)
+  } catch (error) {
+    console.error('Camera access error:', error)
+    alert('无法访问摄像头，请确保已授予权限')
+  }
+}
+
+function startQrScan() {
+  scanInterval = setInterval(async () => {
+    if (!videoRef.value || videoRef.value.readyState !== 4) return
+    if (!jsQR) return
+
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.value.videoWidth
+      canvas.height = videoRef.value.videoHeight
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(videoRef.value, 0, 0)
+
+      const code = jsQR(
+        ctx.getImageData(0, 0, canvas.width, canvas.height).data,
+        canvas.width,
+        canvas.height
+      )
+
+      if (code && code.data) {
+        const url = code.data
+        let antiFakeCode = ''
+
+        if (url.includes('code=')) {
+          const params = new URLSearchParams(url.split('?')[1])
+          antiFakeCode = params.get('code')
+        } else {
+          antiFakeCode = url
+        }
+
+        if (antiFakeCode && antiFakeCode.length >= 12) {
+          stopCamera()
+          await queryByCode(antiFakeCode)
+        }
+      }
+    } catch (error) {
+      console.error('QR scan error:', error)
+    }
+  }, 500)
+}
+
+async function queryByCode(code) {
+  loading.value = true
+  try {
+    const result = await verifyAntiFakeCode(code)
+    if (result.valid && result.data) {
+      emit('verified', result.data)
+    } else {
+      emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
+    }
+  } catch (error) {
+    console.error('Query error:', error)
+    emit('invalid', '验证失败，请检查网络连接')
+  } finally {
+    loading.value = false
+  }
+}
+
+function stopCamera() {
+  showCamera.value = false
+  if (scanInterval) {
+    clearInterval(scanInterval)
+    scanInterval = null
+  }
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop())
+    stream = null
+  }
+}
+
 const handleSubmit = async () => {
   error.value = ''
-  
+
   const validation = validateAntiFakeCode(antiFakeCode.value)
   if (!validation.valid) {
     error.value = validation.message
     return
   }
-
   loading.value = true
   try {
     const result = await verifyAntiFakeCode(antiFakeCode.value.trim())
-    
+
     if (result.valid && result.data) {
       emit('verified', result.data)
     } else {
@@ -102,6 +219,9 @@ defineExpose({ focus: () => inputRef.value?.focus() })
     gap: 0.5rem;
   }
   .btn-submit {
+    display: flex;         
+    align-items: center;
+    justify-content: center;
     min-height: 48px;
     width: 100%;
   }
@@ -127,6 +247,10 @@ defineExpose({ focus: () => inputRef.value?.focus() })
 }
 
 .btn-submit {
+  display: inline-flex;       
+  align-items: center;        
+  justify-content: center;  
+  text-align: center;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
