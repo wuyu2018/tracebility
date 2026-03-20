@@ -1,8 +1,10 @@
 package com.foodtraceability.controller;
 
 import com.foodtraceability.dto.PurchaseInfoDTO;
+import com.foodtraceability.dto.QueryRecordDTO;
 import com.foodtraceability.dto.TraceInfoDTO;
 import com.foodtraceability.dto.VerifyRequest;
+import com.foodtraceability.service.QueryRecordService;
 import com.foodtraceability.service.TraceabilityService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -20,9 +23,11 @@ public class TraceabilityController {
     private static final Logger log = LoggerFactory.getLogger(TraceabilityController.class);
 
     private final TraceabilityService traceabilityService;
+    private final QueryRecordService queryRecordService;
 
-    public TraceabilityController(TraceabilityService traceabilityService) {
+    public TraceabilityController(TraceabilityService traceabilityService, QueryRecordService queryRecordService) {
         this.traceabilityService = traceabilityService;
+        this.queryRecordService = queryRecordService;
     }
 
     @PostMapping("/verify")
@@ -39,9 +44,20 @@ public class TraceabilityController {
                 
                 if (result.isPresent()) {
                     TraceInfoDTO traceInfo = result.get();
-                    log.info("[防伪验证] 精确溯源查询成功 - 防伪码: {}, 批次: {}, 产品: {}, 耗时: {}ms", 
-                        maskCode(antiFakeCode), batchNumber, traceInfo.getProduct().getName(), duration);
-                    return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
+                    QueryRecordDTO queryRecord = queryRecordService.recordQuery(antiFakeCode, batchNumber, "FULL_TRACE");
+                    
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", true);
+                    response.put("data", traceInfo);
+                    response.put("isQueriedBefore", queryRecord.getIsQueriedBefore());
+                    if (queryRecord.getIsQueriedBefore() && queryRecord.getQueryTime() != null) {
+                        response.put("previousQueryTime", queryRecord.getQueryTime());
+                    }
+                    
+                    log.info("[防伪验证] 精确溯源查询成功 - 防伪码: {}, 批次: {}, 产品: {}, 曾查询: {}, 耗时: {}ms", 
+                        maskCode(antiFakeCode), batchNumber, traceInfo.getProduct().getName(), 
+                        queryRecord.getIsQueriedBefore(), duration);
+                    return ResponseEntity.ok(response);
                 } else {
                     log.warn("[防伪验证] 精确溯源查询失败 - 防伪码: {}, 批次: {}, 耗时: {}ms", 
                         maskCode(antiFakeCode), batchNumber, duration);
@@ -91,9 +107,20 @@ public class TraceabilityController {
             
             if (result.isPresent()) {
                 TraceInfoDTO traceInfo = result.get();
-                log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(code), traceInfo.getProduct().getName(), duration);
-                return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
+                QueryRecordDTO queryRecord = queryRecordService.recordQuery(code, traceInfo.getProduct().getBatchNumber(), "SCAN");
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("valid", true);
+                response.put("data", traceInfo);
+                response.put("isQueriedBefore", queryRecord.getIsQueriedBefore());
+                if (queryRecord.getIsQueriedBefore() && queryRecord.getQueryTime() != null) {
+                    response.put("previousQueryTime", queryRecord.getQueryTime());
+                }
+                
+                log.info("[防伪验证] 扫码查询成功 - 防伪码: {}, 产品: {}, 曾查询: {}, 耗时: {}ms", 
+                    maskCode(code), traceInfo.getProduct().getName(), 
+                    queryRecord.getIsQueriedBefore(), duration);
+                return ResponseEntity.ok(response);
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
                 return ResponseEntity.ok(Map.of(
