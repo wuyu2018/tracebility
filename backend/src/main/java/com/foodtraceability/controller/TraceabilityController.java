@@ -85,7 +85,6 @@ public class TraceabilityController {
 
     @PostMapping("/products/list")
     public ResponseEntity<?> listAllProducts() {
-        log.debug("[产品列表] 请求获取全部产品");
         return ResponseEntity.ok(traceabilityService.listAllProducts());
     }
 

@@ -464,7 +464,7 @@ async function loadProductList() {
   try {
     const response = await fetch('/api/products/list', { method: 'POST' })
     const data = await response.json()
-    if (data && data.length > 0) {
+    if (Array.isArray(data) && data.length > 0) {
       productList.value = data
       const batchMap = {}
       data.forEach(product => {
@@ -478,9 +478,13 @@ async function loadProductList() {
         }
       })
       productBatchMap.value = batchMap
+    } else {
+      productList.value = []
+      productBatchMap.value = {}
     }
   } catch (error) {
-    console.error('Failed to load product list:', error)
+    productList.value = []
+    productBatchMap.value = {}
   }
 }
 
@@ -635,7 +639,6 @@ async function handleSubmit() {
           productTemperature: formData.productTemperature !== null ? Number(formData.productTemperature) : null,
           time: formData.time ? `${formData.time}T00:00:00` : null
         }
-        console.log('发送运输销售数据:', apiPayload)
         response = await createTransportSale(apiPayload)
         break
 
@@ -695,11 +698,6 @@ function resetForm() {
 
 function handlePlus(field) {
   ElMessage.info(`功能开发中: ${field.label} 附加操作`)
-}
-
-function debugForm() {
-  console.log('当前实体:', activeEntity.value)
-  console.log('表单数据:', getCurrentForm())
 }
 
 onMounted(() => {
