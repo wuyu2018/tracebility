@@ -252,7 +252,6 @@ const fetchComplaints = async () => {
     }
 
     const response = await getAllComplaintInfo()
-    console.log('投诉列表返回:', response)
 
     let complaintList = []
     if (Array.isArray(response)) {
@@ -302,7 +301,6 @@ const fetchComplaints = async () => {
 }
 
 const handleDelete = (row) => {
-  console.log('删除按钮点击:', row)
   selectedComplaint.value = row
   deleteDialogVisible.value = true
 }
@@ -314,10 +312,7 @@ const confirmDelete = async () => {
   deletingId.value = complaint.complaintId
 
   try {
-    console.log('正在删除投诉，ID:', complaint.complaintId)
-
     const response = await deleteComplaintInfo(complaint.complaintId)
-    console.log('删除响应:', response)
 
     const index = complaints.value.findIndex(item => item.complaintId === complaint.complaintId)
     if (index !== -1) {

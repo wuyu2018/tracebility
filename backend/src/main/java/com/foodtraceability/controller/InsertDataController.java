@@ -37,7 +37,7 @@ public class InsertDataController {
 
     @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductDTO dto) {
-        log.info("[数据录入] 创建产品 - 名称: {}, 批次: {}", dto.getName(), dto.getBatchNumber());
+        log.debug("[数据录入] 创建产品 - 名称: {}, 批次: {}", dto.getName(), dto.getBatchNumber());
         long startTime = System.currentTimeMillis();
         
         try {
@@ -56,11 +56,11 @@ public class InsertDataController {
 
     @PostMapping("/products/{id}/generate-qrcode")
     public ResponseEntity<Product> generateQrCode(@PathVariable Long id) {
-        log.info("[二维码生成] 产品ID: {}", id);
+        log.debug("[二维码生成] 产品ID: {}", id);
         
         try {
             Product product = productService.generateQrCode(id);
-            log.info("[二维码生成] 生成成功 - 产品ID: {}", id);
+            log.debug("[二维码生成] 生成成功 - 产品ID: {}", id);
             return ResponseEntity.ok(product);
         } catch (Exception e) {
             log.error("[二维码生成] 生成失败 - 产品ID: {}, 错误: {}", id, e.getMessage());
@@ -70,7 +70,7 @@ public class InsertDataController {
 
     @PostMapping("/material-purchase")
     public ResponseEntity<MaterialPurchase> createMaterialPurchase(@Valid @RequestBody MaterialPurchaseDTO dto) {
-        log.info("[原料采购] 录入采购记录 - 产品名称: {}, 原料名称: {}", dto.getProductName(), dto.getMaterialName());
+        log.debug("[原料采购] 录入采购记录 - 产品名称: {}, 原料名称: {}", dto.getProductName(), dto.getMaterialName());
         
         try {
             MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
@@ -84,7 +84,7 @@ public class InsertDataController {
 
     @PostMapping("/inspection")
     public ResponseEntity<Inspection> createInspection(@Valid @RequestBody InspectionDTO dto) {
-        log.info("[出厂检验] 录入检验记录 - 产品名称: {}, 批次: {}", dto.getProductName(), dto.getBatchNumber());
+        log.debug("[出厂检验] 录入检验记录 - 产品名称: {}, 批次: {}", dto.getProductName(), dto.getBatchNumber());
         
         try {
             Inspection created = inspectionService.createInspection(dto);
@@ -98,7 +98,7 @@ public class InsertDataController {
 
     @PostMapping("/storage")
     public ResponseEntity<Storage> createStorage(@Valid @RequestBody StorageDTO dto) {
-        log.info("[贮存记录] 录入贮存记录 - 产品名称: {}", dto.getProductName());
+        log.debug("[贮存记录] 录入贮存记录 - 产品名称: {}", dto.getProductName());
         
         try {
             Storage created = storageService.createStorage(dto);
@@ -112,10 +112,10 @@ public class InsertDataController {
 
     @PostMapping("/transport-sale")
     public ResponseEntity<TransportSale> createTransportSale(@Valid @RequestBody TransportSaleDTO dto) {
-        log.info("[储运销售] 录入储运记录 - 产品名称: {}", dto.getProductName());
+        log.debug("[储运销售] 录入储运记录 - 产品名称: {}", dto.getProductName());
         
         try {
-            TransportSale created = transportSaleService.createTransportSale(dto);
+            Transport created = transportSaleService.createTransportSale(dto);
             log.info("[储运销售] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
