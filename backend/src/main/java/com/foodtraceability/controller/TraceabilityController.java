@@ -27,24 +27,48 @@ public class TraceabilityController {
     @PostMapping("/verify")
     public ResponseEntity<?> verify(@Valid @RequestBody VerifyRequest request) {
         String antiFakeCode = request.getAntiFakeCode();
-        log.info("[防伪验证] POST 请求 - 防伪码: {}", maskCode(antiFakeCode));
+        boolean fullTrace = request.isFullTrace();
+        log.info("[防伪验证] POST 请求 - 防伪码: {}, 完整溯源: {}", maskCode(antiFakeCode), fullTrace);
         long startTime = System.currentTimeMillis();
         
         try {
-            var result = traceabilityService.verifyAndGetTraceInfo(antiFakeCode);
-            long duration = System.currentTimeMillis() - startTime;
-            
-            if (result.isPresent()) {
-                TraceInfoDTO traceInfo = result.get();
-                log.info("[防伪验证] 验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
-                    maskCode(antiFakeCode), traceInfo.getProduct().getName(), duration);
-                return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
+            if (fullTrace) {
+                var result = traceabilityService.verifyAndGetTraceInfo(antiFakeCode);
+                long duration = System.currentTimeMillis() - startTime;
+                
+                if (result.isPresent()) {
+                    TraceInfoDTO traceInfo = result.get();
+                    log.info("[防伪验证] 完整溯源查询成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
+                        maskCode(antiFakeCode), traceInfo.getProduct().getName(), duration);
+                    return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
+                } else {
+                    log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
+                    return ResponseEntity.ok(Map.of(
+                            "valid", false,
+                            "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
+                    ));
+                }
             } else {
-                log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
-                return ResponseEntity.ok(Map.of(
-                        "valid", false,
-                        "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
-                ));
+                var info = traceabilityService.getPurchaseInfo(antiFakeCode);
+                long duration = System.currentTimeMillis() - startTime;
+                
+                if (info.isPresent()) {
+                    PurchaseInfoDTO purchaseInfo = info.get();
+                    log.info("[防伪验证] 快速验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
+                        maskCode(antiFakeCode), purchaseInfo.getName(), duration);
+                    return ResponseEntity.ok(Map.of(
+                        "valid", true, 
+                        "productName", purchaseInfo.getName() != null ? purchaseInfo.getName() : "",
+                        "specification", purchaseInfo.getSpecification() != null ? purchaseInfo.getSpecification() : "",
+                        "message", "产品信息验证通过"
+                    ));
+                } else {
+                    log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
+                    return ResponseEntity.ok(Map.of(
+                            "valid", false,
+                            "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
+                    ));
+                }
             }
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;

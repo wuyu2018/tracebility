@@ -66,14 +66,19 @@ onMounted(() => {
 
 async function queryByCode(code) {
   try {
-    const result = await verifyAntiFakeCode(code)
-    if (result.valid && result.data) {
-      onVerified(result.data)
+    const result = await verifyAntiFakeCode(code, true)
+    if (result.valid) {
+      if (result.data) {
+        onVerified(result.data)
+      } else if (result.productName) {
+        onVerified({ product: { name: result.productName, specification: result.specification } })
+      } else {
+        onInvalid('产品信息验证通过')
+      }
     } else {
       onInvalid(result.message || '该产品可能是伪品，请谨慎购买！')
     }
   } catch (error) {
-    console.error('Query error:', error)
     onInvalid('验证失败，请检查网络连接')
   }
 }

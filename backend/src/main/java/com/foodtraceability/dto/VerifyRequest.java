@@ -14,4 +14,6 @@ public class VerifyRequest {
     @NotBlank(message = "防伪码不能为空")
     @Size(min = 12, max = 20, message = "防伪码长度应为12-20位")
     private String antiFakeCode;
+    
+    private boolean fullTrace = false;
 }

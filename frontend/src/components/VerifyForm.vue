@@ -80,7 +80,6 @@ async function startScan() {
       }
     }, 100)
   } catch (error) {
-    console.error('Camera access error:', error)
     alert('无法访问摄像头，请确保已授予权限')
   }
 }
@@ -120,7 +119,6 @@ function startQrScan() {
         }
       }
     } catch (error) {
-      console.error('QR scan error:', error)
     }
   }, 500)
 }
@@ -128,14 +126,19 @@ function startQrScan() {
 async function queryByCode(code) {
   loading.value = true
   try {
-    const result = await verifyAntiFakeCode(code)
-    if (result.valid && result.data) {
-      emit('verified', result.data)
+    const result = await verifyAntiFakeCode(code, true)
+    if (result.valid) {
+      if (result.data) {
+        emit('verified', result.data)
+      } else if (result.productName) {
+        emit('verified', { product: { name: result.productName, specification: result.specification } })
+      } else {
+        emit('invalid', '产品信息验证通过')
+      }
     } else {
       emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
     }
   } catch (error) {
-    console.error('Query error:', error)
     emit('invalid', '验证失败，请检查网络连接')
   } finally {
     loading.value = false

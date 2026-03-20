@@ -7,8 +7,8 @@ const api = axios.create({
   },
 })
 
-export async function verifyAntiFakeCode(antiFakeCode) {
-  const { data } = await api.post('/verify', { antiFakeCode })
+export async function verifyAntiFakeCode(antiFakeCode, fullTrace = false) {
+  const { data } = await api.post('/verify', { antiFakeCode, fullTrace })
   return data
 }
 
