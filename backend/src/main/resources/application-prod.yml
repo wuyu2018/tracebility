@@ -60,11 +60,11 @@ logging:
     org.springframework.web: INFO
     org.springframework.security: WARN
     org.springframework.jdbc: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
     com.zaxxer.hikari: WARN
-    org.hibernate.engine.internal: WARN
-    org.hibernate.event.internal: WARN
+    org.hibernate.engine.internal: OFF
+    org.hibernate.event.internal: OFF
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"

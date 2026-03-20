@@ -55,12 +55,12 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     public void run(String... args) {
         log.info("[数据库初始化] 开始检测数据库状态...");
         
-        if (isDatabaseInitialized()) {
-            log.info("[数据库初始化] 检测到数据库已存在，跳过初始化");
+        if (hasExistingData()) {
+            log.info("[数据库初始化] 检测到数据库已有数据，跳过初始化");
             return;
         }
 
-        log.info("[数据库初始化] 数据库未初始化，开始创建表和初始化数据...");
+        log.info("[数据库初始化] 数据库为空，开始初始化数据...");
         
         try {
             initializeData();
@@ -70,11 +70,11 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         }
     }
 
-    private boolean isDatabaseInitialized() {
+    private boolean hasExistingData() {
         try {
-            Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'product'",
-                Integer.class
+            Long count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM product",
+                Long.class
             );
             return count != null && count > 0;
         } catch (Exception e) {
