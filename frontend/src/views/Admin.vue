@@ -143,7 +143,8 @@ const handleLogin = async () => {
     })
 
     loginSuccess.value = true
-    adminUsername.value = response.data.username 
+    adminUsername.value = response.data.username
+    localStorage.setItem('adminUsername', response.data.username)
     errorMsg.value = ''
     window.location.href = '/ToolsStandalone'
     return 

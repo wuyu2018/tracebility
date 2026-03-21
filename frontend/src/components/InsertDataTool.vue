@@ -388,6 +388,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Clock, Minus } from '@element-plus/icons-vue'
 import {
   createProduct,
   createMaterialPurchase,
