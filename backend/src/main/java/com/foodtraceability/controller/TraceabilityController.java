@@ -3,6 +3,7 @@ package com.foodtraceability.controller;
 import com.foodtraceability.dto.PurchaseInfoDTO;
 import com.foodtraceability.dto.TraceInfoDTO;
 import com.foodtraceability.dto.VerifyRequest;
+import com.foodtraceability.controller.builder.TraceabilityResponseBuilder;
 import com.foodtraceability.service.ProductCleanupService;
 import com.foodtraceability.service.TraceabilityService;
 import jakarta.validation.Valid;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -23,14 +23,14 @@ public class TraceabilityController {
 
     private final TraceabilityService traceabilityService;
     private final ProductCleanupService productCleanupService;
+    private final TraceabilityResponseBuilder responseBuilder;
 
-    private static final Map<String, TraceInfoDTO> TRACE_CACHE = new ConcurrentHashMap<>();
-    private static final Map<String, PurchaseInfoDTO> PURCHASE_CACHE = new ConcurrentHashMap<>();
-    private static final long CACHE_TTL_MS = 60 * 1000;
-
-    public TraceabilityController(TraceabilityService traceabilityService, ProductCleanupService productCleanupService) {
+    public TraceabilityController(TraceabilityService traceabilityService,
+                                   ProductCleanupService productCleanupService,
+                                   TraceabilityResponseBuilder responseBuilder) {
         this.traceabilityService = traceabilityService;
         this.productCleanupService = productCleanupService;
+        this.responseBuilder = responseBuilder;
     }
 
     @PostMapping("/verify")
@@ -47,18 +47,14 @@ public class TraceabilityController {
                 
                 if (result.isPresent()) {
                     TraceInfoDTO traceInfo = result.get();
-                    
-                    String cacheKey = antiFakeCode + ":" + batchNumber;
-                    if (TRACE_CACHE.containsKey(cacheKey)) {
-                        log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 批次: {}, 耗时: {}ms", 
-                            maskCode(antiFakeCode), batchNumber, duration);
-                        return ResponseEntity.ok(Map.of(
-                                "valid", false,
-                                "message", "该产品已被查询过，拒绝再次查询"
-                        ));
+
+                    // 以数据库中的 lastQueriedTime 作为“是否已被查询过”的唯一依据，避免多实例/重启后拦截失效。
+                    if (traceInfo.getProduct() != null && traceInfo.getProduct().getLastQueriedTime() != null) {
+                        log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 批次: {}, 耗时: {}ms",
+                                maskCode(antiFakeCode), batchNumber, duration);
+                        return responseBuilder.duplicateQuery();
                     }
-                    
-                    TRACE_CACHE.put(cacheKey, traceInfo);
+
                     productCleanupService.updateQueryTime(antiFakeCode);
                     
                     log.info("[防伪验证] 精确溯源查询成功 - 防伪码: {}, 批次: {}, 产品: {}, 耗时: {}ms", 
@@ -67,10 +63,7 @@ public class TraceabilityController {
                 } else {
                     log.warn("[防伪验证] 精确溯源查询失败 - 防伪码: {}, 批次: {}, 耗时: {}ms", 
                         maskCode(antiFakeCode), batchNumber, duration);
-                    return ResponseEntity.ok(Map.of(
-                            "valid", false,
-                            "message", "未找到该防伪码和批次对应的产品溯源信息，请核对后重试！"
-                    ));
+                    return responseBuilder.invalid("未找到该防伪码和批次对应的产品溯源信息，请核对后重试！");
                 }
             } else {
                 var info = traceabilityService.getPurchaseInfo(antiFakeCode);
@@ -81,33 +74,22 @@ public class TraceabilityController {
                     
                     if (purchaseInfo.getLastQueriedTime() != null) {
                         log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
-                        return ResponseEntity.ok(Map.of(
-                                "valid", false,
-                                "message", "该产品已被查询过，拒绝再次查询"
-                        ));
+                        return responseBuilder.duplicateQuery();
                     }
                     
                     log.info("[防伪验证] 快速验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
                         maskCode(antiFakeCode), purchaseInfo.getName(), duration);
-                    return ResponseEntity.ok(Map.of(
-                        "valid", true, 
-                        "productName", purchaseInfo.getName() != null ? purchaseInfo.getName() : "",
-                        "specification", purchaseInfo.getSpecification() != null ? purchaseInfo.getSpecification() : "",
-                        "message", "产品信息验证通过，如需查看完整溯源信息请提供批次号"
-                    ));
+                    return responseBuilder.validQuick(purchaseInfo);
                 } else {
                     log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
-                    return ResponseEntity.ok(Map.of(
-                            "valid", false,
-                            "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
-                    ));
+                    return responseBuilder.invalid("未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！");
                 }
             }
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[防伪验证] 系统错误 - 防伪码: {}, 耗时: {}ms, 错误: {}", 
                 maskCode(antiFakeCode), duration, e.getMessage());
-            return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
+            return responseBuilder.systemError();
         }
     }
 
@@ -125,29 +107,23 @@ public class TraceabilityController {
                 
                 if (traceInfo.getProduct() != null && traceInfo.getProduct().getLastQueriedTime() != null) {
                     log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
-                    return ResponseEntity.ok(Map.of(
-                            "valid", false,
-                            "message", "该产品已被查询过，拒绝再次查询"
-                    ));
+                    return responseBuilder.duplicateQuery();
                 }
                 
                 productCleanupService.updateQueryTime(code);
                 
                 log.info("[防伪验证] 扫码查询成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
                     maskCode(code), traceInfo.getProduct().getName(), duration);
-                return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
+                return responseBuilder.validTrace(traceInfo);
             } else {
                 log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
-                return ResponseEntity.ok(Map.of(
-                        "valid", false,
-                        "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"
-                ));
+                return responseBuilder.invalid("未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！");
             }
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[防伪验证] 系统错误 - 防伪码: {}, 耗时: {}ms, 错误: {}", 
                 maskCode(code), duration, e.getMessage());
-            return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
+            return responseBuilder.systemError();
         }
     }
 

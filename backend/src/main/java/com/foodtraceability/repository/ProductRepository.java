@@ -18,6 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByAntiFakeCode(String antiFakeCode);
     
     List<Product> findByIsDeletedFalseAndLastQueriedTimeBefore(LocalDateTime dateTime);
+
+    List<Product> findByNameAndIsDeletedFalse(String name);
     
     @Modifying
     @Query("UPDATE Product p SET p.lastQueriedTime = :queryTime WHERE p.antiFakeCode = :antiFakeCode")

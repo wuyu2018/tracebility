@@ -93,7 +93,8 @@ const complaintRules = {
 const submitting = ref(false)
 const errorMessage = ref('')
 const productOptions = ref([])
-const API_BASE_URL = 'http://localhost:8080/api'
+// Use same-origin path so HTTPS/TLS is always respected in production.
+const API_BASE_URL = '/api'
 const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
 async function loadProductList() {
