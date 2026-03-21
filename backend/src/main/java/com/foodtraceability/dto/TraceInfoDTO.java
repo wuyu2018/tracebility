@@ -30,6 +30,7 @@ public class TraceInfoDTO {
         private String batchNumber;
         private LocalDate productionDate;
         private String shelfLife;
+        private LocalDateTime lastQueriedTime;
     }
 
     @Data

@@ -3,6 +3,7 @@ package com.foodtraceability.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +19,5 @@ public class PurchaseInfoDTO {
     private String imageUrl;
     private String contactPhone;
     private String contactEmail;
+    private LocalDateTime lastQueriedTime;
 }
