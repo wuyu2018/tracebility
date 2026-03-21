@@ -98,7 +98,7 @@ const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
 async function loadProductList() {
   try {
-    const response = await axios.post(`${API_BASE_URL}/products/list`)
+    const response = await axios.post(`${API_BASE_URL}/insert/products/list`)
     productOptions.value = response.data || []
   } catch (error) {
     productOptions.value = []
