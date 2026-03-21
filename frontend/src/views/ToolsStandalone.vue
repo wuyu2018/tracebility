@@ -265,14 +265,19 @@ function copyCodes() {
 async function loadProductList() {
   try {
     const data = await listAllProducts()
+    console.log('产品列表原始数据:', data)
     productList.value = data || []
+    console.log('处理后产品列表:', productList.value)
+    console.log('有二维码的产品:', productsWithQrCode.value.length)
+    console.log('无二维码的产品:', productsWithoutQrCode.value.length)
   } catch (error) {
     console.error('Failed to load product list:', error)
+    productList.value = []
   }
 }
 
 const productsWithQrCode = computed(() => {
-  return productList.value.filter(p => p.qrCodeUrl || (p.productId && p.qrCodeUrl))
+  return productList.value.filter(p => p.qrCodeUrl)
 })
 
 const productsWithoutQrCode = computed(() => {
@@ -340,31 +345,45 @@ function handleSelectionChange(selection) {
 }
 
 async function batchGenerateQrCodes() {
-  if (!productsWithoutQrCode.value.length) return
+  if (!productsWithoutQrCode.value.length) {
+    ElMessage.info('没有需要生成二维码的产品')
+    return
+  }
   
   batchGenerating.value = true
   try {
-    const productIds = productsWithoutQrCode.value.map(p => p.id || p.productId)
+    const productIds = productsWithoutQrCode.value.map(p => p.id).filter(id => id != null)
+    console.log('生成二维码产品IDs:', productIds)
+    
+    if (productIds.length === 0) {
+      ElMessage.warning('未找到有效的产品ID')
+      return
+    }
+    
     await batchGenerateQrCodesApi(productIds)
-    ElMessage.success('批量生成二维码成功')
+    ElMessage.success(`成功生成 ${productIds.length} 个二维码`)
     await loadProductList()
   } catch (error) {
     console.error('Batch generate failed:', error)
-    ElMessage.error('批量生成失败')
+    ElMessage.error('批量生成失败: ' + (error.message || '请重试'))
   } finally {
     batchGenerating.value = false
   }
 }
 
 async function generateQrCodeForProduct(row) {
-  const productId = row.id || row.productId
+  const productId = row.id
+  if (!productId) {
+    ElMessage.error('产品ID无效')
+    return
+  }
   try {
     await generateQrCode(productId)
     ElMessage.success(`产品 ${row.name} 二维码生成成功`)
     await loadProductList()
   } catch (error) {
     console.error('Generate QR code failed:', error)
-    ElMessage.error('二维码生成失败')
+    ElMessage.error('二维码生成失败: ' + (error.message || '请重试'))
   }
 }
 
@@ -399,15 +418,22 @@ async function batchDeleteProducts() {
     )
     
     batchDeleting.value = true
-    const productIds = selectedProducts.value.map(p => p.id || p.productId)
+    const productIds = selectedProducts.value.map(p => p.id).filter(id => id != null)
+    console.log('删除产品IDs:', productIds)
+    
+    if (productIds.length === 0) {
+      ElMessage.warning('未找到有效的产品ID')
+      return
+    }
+    
     await batchDeleteProductsApi(productIds)
     ElMessage.success('批量删除成功')
-    await loadProductList()
     selectedProducts.value = []
+    await loadProductList()
   } catch (error) {
     if (error !== 'cancel') {
       console.error('Batch delete failed:', error)
-      ElMessage.error('批量删除失败')
+      ElMessage.error('批量删除失败: ' + (error.message || '请重试'))
     }
   } finally {
     batchDeleting.value = false
