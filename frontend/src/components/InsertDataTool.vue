@@ -136,7 +136,21 @@
                   <td class="field-action"><el-button type="text" size="small">+</el-button></td>
                   <td class="field-unit"></td>
                 </tr>
-                <tr v-for="field in inspectionFields.slice(1)" :key="field.prop">
+                <tr>
+                  <td class="field-label">批号</td>
+                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
+                  <td class="field-input">
+                    <el-input
+                      v-model="inspectionForm.batchNumber"
+                      placeholder="请输入批号"
+                      :disabled="!inspectionForm.productName"
+                      clearable
+                    />
+                  </td>
+                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
+                  <td class="field-unit"></td>
+                </tr>
+                <tr v-for="field in inspectionFields.slice(2)" :key="field.prop">
                   <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
@@ -420,6 +434,7 @@ const materialForm = reactive({
 
 const inspectionForm = reactive({
   productName: '',
+  batchNumber: '',
   sampleName: '',
   sampleQuantity: null,
   sampleSpecification: ''
@@ -510,6 +525,7 @@ const materialFields = [
 
 const inspectionFields = [
   { prop: 'productName', label: '产品名称', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '请输入批号' },
   { prop: 'sampleName', label: '样品名称', required: false, type: 'text' },
   { prop: 'sampleQuantity', label: '样品数量', required: false, type: 'number' },
   { prop: 'sampleSpecification', label: '样品规格', required: false, type: 'text' }
@@ -591,6 +607,7 @@ async function handleSubmit() {
       case 'inspection':
         apiPayload = {
           productName: formData.productName,
+          batchNumber: formData.batchNumber || null,
           sampleName: formData.sampleName || null,
           sampleQuantity: formData.sampleQuantity ? Number(formData.sampleQuantity) : null,
           sampleSpecification: formData.sampleSpecification || null

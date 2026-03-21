@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.zxing.BarcodeFormat;
@@ -56,6 +57,37 @@ public class ProductServiceImpl implements ProductService {
         String qrCodeData = generateQrCodeAsDataUrl(qrContent);
         product.setQrCodeUrl(qrCodeData);
         return repository.save(product);
+    }
+
+    @Override
+    @Transactional
+    public List<Product> batchGenerateQrCodes(List<Long> productIds) {
+        return productIds.stream().map(id -> {
+            try {
+                return generateQrCode(id);
+            } catch (Exception e) {
+                throw new RuntimeException("批量生成失败，产品ID: " + id + ", 错误: " + e.getMessage());
+            }
+        }).toList();
+    }
+
+    @Override
+    @Transactional
+    public void batchDeleteProducts(List<Long> productIds) {
+        for (Long id : productIds) {
+            repository.findById(id).ifPresent(product -> {
+                product.setQrCodeUrl(null);
+                product.setIsDeleted(true);
+                repository.save(product);
+            });
+        }
+    }
+
+    @Override
+    public List<Product> listAllProducts() {
+        return repository.findAll().stream()
+                .filter(p -> !p.getIsDeleted())
+                .toList();
     }
 
     private String generateQrCodeAsDataUrl(String content) {

@@ -4,6 +4,9 @@
     <div class="complaint-header">
       <h2>投诉信息管理</h2>
       <div class="action-buttons">
+        <el-button type="danger" @click="handleBatchDelete" :disabled="!selectedComplaints.length">
+          批量删除 ({{ selectedComplaints.length }})
+        </el-button>
         <el-button type="primary" @click="fetchComplaints" :loading="loading">
           <el-icon><Refresh /></el-icon>
           刷新
@@ -54,7 +57,9 @@
         stripe
         style="width: 100%"
         @sort-change="handleSortChange"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" />
         <el-table-column type="index" label="序号" width="60" align="center" />
 
         <el-table-column prop="complaintId" label="投诉编号" width="120" sortable>
@@ -138,6 +143,32 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 批量删除确认对话框 -->
+    <el-dialog
+      v-model="batchDeleteDialogVisible"
+      title="批量删除确认"
+      width="450px"
+      center
+    >
+      <div class="delete-confirm-content">
+        <el-icon class="warning-icon"><WarningFilled /></el-icon>
+        <p>确定要删除选中的 <strong>{{ selectedComplaints.length }}</strong> 条投诉信息吗？</p>
+        <p class="delete-warning">此操作不可恢复，请谨慎操作！</p>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchDeleteDialogVisible = false">取消</el-button>
+          <el-button
+            type="danger"
+            @click="confirmBatchDelete"
+            :loading="batchDeleting"
+          >
+            确认删除
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -167,6 +198,9 @@ const pageSize = ref(10)
 const deleteDialogVisible = ref(false)
 const selectedComplaint = ref(null)
 const deletingId = ref(null)
+const selectedComplaints = ref([])
+const batchDeleteDialogVisible = ref(false)
+const batchDeleting = ref(false)
 
 const filteredComplaints = computed(() => {
   let result = [...complaints.value]
@@ -303,6 +337,54 @@ const fetchComplaints = async () => {
 const handleDelete = (row) => {
   selectedComplaint.value = row
   deleteDialogVisible.value = true
+}
+
+const handleSelectionChange = (selection) => {
+  selectedComplaints.value = selection
+}
+
+const handleBatchDelete = () => {
+  if (!selectedComplaints.value.length) return
+  batchDeleteDialogVisible.value = true
+}
+
+const confirmBatchDelete = async () => {
+  if (!selectedComplaints.value.length) return
+
+  batchDeleting.value = true
+  const complaintIds = selectedComplaints.value.map(c => c.complaintId)
+
+  try {
+    for (const id of complaintIds) {
+      await deleteComplaintInfo(id)
+    }
+
+    const deletedIds = new Set(complaintIds)
+    complaints.value = complaints.value.filter(item => !deletedIds.has(item.complaintId))
+
+    ElMessage.success(`批量删除成功，共删除 ${complaintIds.length} 条投诉`)
+    batchDeleteDialogVisible.value = false
+    selectedComplaints.value = []
+
+    if (filteredComplaints.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
+
+    refreshProductOptions()
+
+  } catch (error) {
+    console.error('批量删除投诉失败:', error)
+
+    if (error.response) {
+      ElMessage.error('批量删除失败: ' + (error.response.data || error.response.statusText))
+    } else if (error.request) {
+      ElMessage.error('批量删除失败: 服务器无响应')
+    } else {
+      ElMessage.error('批量删除失败: ' + error.message)
+    }
+  } finally {
+    batchDeleting.value = false
+  }
 }
 
 const confirmDelete = async () => {

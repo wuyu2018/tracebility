@@ -83,11 +83,28 @@
 
           <section class="tool-card">
             <h2>已生成二维码的产品列表</h2>
-            <el-table :data="productsWithQrCode" style="width: 100%">
+            <div class="batch-actions">
+              <el-button type="primary" @click="batchGenerateQrCodes" :disabled="!selectedProducts.length" :loading="batchGenerating">
+                批量生成二维码 ({{ selectedProducts.length }})
+              </el-button>
+              <el-button type="success" @click="batchDownloadQrCodes" :disabled="!selectedProducts.length">
+                批量下载 ({{ selectedProducts.length }})
+              </el-button>
+              <el-button type="danger" @click="batchDeleteProducts" :disabled="!selectedProducts.length" :loading="batchDeleting">
+                批量删除 ({{ selectedProducts.length }})
+              </el-button>
+            </div>
+            <el-table 
+              :data="productsWithQrCode" 
+              style="width: 100%"
+              @selection-change="handleSelectionChange"
+              ref="productTable"
+            >
+              <el-table-column type="selection" width="55" />
               <el-table-column prop="name" label="产品名称" />
               <el-table-column prop="batchNumber" label="批号" />
               <el-table-column prop="antiFakeCode" label="防伪码" />
-              <el-table-column label="操作" width="150">
+              <el-table-column label="操作" width="200">
                 <template #default="scope">
                   <el-button type="primary" size="small" @click="viewQrCode(scope.row)">查看</el-button>
                   <el-button type="success" size="small" @click="downloadProductQrCodeFromRow(scope.row)">下载</el-button>
@@ -107,6 +124,11 @@
       <el-tab-pane label="数据录入" name="insert">
         <InsertDataTool />
       </el-tab-pane>
+
+      <!--管理员管理标签页 -->
+      <el-tab-pane label="管理员管理" name="admin">
+        <AddAdmin />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -115,9 +137,10 @@
 import { ref, onMounted, computed } from 'vue'
 import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
-import { ElMessage } from 'element-plus'
+import AddAdmin from '/src/views/AddAdmin.vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
-import { listAllProducts, generateQrCode } from '../services/api'
+import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
 
 
 const length = ref(16)
@@ -139,6 +162,12 @@ const selectedBatchNumber = ref('')
 const selectedAntiFakeCode = ref('')
 const generatedQrCode = ref('')
 const generating = ref(false)
+
+// 批量操作相关
+const selectedProducts = ref([])
+const productTable = ref(null)
+const batchGenerating = ref(false)
+const batchDeleting = ref(false)
 
 function getVerifyUrl() {
   if (typeof window === 'undefined') return ''
@@ -284,6 +313,74 @@ function downloadProductQrCodeFromRow(row) {
   a.href = row.qrCodeUrl
   a.download = `防伪码_${row.antiFakeCode}.png`
   a.click()
+}
+
+function handleSelectionChange(selection) {
+  selectedProducts.value = selection
+}
+
+async function batchGenerateQrCodes() {
+  if (!selectedProducts.value.length) return
+  
+  batchGenerating.value = true
+  try {
+    const productIds = selectedProducts.value.map(p => p.id || p.productId)
+    await batchGenerateQrCodesApi(productIds)
+    ElMessage.success('批量生成二维码成功')
+    await loadProductList()
+    selectedProducts.value = []
+  } catch (error) {
+    console.error('Batch generate failed:', error)
+    ElMessage.error('批量生成失败')
+  } finally {
+    batchGenerating.value = false
+  }
+}
+
+function batchDownloadQrCodes() {
+  if (!selectedProducts.value.length) return
+  
+  selectedProducts.value.forEach((product, index) => {
+    if (product.qrCodeUrl) {
+      setTimeout(() => {
+        const a = document.createElement('a')
+        a.href = product.qrCodeUrl
+        a.download = `防伪码_${product.antiFakeCode}.png`
+        a.click()
+      }, index * 200)
+    }
+  })
+  ElMessage.success('开始下载二维码')
+}
+
+async function batchDeleteProducts() {
+  if (!selectedProducts.value.length) return
+  
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedProducts.value.length} 个产品的防伪码吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    batchDeleting.value = true
+    const productIds = selectedProducts.value.map(p => p.id || p.productId)
+    await batchDeleteProductsApi(productIds)
+    ElMessage.success('批量删除成功')
+    await loadProductList()
+    selectedProducts.value = []
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Batch delete failed:', error)
+      ElMessage.error('批量删除失败')
+    }
+  } finally {
+    batchDeleting.value = false
+  }
 }
 
 onMounted(() => {
@@ -542,5 +639,16 @@ onMounted(() => {
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
   color: var(--color-text-muted);
+}
+
+.batch-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.batch-actions .el-button {
+  padding: 0.75rem 1.25rem;
 }
 </style>

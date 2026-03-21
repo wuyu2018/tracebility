@@ -28,7 +28,7 @@ export async function getPurchaseInfo(antiFakeCode) {
 }
 
 export async function listAllProducts() {
-  const { data } = await api.post('/products/list')
+  const { data } = await api.post('/insert/products/list')
   return data
 }
 
@@ -74,5 +74,15 @@ export async function createTransportSale(data) {
 
 export async function generateQrCode(productId) {
   const { data } = await api.post(`/insert/products/${productId}/generate-qrcode`);
+  return data;
+}
+
+export async function batchGenerateQrCodes(productIds) {
+  const { data } = await api.post('/insert/products/batch-generate-qrcode', { productIds });
+  return data;
+}
+
+export async function batchDeleteProducts(productIds) {
+  const { data } = await api.post('/insert/products/batch-delete', { productIds });
   return data;
 }
