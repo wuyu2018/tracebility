@@ -8,10 +8,9 @@
 food-traceability-system/
 ├── backend/                    # Spring Boot 后端
 │   ├── src/main/java/         # Java 源代码
-│   │   └── config/
+│   │   └── com/foodtraceability/config/
 │   │       └── SmartDatabaseInitializer.java  # 智能数据库初始化器
 │   └── src/main/resources/    # 配置文件
-│       ├── application.yml    # 开发环境配置
 │       ├── application-prod.yml  # 生产环境配置
 │       └── logback-spring.xml # 日志配置
 ├── frontend/                   # Vue 3 前端
@@ -22,7 +21,6 @@ food-traceability-system/
 │   ├── backup.sh             # 数据库备份脚本
 │   └── health-check.sh       # 健康检查脚本
 ├── docs/                      # 项目文档
-├── docker-compose.yml        # 开发环境 Docker 配置
 ├── docker-compose.prod.yml   # 生产环境 Docker 配置
 ├── .env.example              # 环境变量模板
 └── README.md
@@ -31,9 +29,34 @@ food-traceability-system/
 ## 功能说明
 
 1. **防伪验证**：输入12-20位防伪码，通过 POST 提交到后端验证，返回完整溯源信息或伪品警示
-2. **溯源信息**：产品信息、原料采购、贮存记录、出厂检验、储运销售、投诉信息
+2. **溯源信息**：产品信息、原料采购、贮存记录、出厂检验、储运销售、投诉信息；支持批次模式精确返回对应批次的完整链路
 3. **采购联系**：点击导航栏「采购联系」按钮，浏览全部产品并联系采购
 4. **防伪工具**：独立页面，不含导航栏和页脚，可生成防伪验证二维码及防伪码。访问地址：`/tools.html`
+
+## 核心机制（上线重点）
+- **一次性防伪验证与重复查询拦截**：后端通过把 `Product.lastQueriedTime` 写入数据库来判定“是否已被查询过”。首次验证成功后，后续同一防伪码（批次模式下同一批次）再次访问会返回 `valid:false` 并提示已被查询过。
+- **自动清理（节省隐私/数据空间）**：后端使用定时任务（`@Scheduled(cron="0 0 3 * * ?")`，每天凌晨 3 点）清理 7 天前的查询数据；清理产品的原料采购/贮存/检验/储运销售，并且仅在“该产品下已无未删除批次”时才删除按 `productName` 关联的投诉数据，避免误删仍在保留期内的批次相关信息。
+- **服务端多端一致性**：去重逻辑不依赖进程内缓存，便于多实例部署保持一致拦截效果。
+- **前端扫码识别**：`Verify` 页面使用摄像头获取图像，并用 `jsQR` 解析二维码内容（动态导入，支持从摄像头直接读取防伪码）。
+- **管理员登录风控**：管理员登录接口要求提交验证码（`POST /api/captcha` 先存储验证码，`POST /api/login` 同时校验验证码与密码）。
+
+## 关键接口（前后端对照）
+- 防伪验证
+  - `POST /api/verify`：请求体包含 `antiFakeCode`，可选 `batchNumber`
+  - `GET /api/verify?code=...`：用于扫描二维码时的“快速验证”
+- 采购信息
+  - `POST /api/purchase-info`
+- 产品列表（用于采购联系页和数据录入页的产品下拉）
+  - `POST /api/insert/products/list`
+- 投诉
+  - `POST /api/complaint`
+  - `GET /api/getAllComplaintInfo`
+  - `DELETE /api/deleteComplaintInfo/{id}`
+  - `DELETE /api/deleteComplaintInfo/batch`（请求体为 `Long[]`）
+- 管理员
+  - `POST /api/captcha`（提交 `username`/`captcha`）
+  - `POST /api/login`（请求体为 `AdminLoginDTO`，包含 `captcha`）
+  - `POST /api/admin/register`
 
 ## 快速启动
 
@@ -44,14 +67,14 @@ food-traceability-system/
 cp .env.example .env
 # 编辑 .env 填写实际配置
 
-# 2. 启动开发环境
-docker-compose up -d
+# 2. 启动（生产配置）
+docker-compose -f docker-compose.prod.yml up -d
 
 # 3. 查看服务状态
-docker-compose ps
+docker-compose -f docker-compose.prod.yml ps
 
 # 4. 查看日志
-docker-compose logs -f backend
+docker-compose -f docker-compose.prod.yml logs -f backend
 ```
 
 ### 开发环境
@@ -157,8 +180,8 @@ SmartDatabaseInitializer 检查 product 表
 
 | 端口 | 服务 | 内部/外部 | 生产环境建议 |
 |------|------|-----------|--------------|
-| 80 | Frontend (HTTP) | 外部暴露 | **必须开放** - 标准 HTTP 端口 |
-| 443 | HTTPS | 外部暴露 | 如启用 HTTPS 则开放 |
+| 80 | Edge 网关 (HTTP重定向) | 外部暴露 | **必须开放** - 自动跳转到 HTTPS |
+| 443 | Edge 网关 (HTTPS) | 外部暴露 | **必须开放** - 密文传输 |
 | 3306 | MySQL | **不暴露** | **禁止开放** - 仅容器内部通信 |
 | 8080 | Backend | **不暴露** | **禁止开放** - 仅容器内部通信 |
 | 5173 | Vite Dev | 外部暴露 | 仅开发环境使用 |
@@ -170,13 +193,13 @@ SmartDatabaseInitializer 检查 product 表
                            │
                            ▼
                     ┌──────────────┐
-                    │   端口 80    │  ◀── 防火墙开放
-                    │   端口 443   │  ◀── 如启用 HTTPS
+                    │   端口 80    │  ◀── 防火墙开放（重定向）
+                    │   端口 443   │  ◀── 密文传输（HTTPS）
                     └──────────────┘
                            │
                            ▼
                     ┌──────────────┐
-                    │    Nginx     │  (Frontend 容器)
+                    │    Edge Nginx │  (TLS 终止 + 转发到 Frontend)
                     │   端口 80    │
                     └──────────────┘
                            │
@@ -288,30 +311,25 @@ curl http://localhost:8080/actuator/health
 | 文件 | 修改内容 |
 |------|----------|
 | `.env` | 设置 `MYSQL_ROOT_PASSWORD`、`MYSQL_PASSWORD`、`CORS_ALLOWED_ORIGINS=https://你的域名` |
-| `docker-compose.prod.yml` | 修改 `FRONTEND_EXPOSED_PORT` 如需 HTTPS (443) |
+| `docker-compose.prod.yml` | 修改 `FRONTEND_EXPOSED_PORT`（外部 80 入口；会重定向到 443） |
 | `frontend/nginx.conf` | `server_name` 改为你的域名 |
 | `backend/src/main/resources/application-prod.yml` | `app.verify-url` 改为你的域名 |
 
 ### HTTPS 配置（如需）
 
-如需启用 HTTPS，建议使用 Nginx 作为反向代理：
+如需启用 HTTPS（TLS 终止），建议使用前置 Nginx 网关容器（`edge`）：
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name 你的域名;
-    
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-    
-    location / {
-        proxy_pass http://frontend:80;
-    }
-    location /api {
-        proxy_pass http://backend:8080;
-    }
-}
-```
+在本项目的 `docker-compose.prod.yml` 中，已集成前置网关：
+- 网关配置文件：`edge-nginx.conf`
+- 证书挂载目录：`./certs`
+- 请在项目根目录创建 `certs/` 目录，并放置证书文件
+- 证书文件名约定：
+  - `certs/fullchain.pem`
+  - `certs/privkey.pem`
+
+启用后：
+- 外网访问走 `https://`（密文传输）
+- 前端容器与后端容器间仍走容器内 `http`（降低证书运维复杂度）
 
 ### 一键部署清单
 
@@ -333,9 +351,7 @@ docker-compose -f docker-compose.prod.yml --env-file .env up -d
 
 | 文件 | 原因 | 建议 |
 |------|------|------|
-| `docker-compose.yml` | 开发环境用，生产用 `docker-compose.prod.yml` | 可删 |
-| `application.yml` | 开发配置，生产用 `application-prod.yml` | 可删 |
-| `.env.example` | 仅作模板参考，上线后不需要 | 可删 |
+| `.env.example` | 仅作环境变量模板；生产以 `.env` 为准 | 可按需保留/删除 |
 
 ### 精简后的项目结构
 
@@ -366,7 +382,5 @@ food-traceability-system/
 
 ```gitignore
 # 上线后删除
-docker-compose.yml
 .env.example
-backend/src/main/resources/application.yml
 ```

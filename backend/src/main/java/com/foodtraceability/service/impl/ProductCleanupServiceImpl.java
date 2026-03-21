@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class ProductCleanupServiceImpl implements ProductCleanupService {
@@ -56,6 +58,12 @@ public class ProductCleanupServiceImpl implements ProductCleanupService {
         LocalDateTime cutoffTime = LocalDateTime.now().minusDays(RETENTION_DAYS);
         
         List<Product> expiredProducts = productRepository.findByIsDeletedFalseAndLastQueriedTimeBefore(cutoffTime);
+        Set<String> productNamesToMaybeCleanupComplaints = new HashSet<>();
+        for (Product p : expiredProducts) {
+            if (p.getName() != null) {
+                productNamesToMaybeCleanupComplaints.add(p.getName());
+            }
+        }
         
         int deletedCount = 0;
         for (Product product : expiredProducts) {
@@ -69,14 +77,22 @@ public class ProductCleanupServiceImpl implements ProductCleanupService {
             storageRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
             inspectionRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
             transportSaleRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
-            complaintRepository.deleteByProductName(productName);
             
             product.setIsDeleted(true);
             productRepository.save(product);
             
             deletedCount++;
         }
-        
+
+        // 投诉数据按 productName 关联（没有批次字段）。因此只有当该产品下已不存在任何未删除批次时，
+        // 才删除对应投诉，避免误删其它仍在保留期内的批次投诉记录。
+        for (String productName : productNamesToMaybeCleanupComplaints) {
+            List<Product> remaining = productRepository.findByNameAndIsDeletedFalse(productName);
+            if (remaining.isEmpty()) {
+                complaintRepository.deleteByProductName(productName);
+            }
+        }
+
         log.info("[产品清理] 共清理 {} 个产品的数据", deletedCount);
     }
     

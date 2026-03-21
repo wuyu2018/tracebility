@@ -33,7 +33,7 @@
         </button>
       </div>
       <p class="form-tip">输入防伪码快速验证，输入防伪码+批次号查看完整溯源信息</p>
-      <p v-if="error" class="error-msg">{{ error }}</p>
+      <p v-if="error" class="form-error">{{ error }}</p>
     </div>
     <div v-if="showCamera" class="camera-overlay">
       <div class="camera-container">
@@ -316,29 +316,4 @@ defineExpose({ focus: () => inputRef.value?.focus() })
   cursor: not-allowed;
 }
 
-.loading-spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.error-msg {
-  color: var(--color-danger);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-.form-tip {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-top: 0.25rem;
-}
 </style>

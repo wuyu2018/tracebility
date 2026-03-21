@@ -74,7 +74,8 @@ import { ref, reactive, onMounted ,nextTick } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
-const API_BASE_URL = 'http://localhost:8080/api'
+// Use same-origin path so HTTPS/TLS is always respected in production.
+const API_BASE_URL = '/api'
 const router = useRouter()
 const isOpen = ref(false)
 
