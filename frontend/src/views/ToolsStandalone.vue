@@ -53,35 +53,6 @@
           <p class="tools-desc">为已录入的产品生成防伪二维码，下载后贴到对应产品包装上</p>
 
           <section class="tool-card">
-            <h2>选择产品生成二维码</h2>
-            <div class="qr-gen-form">
-              <div class="form-row">
-                <label>选择产品</label>
-                <el-select v-model="selectedProductId" placeholder="选择产品" filterable @change="onProductChange">
-                  <el-option
-                    v-for="product in productList"
-                    :key="product.id || product.productId"
-                    :label="`${product.name} (${product.batchNumber})`"
-                    :value="product.id || product.productId"
-                  />
-                </el-select>
-              </div>
-              <button type="button" class="btn-generate" @click="generateProductQrCode" :disabled="!selectedProductId || generating">
-                {{ generating ? '生成中...' : '生成二维码' }}
-              </button>
-            </div>
-            
-            <div v-if="generatedQrCode" class="qr-display">
-              <h3>{{ selectedProductName }} - {{ selectedBatchNumber }}</h3>
-              <div class="qr-wrap">
-                <img :src="generatedQrCode" alt="产品二维码" class="qr-image" />
-              </div>
-              <p class="qr-code-text">防伪码: {{ selectedAntiFakeCode }}</p>
-              <button type="button" class="btn-download" @click="downloadProductQrCode">下载二维码</button>
-            </div>
-          </section>
-
-          <section class="tool-card">
             <h2>已生成二维码的产品列表</h2>
             <div class="batch-actions">
               <el-button type="primary" @click="batchGenerateQrCodes" :disabled="!productsWithoutQrCode.length" :loading="batchGenerating">
@@ -104,10 +75,9 @@
               <el-table-column prop="name" label="产品名称" />
               <el-table-column prop="batchNumber" label="批号" />
               <el-table-column prop="antiFakeCode" label="防伪码" />
-              <el-table-column label="操作" width="200">
+              <el-table-column label="操作" width="100">
                 <template #default="scope">
-                  <el-button type="primary" size="small" @click="viewQrCode(scope.row)">查看</el-button>
-                  <el-button type="success" size="small" @click="downloadProductQrCodeFromRow(scope.row)">下载</el-button>
+                  <el-button type="success" size="small" @click="downloadQrCode(scope.row)">下载</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -186,12 +156,6 @@ const generatedCodes = ref([])
 
 // 二维码生成相关
 const productList = ref([])
-const selectedProductId = ref(null)
-const selectedProductName = ref('')
-const selectedBatchNumber = ref('')
-const selectedAntiFakeCode = ref('')
-const generatedQrCode = ref('')
-const generating = ref(false)
 
 // 批量操作相关
 const selectedProducts = ref([])
@@ -314,62 +278,6 @@ const productsWithoutQrCode = computed(() => {
   return productList.value.filter(p => !p.qrCodeUrl)
 })
 
-function onProductChange() {
-  const product = productList.value.find(p => p.id === selectedProductId.value || p.productId === selectedProductId.value)
-  if (product) {
-    selectedProductName.value = product.name
-    selectedBatchNumber.value = product.batchNumber
-    selectedAntiFakeCode.value = product.antiFakeCode
-    generatedQrCode.value = product.qrCodeUrl || ''
-  } else {
-    selectedProductName.value = ''
-    selectedBatchNumber.value = ''
-    selectedAntiFakeCode.value = ''
-    generatedQrCode.value = ''
-  }
-}
-
-async function generateProductQrCode() {
-  if (!selectedProductId.value) return
-  
-  generating.value = true
-  try {
-    const result = await generateQrCode(selectedProductId.value)
-    generatedQrCode.value = result.qrCodeUrl
-    ElMessage.success('二维码生成成功')
-    await loadProductList()
-  } catch (error) {
-    console.error('Failed to generate QR code:', error)
-    ElMessage.error('二维码生成失败')
-  } finally {
-    generating.value = false
-  }
-}
-
-function viewQrCode(row) {
-  selectedProductId.value = row.id || row.productId
-  selectedProductName.value = row.name
-  selectedBatchNumber.value = row.batchNumber
-  selectedAntiFakeCode.value = row.antiFakeCode
-  generatedQrCode.value = row.qrCodeUrl || ''
-}
-
-function downloadProductQrCode() {
-  if (!generatedQrCode.value) return
-  const a = document.createElement('a')
-  a.href = generatedQrCode.value
-  a.download = `防伪码_${selectedAntiFakeCode.value}.png`
-  a.click()
-}
-
-function downloadProductQrCodeFromRow(row) {
-  if (!row.qrCodeUrl) return
-  const a = document.createElement('a')
-  a.href = row.qrCodeUrl
-  a.download = `防伪码_${row.antiFakeCode}.png`
-  a.click()
-}
-
 function handleSelectionChange(selection) {
   selectedProducts.value = selection
 }
@@ -388,6 +296,14 @@ function selectAllPending() {
 function clearPendingSelection() {
   pendingTable.value?.clearSelection()
   selectedPendingProducts.value = []
+}
+
+function downloadQrCode(row) {
+  if (!row.qrCodeUrl) return
+  const a = document.createElement('a')
+  a.href = row.qrCodeUrl
+  a.download = `防伪码_${row.antiFakeCode}.png`
+  a.click()
 }
 
 async function batchGenerateSelectedQrCodes() {
