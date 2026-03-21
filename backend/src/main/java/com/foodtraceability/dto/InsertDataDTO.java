@@ -50,7 +50,6 @@ public class InsertDataDTO {
         private String batchNumber;
         @Size(max = 50, message = "规格长度不能超过50")
         private String specification;
-        private LocalDate productionDate;
         @Size(max = 50, message = "保质期长度不能超过50")
         private String shelfLife;
         @Size(max = 255, message = "图片URL长度不能超过255")
