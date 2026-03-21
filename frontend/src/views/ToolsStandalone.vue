@@ -113,10 +113,24 @@
             </el-table>
             <div v-if="productsWithoutQrCode.length > 0" class="pending-section">
               <h3>待生成二维码的产品 ({{ productsWithoutQrCode.length }})</h3>
+              <div class="batch-actions">
+                <el-button type="warning" @click="batchGenerateSelectedQrCodes" :disabled="!selectedPendingProducts.length" :loading="batchGenerating">
+                  批量生成选中的二维码 ({{ selectedPendingProducts.length }})
+                </el-button>
+                <el-button type="info" @click="selectAllPending" :disabled="!productsWithoutQrCode.length">
+                  全选
+                </el-button>
+                <el-button type="info" @click="clearPendingSelection" :disabled="!selectedPendingProducts.length">
+                  取消选择
+                </el-button>
+              </div>
               <el-table 
                 :data="productsWithoutQrCode" 
                 style="width: 100%"
+                @selection-change="handlePendingSelectionChange"
+                ref="pendingTable"
               >
+                <el-table-column type="selection" width="55" />
                 <el-table-column prop="name" label="产品名称" />
                 <el-table-column prop="batchNumber" label="批号" />
                 <el-table-column prop="antiFakeCode" label="防伪码" />
@@ -182,6 +196,8 @@ const generating = ref(false)
 // 批量操作相关
 const selectedProducts = ref([])
 const productTable = ref(null)
+const selectedPendingProducts = ref([])
+const pendingTable = ref(null)
 const batchGenerating = ref(false)
 const batchDeleting = ref(false)
 
@@ -356,6 +372,50 @@ function downloadProductQrCodeFromRow(row) {
 
 function handleSelectionChange(selection) {
   selectedProducts.value = selection
+}
+
+function handlePendingSelectionChange(selection) {
+  selectedPendingProducts.value = selection
+}
+
+function selectAllPending() {
+  pendingTable.value?.clearSelection()
+  productsWithoutQrCode.value.forEach(product => {
+    pendingTable.value?.toggleRowSelection(product, true)
+  })
+}
+
+function clearPendingSelection() {
+  pendingTable.value?.clearSelection()
+  selectedPendingProducts.value = []
+}
+
+async function batchGenerateSelectedQrCodes() {
+  if (!selectedPendingProducts.value.length) {
+    ElMessage.info('请先选择要生成二维码的产品')
+    return
+  }
+  
+  batchGenerating.value = true
+  try {
+    const productIds = selectedPendingProducts.value.map(p => p.id).filter(id => id != null)
+    console.log('生成选中的二维码产品IDs:', productIds)
+    
+    if (productIds.length === 0) {
+      ElMessage.warning('未找到有效的产品ID')
+      return
+    }
+    
+    await batchGenerateQrCodesApi(productIds)
+    ElMessage.success(`成功生成 ${productIds.length} 个二维码`)
+    selectedPendingProducts.value = []
+    await loadProductList()
+  } catch (error) {
+    console.error('Batch generate failed:', error)
+    ElMessage.error('批量生成失败: ' + (error.message || '请重试'))
+  } finally {
+    batchGenerating.value = false
+  }
 }
 
 async function batchGenerateQrCodes() {
