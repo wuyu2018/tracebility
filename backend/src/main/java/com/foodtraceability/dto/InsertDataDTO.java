@@ -28,6 +28,8 @@ public class InsertDataDTO {
         @NotBlank(message = "产品名称不能为空")
         @Size(max = 100, message = "产品名称长度不能超过100")
         private String productName;
+        @Size(max = 50, message = "批号长度不能超过50")
+        private String batchNumber;
         @Size(max = 100, message = "样品名称长度不能超过100")
         private String sampleName;
         @Min(value = 0, message = "样品数量不能小于0")
