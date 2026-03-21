@@ -72,4 +72,24 @@ public class AdminServiceImpl implements AdminService {
         admin.setPassword(passwordEncoder.encode(password));
         return adminRepository.save(admin);
     }
+
+    @Override
+    public void verifyCurrentPassword(String username, String currentPassword) {
+        if (username == null || username.isBlank()) {
+            throw new BusinessException("用户名不能为空");
+        }
+        if (currentPassword == null || currentPassword.isBlank()) {
+            throw new BusinessException("当前密码不能为空");
+        }
+
+        Optional<Admin> adminOptional = adminRepository.findByUsername(username);
+        if (!adminOptional.isPresent()) {
+            throw new BusinessException("管理员不存在");
+        }
+
+        Admin admin = adminOptional.get();
+        if (!passwordEncoder.matches(currentPassword, admin.getPassword())) {
+            throw new BusinessException("当前密码验证失败");
+        }
+    }
 }

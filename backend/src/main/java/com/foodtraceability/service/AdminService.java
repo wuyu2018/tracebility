@@ -11,4 +11,6 @@ public interface AdminService {
     Admin findByUsername(String username);
 
     Admin createAdmin(String username, String password);
+
+    void verifyCurrentPassword(String username, String currentPassword);
 }

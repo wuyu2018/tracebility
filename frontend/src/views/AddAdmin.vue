@@ -3,7 +3,7 @@
     <div class="add-admin-card">
       <div class="card-header">
         <h2>添加管理员</h2>
-        <span class="subtitle">创建新的管理员账户</span>
+        <span class="subtitle">创建新的管理员账户（需超级管理员权限）</span>
       </div>
 
       <div class="form-section">
@@ -15,18 +15,26 @@
             v-model="adminForm.username"
             placeholder="请输入管理员账号"
             autocomplete="off"
+            @input="validateUsername"
           />
+          <span class="field-hint" :class="{ 'hint-error': usernameError }">
+            {{ usernameError || '4-20位字母或数字组合' }}
+          </span>
         </div>
 
         <div class="input-group">
-          <label>密码</label>
+          <label>新管理员密码</label>
           <input
             type="password"
             class="input-field"
             v-model="adminForm.password"
-            placeholder="请输入密码（至少6位）"
+            placeholder="请输入密码"
             autocomplete="off"
+            @input="validatePassword"
           />
+          <span class="field-hint" :class="{ 'hint-error': passwordError }">
+            {{ passwordError || '8-20位，必须包含字母、数字和特殊字符' }}
+          </span>
         </div>
 
         <div class="input-group">
@@ -41,6 +49,25 @@
           />
         </div>
 
+        <div class="security-notice">
+          <div class="notice-icon">🔒</div>
+          <div class="notice-content">
+            <strong>安全验证</strong>
+            <p>为确保安全，请输入当前管理员账号的密码进行身份验证</p>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>当前管理员密码</label>
+          <input
+            type="password"
+            class="input-field security-input"
+            v-model="adminForm.currentPassword"
+            placeholder="请输入当前管理员密码"
+            autocomplete="off"
+          />
+        </div>
+
         <div v-if="errorMsg" class="error-message">
           <span>⚠️</span> {{ errorMsg }}
         </div>
@@ -49,21 +76,26 @@
           <span>✅</span> {{ successMsg }}
         </div>
 
-        <button type="button" class="submit-btn" :disabled="loading" @click="handleAddAdmin">
+        <button type="button" class="submit-btn" :disabled="loading || !isFormValid" @click="handleAddAdmin">
           <span v-if="loading">⏳ 处理中...</span>
           <span v-else>🚀 创建管理员</span>
         </button>
       </div>
 
       <div class="footer-note">
-        <strong>⚠️ 仅限超级管理员操作</strong>
+        <strong>⚠️ 操作安全警告</strong>
+        <ul>
+          <li>仅限超级管理员操作</li>
+          <li>新建管理员账号可登录系统</li>
+          <li>请妥善保管管理员账号密码</li>
+        </ul>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
@@ -72,12 +104,69 @@ const API_BASE_URL = '/api'
 const adminForm = reactive({
   username: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  currentPassword: ''
 })
 
 const errorMsg = ref('')
 const successMsg = ref('')
 const loading = ref(false)
+const usernameError = ref('')
+const passwordError = ref('')
+
+const isFormValid = computed(() => {
+  return (
+    adminForm.username &&
+    adminForm.password &&
+    adminForm.confirmPassword &&
+    adminForm.currentPassword &&
+    !usernameError.value &&
+    !passwordError.value &&
+    adminForm.password === adminForm.confirmPassword
+  )
+})
+
+function validateUsername() {
+  const username = adminForm.username
+  if (!username) {
+    usernameError.value = ''
+    return
+  }
+  if (username.length < 4 || username.length > 20) {
+    usernameError.value = '用户名长度必须为4-20位'
+    return
+  }
+  if (!/^[a-zA-Z0-9]+$/.test(username)) {
+    usernameError.value = '用户名只能包含字母和数字'
+    return
+  }
+  usernameError.value = ''
+}
+
+function validatePassword() {
+  const password = adminForm.password
+  if (!password) {
+    passwordError.value = ''
+    return
+  }
+  if (password.length < 8 || password.length > 20) {
+    passwordError.value = '密码长度必须为8-20位'
+    return
+  }
+  if (!/[a-zA-Z]/.test(password)) {
+    passwordError.value = '密码必须包含字母'
+    return
+  }
+  if (!/[0-9]/.test(password)) {
+    passwordError.value = '密码必须包含数字'
+    return
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    passwordError.value = '密码必须包含特殊字符'
+    return
+  }
+  passwordError.value = ''
+}
 
 const handleAddAdmin = async () => {
   errorMsg.value = ''
@@ -87,16 +176,30 @@ const handleAddAdmin = async () => {
     errorMsg.value = '请输入管理员账号'
     return
   }
+  if (usernameError.value) {
+    errorMsg.value = usernameError.value
+    return
+  }
   if (!adminForm.password || !adminForm.password.trim()) {
     errorMsg.value = '请输入密码'
     return
   }
-  if (adminForm.password.length < 6) {
-    errorMsg.value = '密码长度不能少于6位'
+  if (passwordError.value) {
+    errorMsg.value = passwordError.value
     return
   }
   if (adminForm.password !== adminForm.confirmPassword) {
     errorMsg.value = '两次输入的密码不一致'
+    return
+  }
+  if (!adminForm.currentPassword) {
+    errorMsg.value = '请输入当前管理员密码进行身份验证'
+    return
+  }
+
+  const currentAdminUsername = localStorage.getItem('adminUsername')
+  if (!currentAdminUsername) {
+    errorMsg.value = '无法获取当前管理员信息，请重新登录'
     return
   }
 
@@ -105,7 +208,9 @@ const handleAddAdmin = async () => {
   try {
     const response = await axios.post(`${API_BASE_URL}/admin/register`, {
       username: adminForm.username,
-      password: adminForm.password
+      password: adminForm.password,
+      currentPassword: adminForm.currentPassword,
+      currentAdminUsername: currentAdminUsername
     })
 
     successMsg.value = response.data.message || '管理员创建成功'
@@ -114,6 +219,7 @@ const handleAddAdmin = async () => {
     adminForm.username = ''
     adminForm.password = ''
     adminForm.confirmPassword = ''
+    adminForm.currentPassword = ''
 
   } catch (error) {
     console.error('创建管理员失败:', error)
@@ -146,7 +252,7 @@ const handleAddAdmin = async () => {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   padding: 2.5rem 2rem;
 }
 
@@ -204,14 +310,62 @@ const handleAddAdmin = async () => {
   font-size: 0.95rem;
 }
 
+.security-input {
+  border-color: var(--color-warning, #e6a23c);
+  background-color: #fdf6ec;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.hint-error {
+  color: var(--color-danger, #f56c6c);
+}
+
+.security-notice {
+  display: flex;
+  gap: 1rem;
+  background: #fff3e6;
+  border: 1px solid #ffe4b5;
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.notice-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.notice-content {
+  flex: 1;
+}
+
+.notice-content strong {
+  display: block;
+  color: var(--color-warning-dark, #b37b00);
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.notice-content p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 .error-message {
-  color: var(--color-danger);
+  color: var(--color-danger, #f56c6c);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: #fee2e2;
+  background: #fef0f0;
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
 }
@@ -252,27 +406,31 @@ const handleAddAdmin = async () => {
 }
 
 .submit-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .footer-note {
   margin-top: 2rem;
   font-size: 0.85rem;
   color: var(--color-text-muted);
-  text-align: center;
+  text-align: left;
   border-top: 1px dashed #e0e6e1;
   padding-top: 1.25rem;
 }
 
 .footer-note strong {
-  color: var(--color-primary-dark);
+  display: block;
+  color: var(--color-danger, #f56c6c);
   font-weight: 600;
-  background: var(--color-bg);
-  padding: 0.25rem 0.875rem;
-  border-radius: 50px;
-  font-size: 0.8rem;
-  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+.footer-note ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.8;
 }
 
 @media (max-width: 480px) {
