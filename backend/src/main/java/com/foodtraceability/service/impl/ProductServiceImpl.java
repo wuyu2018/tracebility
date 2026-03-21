@@ -77,7 +77,6 @@ public class ProductServiceImpl implements ProductService {
         for (Long id : productIds) {
             repository.findById(id).ifPresent(product -> {
                 product.setQrCodeUrl(null);
-                product.setIsDeleted(true);
                 repository.save(product);
             });
         }
