@@ -302,7 +302,7 @@ const fetchComplaints = async () => {
         return {
           complaintId: complaintId,
           productId: productId,
-          productName: productMap[productId] || (productId ? `产品${productId}` : '未知产品'),
+          productName: item.productName || productMap[productId] || (productId ? `产品${productId}` : '未知产品'),
           complaintContent: item.complaintReason || item.complaint_content || item.complaint_reason || item.complaintContent || '',
           complaintTime: item.complaintTime || item.complaint_time || new Date().toISOString(),
           rawData: item
