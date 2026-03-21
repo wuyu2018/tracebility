@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -22,6 +23,10 @@ public class TraceabilityController {
 
     private final TraceabilityService traceabilityService;
     private final ProductCleanupService productCleanupService;
+
+    private static final Map<String, TraceInfoDTO> TRACE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, PurchaseInfoDTO> PURCHASE_CACHE = new ConcurrentHashMap<>();
+    private static final long CACHE_TTL_MS = 60 * 1000;
 
     public TraceabilityController(TraceabilityService traceabilityService, ProductCleanupService productCleanupService) {
         this.traceabilityService = traceabilityService;
@@ -42,6 +47,18 @@ public class TraceabilityController {
                 
                 if (result.isPresent()) {
                     TraceInfoDTO traceInfo = result.get();
+                    
+                    String cacheKey = antiFakeCode + ":" + batchNumber;
+                    if (TRACE_CACHE.containsKey(cacheKey)) {
+                        log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 批次: {}, 耗时: {}ms", 
+                            maskCode(antiFakeCode), batchNumber, duration);
+                        return ResponseEntity.ok(Map.of(
+                                "valid", false,
+                                "message", "该产品已被查询过，拒绝再次查询"
+                        ));
+                    }
+                    
+                    TRACE_CACHE.put(cacheKey, traceInfo);
                     productCleanupService.updateQueryTime(antiFakeCode);
                     
                     log.info("[防伪验证] 精确溯源查询成功 - 防伪码: {}, 批次: {}, 产品: {}, 耗时: {}ms", 
@@ -61,6 +78,15 @@ public class TraceabilityController {
                 
                 if (info.isPresent()) {
                     PurchaseInfoDTO purchaseInfo = info.get();
+                    
+                    if (purchaseInfo.getLastQueriedTime() != null) {
+                        log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 耗时: {}ms", maskCode(antiFakeCode), duration);
+                        return ResponseEntity.ok(Map.of(
+                                "valid", false,
+                                "message", "该产品已被查询过，拒绝再次查询"
+                        ));
+                    }
+                    
                     log.info("[防伪验证] 快速验证成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 
                         maskCode(antiFakeCode), purchaseInfo.getName(), duration);
                     return ResponseEntity.ok(Map.of(
@@ -96,6 +122,15 @@ public class TraceabilityController {
             
             if (result.isPresent()) {
                 TraceInfoDTO traceInfo = result.get();
+                
+                if (traceInfo.getProduct() != null && traceInfo.getProduct().getLastQueriedTime() != null) {
+                    log.warn("[防伪验证] 重复查询拦截 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
+                    return ResponseEntity.ok(Map.of(
+                            "valid", false,
+                            "message", "该产品已被查询过，拒绝再次查询"
+                    ));
+                }
+                
                 productCleanupService.updateQueryTime(code);
                 
                 log.info("[防伪验证] 扫码查询成功 - 防伪码: {}, 产品: {}, 耗时: {}ms", 

@@ -102,6 +102,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setBatchNumber(product.getBatchNumber());
         productInfo.setProductionDate(product.getProductionDate());
         productInfo.setShelfLife(product.getShelfLife());
+        productInfo.setLastQueriedTime(product.getLastQueriedTime());
         dto.setProduct(productInfo);
 
         String productName = product.getName();
@@ -132,6 +133,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         dto.setImageUrl(product.getImageUrl());
         dto.setContactPhone(product.getContactPhone());
         dto.setContactEmail(product.getContactEmail());
+        dto.setLastQueriedTime(product.getLastQueriedTime());
         return dto;
     }
 
