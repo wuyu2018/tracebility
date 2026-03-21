@@ -462,7 +462,7 @@ const productBatchMap = ref({})
 
 async function loadProductList() {
   try {
-    const response = await fetch('/api/products/list', { method: 'POST' })
+    const response = await fetch('/api/insert/products/list', { method: 'POST' })
     const data = await response.json()
     if (Array.isArray(data) && data.length > 0) {
       productList.value = data
