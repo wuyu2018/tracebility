@@ -84,8 +84,8 @@
           <section class="tool-card">
             <h2>已生成二维码的产品列表</h2>
             <div class="batch-actions">
-              <el-button type="primary" @click="batchGenerateQrCodes" :disabled="!selectedProducts.length" :loading="batchGenerating">
-                批量生成二维码 ({{ selectedProducts.length }})
+              <el-button type="primary" @click="batchGenerateQrCodes" :disabled="!productsWithoutQrCode.length" :loading="batchGenerating">
+                批量生成二维码 ({{ productsWithoutQrCode.length }})
               </el-button>
               <el-button type="success" @click="batchDownloadQrCodes" :disabled="!selectedProducts.length">
                 批量下载 ({{ selectedProducts.length }})
@@ -111,6 +111,22 @@
                 </template>
               </el-table-column>
             </el-table>
+            <div v-if="productsWithoutQrCode.length > 0" class="pending-section">
+              <h3>待生成二维码的产品 ({{ productsWithoutQrCode.length }})</h3>
+              <el-table 
+                :data="productsWithoutQrCode" 
+                style="width: 100%"
+              >
+                <el-table-column prop="name" label="产品名称" />
+                <el-table-column prop="batchNumber" label="批号" />
+                <el-table-column prop="antiFakeCode" label="防伪码" />
+                <el-table-column label="操作" width="100">
+                  <template #default="scope">
+                    <el-button type="warning" size="small" @click="generateQrCodeForProduct(scope.row)">生成</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </section>
         </div>
       </el-tab-pane>
@@ -259,6 +275,10 @@ const productsWithQrCode = computed(() => {
   return productList.value.filter(p => p.qrCodeUrl || (p.productId && p.qrCodeUrl))
 })
 
+const productsWithoutQrCode = computed(() => {
+  return productList.value.filter(p => !p.qrCodeUrl)
+})
+
 function onProductChange() {
   const product = productList.value.find(p => p.id === selectedProductId.value || p.productId === selectedProductId.value)
   if (product) {
@@ -320,20 +340,31 @@ function handleSelectionChange(selection) {
 }
 
 async function batchGenerateQrCodes() {
-  if (!selectedProducts.value.length) return
+  if (!productsWithoutQrCode.value.length) return
   
   batchGenerating.value = true
   try {
-    const productIds = selectedProducts.value.map(p => p.id || p.productId)
+    const productIds = productsWithoutQrCode.value.map(p => p.id || p.productId)
     await batchGenerateQrCodesApi(productIds)
     ElMessage.success('批量生成二维码成功')
     await loadProductList()
-    selectedProducts.value = []
   } catch (error) {
     console.error('Batch generate failed:', error)
     ElMessage.error('批量生成失败')
   } finally {
     batchGenerating.value = false
+  }
+}
+
+async function generateQrCodeForProduct(row) {
+  const productId = row.id || row.productId
+  try {
+    await generateQrCode(productId)
+    ElMessage.success(`产品 ${row.name} 二维码生成成功`)
+    await loadProductList()
+  } catch (error) {
+    console.error('Generate QR code failed:', error)
+    ElMessage.error('二维码生成失败')
   }
 }
 
@@ -394,13 +425,26 @@ onMounted(() => {
   min-height: 100vh;
   background: var(--color-bg);
   display: flex;
-  align-items: flex-start;
   justify-content: center;
   padding: 2rem 1rem;
 }
 
 .tools-standalone :deep(.el-tabs__content) {
   overflow: visible;
+}
+
+.tools-standalone :deep(.el-tabs__header) {
+  margin-bottom: 1.5rem;
+}
+
+.tools-standalone :deep(.el-tabs__item) {
+  font-size: 1rem;
+  padding: 0 1.25rem;
+}
+
+.tools-standalone :deep(.el-tabs__nav) {
+  display: flex;
+  justify-content: center;
 }
 
 @media (max-width: 480px) {
@@ -410,20 +454,23 @@ onMounted(() => {
 }
 
 .tools-page {
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
+  margin: 0 auto;
 }
 
 .tools-page h1 {
   font-size: 1.5rem;
   color: var(--color-primary-dark);
   margin-bottom: 0.5rem;
+  text-align: center;
 }
 
 .tools-desc {
   color: var(--color-text-muted);
   font-size: 0.95rem;
   margin-bottom: 2rem;
+  text-align: center;
 }
 
 .tool-card {
@@ -433,6 +480,7 @@ onMounted(() => {
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-sm);
   border: 1px solid rgba(45, 90, 61, 0.06);
+  text-align: center;
 }
 
 .tool-card h2 {
@@ -582,15 +630,7 @@ onMounted(() => {
 .tools-tabs {
   width: 100%;
   max-width: 1200px;
-}
-
-.tools-tabs :deep(.el-tabs__header) {
-  margin-bottom: 1.5rem;
-}
-
-.tools-tabs :deep(.el-tabs__item) {
-  font-size: 1rem;
-  padding: 0 1.25rem;
+  margin: 0 auto;
 }
 
 .qr-gen-form {
@@ -646,9 +686,22 @@ onMounted(() => {
   gap: 0.75rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .batch-actions .el-button {
   padding: 0.75rem 1.25rem;
+}
+
+.pending-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed #e0e6e1;
+}
+
+.pending-section h3 {
+  margin-bottom: 1rem;
+  color: var(--color-text);
+  font-size: 1rem;
 }
 </style>
