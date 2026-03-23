@@ -12,7 +12,6 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
 
-# 安装 wget（用于健康检查）
 RUN apk add --no-cache wget
 
 RUN addgroup -g 1001 -S appgroup && \
@@ -28,9 +27,7 @@ USER appuser
 
 EXPOSE 8080
 
-# 健康检查：访问 actuator/health 端点（需要应用启用 actuator）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "-Djava.security.egd=file:/dev/./urandom", "app.jar"]
 ENTRYPOINT ["java", "-Xmx512m", "-jar", "-Djava.security.egd=file:/dev/./urandom", "app.jar"]
