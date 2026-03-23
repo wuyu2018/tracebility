@@ -38,7 +38,6 @@ public class ProductServiceImpl implements ProductService {
         entity.setAntiFakeCode(dto.getAntiFakeCode());
         entity.setName(dto.getName());
         entity.setSpecification(dto.getSpecification());
-        entity.setBatchNumber(dto.getBatchNumber());
         entity.setShelfLife(dto.getShelfLife());
         entity.setImageUrl(dto.getImageUrl());
         entity.setContactPhone(dto.getContactPhone());
