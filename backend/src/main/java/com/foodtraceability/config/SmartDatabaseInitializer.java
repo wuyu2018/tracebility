@@ -134,12 +134,13 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     }
 
     private Product createProduct(String antiFakeCode, String name, String specification, String batchNumber,
-                                  String shelfLife, String imageUrl, String phone, String email) {
+                                  LocalDate productionDate, String shelfLife, String imageUrl, String phone, String email) {
         Product p = new Product();
         p.setAntiFakeCode(antiFakeCode);
         p.setName(name);
         p.setSpecification(specification);
         p.setBatchNumber(batchNumber);
+        p.setProductionDate(productionDate);
         p.setShelfLife(shelfLife);
         p.setImageUrl(imageUrl);
         p.setContactPhone(phone);
