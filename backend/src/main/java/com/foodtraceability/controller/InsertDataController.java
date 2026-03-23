@@ -40,7 +40,7 @@ public class InsertDataController {
 
     @PostMapping("/products")
     public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO dto) {
-        log.debug("[数据录入] 创建产品 - 名称: {}, 批次: {}", dto.getName(), dto.getBatchNumber());
+        log.debug("[数据录入] 创建产品 - 名称: {}", dto.getName());
         long startTime = System.currentTimeMillis();
         
         try {
