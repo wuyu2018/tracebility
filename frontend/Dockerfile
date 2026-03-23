@@ -1,10 +1,15 @@
 FROM node:20-alpine AS builder
 
+RUN npm config set registry https://registry.npmmirror.com && \
+    apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone
+
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --registry https://registry.npmmirror.com
 
 COPY . .
 
@@ -31,7 +36,6 @@ USER nginxuser
 
 EXPOSE 80
 
-# 健康检查：访问 /health 端点（已在 nginx.conf 中定义）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
 

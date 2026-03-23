@@ -1,11 +1,14 @@
 FROM eclipse-temurin:17-jdk-alpine AS builder
 
+RUN cat > /etc/apk/repositories << 'EOF' \
+    && apk add --no-cache maven \
+    http://mirrors.aliyun.com/alpine/v3.18/main \
+    http://mirrors.aliyun.com/alpine/v3.18/community
+
 WORKDIR /app
 
-RUN apk add --no-cache maven
-
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B || mvn dependency:resolve -B
 
 COPY src ./src
 RUN mvn clean package -DskipTests
