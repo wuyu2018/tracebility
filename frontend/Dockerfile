@@ -1,4 +1,4 @@
-FROM registry.cn-hangzhou.aliyuncs.com/acs/node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 RUN npm config set registry https://registry.npmmirror.com && \
     apk add --no-cache tzdata && \
@@ -18,7 +18,7 @@ ARG NGINX_PORT
 ENV VUE_APP_API_BASE_URL="https://${NGINX_HOST}:${NGINX_PORT}/api"
 RUN npm run build
 
-FROM registry.cn-hangzhou.aliyuncs.com/acs/nginx:alpine
+FROM nginx:alpine
 
 RUN addgroup -g 1001 -S nginxgroup && \
     adduser -u 1001 -S nginxuser -G nginxgroup
