@@ -1,4 +1,4 @@
-FROM registry.cn-hangzhou.aliyuncs.com/acs/eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:17-jdk-alpine AS builder
 
 RUN echo 'http://mirrors.aliyun.com/alpine/v3.18/main' > /etc/apk/repositories && \
     echo 'http://mirrors.aliyun.com/alpine/v3.18/community' >> /etc/apk/repositories && \
@@ -12,7 +12,7 @@ RUN mvn dependency:go-offline -B || mvn dependency:resolve -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM registry.cn-hangzhou.aliyuncs.com/acs/eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 RUN apk add --no-cache wget
 
