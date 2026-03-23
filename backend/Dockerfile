@@ -1,9 +1,8 @@
 FROM eclipse-temurin:17-jdk-alpine AS builder
 
-RUN cat > /etc/apk/repositories << 'EOF' \
-    && apk add --no-cache maven \
-    http://mirrors.aliyun.com/alpine/v3.18/main \
-    http://mirrors.aliyun.com/alpine/v3.18/community
+RUN echo 'http://mirrors.aliyun.com/alpine/v3.18/main' > /etc/apk/repositories && \
+    echo 'http://mirrors.aliyun.com/alpine/v3.18/community' >> /etc/apk/repositories && \
+    apk add --no-cache maven
 
 WORKDIR /app
 
