@@ -145,6 +145,7 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         p.setImageUrl(imageUrl);
         p.setContactPhone(phone);
         p.setContactEmail(email);
+        p.setIsDeleted(false);
         return p;
     }
 
