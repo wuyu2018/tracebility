@@ -68,7 +68,11 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="productName" label="产品名称" width="150" sortable />
+        <el-table-column prop="antiFakeCode" label="防伪码" width="150" sortable>
+          <template #default="{ row }">
+            <el-tag type="info">{{ row.antiFakeCode }}</el-tag>
+          </template>
+        </el-table-column>
 
         <el-table-column prop="complaintContent" label="投诉内容" minWidth="200">
           <template #default="{ row }">
@@ -126,7 +130,7 @@
         <p>确定要删除这条投诉信息吗？</p>
         <p class="delete-detail" v-if="selectedComplaint">
           投诉编号：{{ selectedComplaint.complaintId }}<br>
-          产品名称：{{ selectedComplaint.productName }}
+          防伪码：{{ selectedComplaint.antiFakeCode }}
         </p>
         <p class="delete-warning">此操作不可恢复，请谨慎操作！</p>
       </div>
@@ -209,12 +213,12 @@ const filteredComplaints = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(item =>
       item.complaintContent?.toLowerCase().includes(keyword) ||
-      item.productName?.toLowerCase().includes(keyword)
+      item.antiFakeCode?.toLowerCase().includes(keyword)
     )
   }
 
   if (filterProduct.value) {
-    result = result.filter(item => item.productName === filterProduct.value)
+    result = result.filter(item => item.antiFakeCode === filterProduct.value)
   }
 
   const start = (currentPage.value - 1) * pageSize.value
@@ -229,12 +233,12 @@ const totalComplaints = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(item =>
       item.complaintContent?.toLowerCase().includes(keyword) ||
-      item.productName?.toLowerCase().includes(keyword)
+      item.antiFakeCode?.toLowerCase().includes(keyword)
     )
   }
 
   if (filterProduct.value) {
-    result = result.filter(item => item.productName === filterProduct.value)
+    result = result.filter(item => item.antiFakeCode === filterProduct.value)
   }
 
   return result.length
@@ -267,8 +271,8 @@ const fetchComplaints = async () => {
       }, {})
 
       productOptions.value = products.map(product => ({
-        value: product.name || product.productName || `产品${product.id}`,
-        label: product.name || product.productName || `产品${product.id}`
+        value: product.antiFakeCode,
+        label: `${product.name} (防伪码: ${product.antiFakeCode})`
       }))
 
       const uniqueOptions = []
@@ -297,24 +301,22 @@ const fetchComplaints = async () => {
     if (complaintList.length > 0) {
       complaints.value = complaintList.map((item, index) => {
         const complaintId = item.id || item.complaintId || `C${Date.now()}-${index}`
-        const productId = item.productId || item.product_id
 
         return {
           complaintId: complaintId,
-          productId: productId,
-          productName: item.productName || productMap[productId] || (productId ? `产品${productId}` : '未知产品'),
+          antiFakeCode: item.antiFakeCode || '',
           complaintContent: item.complaintReason || item.complaint_content || item.complaint_reason || item.complaintContent || '',
           complaintTime: item.complaintTime || item.complaint_time || new Date().toISOString(),
           rawData: item
         }
       })
 
-      const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
-      complaintProductNames.forEach(productName => {
-        if (!productOptions.value.some(opt => opt.value === productName)) {
+      const complaintAntiFakeCodes = [...new Set(complaints.value.map(item => item.antiFakeCode).filter(Boolean))]
+      complaintAntiFakeCodes.forEach(antiFakeCode => {
+        if (!productOptions.value.some(opt => opt.value === antiFakeCode)) {
           productOptions.value.push({
-            value: productName,
-            label: productName
+            value: antiFakeCode,
+            label: antiFakeCode
           })
         }
       })
@@ -427,15 +429,15 @@ const confirmDelete = async () => {
 }
 
 const refreshProductOptions = () => {
-  const complaintProductNames = [...new Set(complaints.value.map(item => item.productName).filter(Boolean))]
+  const complaintAntiFakeCodes = [...new Set(complaints.value.map(item => item.antiFakeCode).filter(Boolean))]
   productOptions.value = productOptions.value.filter(opt =>
-    complaintProductNames.includes(opt.value)
+    complaintAntiFakeCodes.includes(opt.value)
   )
-  complaintProductNames.forEach(productName => {
-    if (!productOptions.value.some(opt => opt.value === productName)) {
+  complaintAntiFakeCodes.forEach(antiFakeCode => {
+    if (!productOptions.value.some(opt => opt.value === antiFakeCode)) {
       productOptions.value.push({
-        value: productName,
-        label: productName
+        value: antiFakeCode,
+        label: antiFakeCode
       })
     }
   })

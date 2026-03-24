@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface InspectionRepository extends JpaRepository<Inspection, Long> {
-    List<Inspection> findByProductNameAndBatchNumber(String productName, String batchNumber);
-    List<Inspection> findByProductName(String productName);
-    void deleteByProductNameAndBatchNumber(String productName, String batchNumber);
+    List<Inspection> findByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
+    List<Inspection> findByAntiFakeCode(String antiFakeCode);
+    void deleteByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
 }

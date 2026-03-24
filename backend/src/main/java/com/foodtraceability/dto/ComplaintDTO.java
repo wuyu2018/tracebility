@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 public class ComplaintDTO {
     private Long id;
 
-    @NotBlank(message = "产品名称不能为空")
-    private String productName;
+    @NotBlank(message = "防伪码不能为空")
+    private String antiFakeCode;
 
     @NotBlank(message = "投诉原因不能为空")
     private String complaintReason;

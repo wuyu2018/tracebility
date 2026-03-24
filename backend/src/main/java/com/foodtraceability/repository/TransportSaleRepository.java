@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface TransportSaleRepository extends JpaRepository<TransportSale, Long> {
-    List<TransportSale> findByProductNameAndBatchNumber(String productName, String batchNumber);
-    List<TransportSale> findByProductName(String productName);
-    void deleteByProductNameAndBatchNumber(String productName, String batchNumber);
+    List<TransportSale> findByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
+    List<TransportSale> findByAntiFakeCode(String antiFakeCode);
+    void deleteByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
 }

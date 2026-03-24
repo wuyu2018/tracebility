@@ -5,5 +5,6 @@ import com.foodtraceability.entity.*;
 
 public interface MaterialPurchaseService {
     MaterialPurchase createMaterialPurchase(MaterialPurchaseDTO dto);
+    void deleteById(Long id);
 }
 

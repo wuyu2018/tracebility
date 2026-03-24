@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface StorageRepository extends JpaRepository<Storage, Long> {
-    List<Storage> findByProductNameAndBatchNumber(String productName, String batchNumber);
-    List<Storage> findByProductName(String productName);
-    void deleteByProductNameAndBatchNumber(String productName, String batchNumber);
+    List<Storage> findByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
+    List<Storage> findByAntiFakeCode(String antiFakeCode);
+    void deleteByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
 }

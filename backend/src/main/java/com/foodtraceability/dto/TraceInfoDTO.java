@@ -37,7 +37,7 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MaterialPurchaseDTO {
-        private String productName;
+        private String antiFakeCode;
         private String batchNumber;
         private String materialName;
         private String producerName;
@@ -48,7 +48,7 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class StorageDTO {
-        private String productName;
+        private String antiFakeCode;
         private String batchNumber;
         private LocalDateTime storageTime;
         private LocalDateTime outboundTime;
@@ -60,7 +60,7 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class InspectionDTO {
-        private String productName;
+        private String antiFakeCode;
         private String batchNumber;
         private String sampleName;
         private Integer sampleQuantity;
@@ -71,7 +71,7 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TransportSaleDTO {
-        private String productName;
+        private String antiFakeCode;
         private String batchNumber;
         private Double environmentTemperature;
         private Double productTemperature;
@@ -82,6 +82,7 @@ public class TraceInfoDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ComplaintDTO {
+        private String antiFakeCode;
         private String complaintReason;
         private LocalDateTime complaintTime;
     }

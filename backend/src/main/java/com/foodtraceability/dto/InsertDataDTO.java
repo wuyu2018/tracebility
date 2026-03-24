@@ -9,9 +9,9 @@ public class InsertDataDTO {
 
     @Data
     public static class MaterialPurchaseDTO {
-        @NotBlank(message = "产品名称不能为空")
-        @Size(max = 100, message = "产品名称长度不能超过100")
-        private String productName;
+        @NotBlank(message = "防伪码不能为空")
+        @Size(max = 20, message = "防伪码长度不能超过20")
+        private String antiFakeCode;
         @Size(max = 50, message = "批号长度不能超过50")
         private String batchNumber;
         @NotBlank(message = "原料名称不能为空")
@@ -25,9 +25,9 @@ public class InsertDataDTO {
 
     @Data
     public static class InspectionDTO {
-        @NotBlank(message = "产品名称不能为空")
-        @Size(max = 100, message = "产品名称长度不能超过100")
-        private String productName;
+        @NotBlank(message = "防伪码不能为空")
+        @Size(max = 20, message = "防伪码长度不能超过20")
+        private String antiFakeCode;
         @Size(max = 50, message = "批号长度不能超过50")
         private String batchNumber;
         @Size(max = 100, message = "样品名称长度不能超过100")
@@ -51,6 +51,8 @@ public class InsertDataDTO {
         private String specification;
         @Size(max = 50, message = "批号长度不能超过50")
         private String batchNumber;
+        @NotNull(message = "生产日期不能为空")
+        private LocalDate productionDate;
         @Size(max = 50, message = "保质期长度不能超过50")
         private String shelfLife;
         @Size(max = 255, message = "图片URL长度不能超过255")
@@ -65,9 +67,9 @@ public class InsertDataDTO {
 
     @Data
     public static class StorageDTO {
-        @NotBlank(message = "产品名称不能为空")
-        @Size(max = 100, message = "产品名称长度不能超过100")
-        private String productName;
+        @NotBlank(message = "防伪码不能为空")
+        @Size(max = 20, message = "防伪码长度不能超过20")
+        private String antiFakeCode;
         @Size(max = 50, message = "批号长度不能超过50")
         private String batchNumber;
         private LocalDateTime storageTime;
@@ -80,9 +82,9 @@ public class InsertDataDTO {
 
     @Data
     public static class TransportSaleDTO {
-        @NotBlank(message = "产品名称不能为空")
-        @Size(max = 100, message = "产品名称长度不能超过100")
-        private String productName;
+        @NotBlank(message = "防伪码不能为空")
+        @Size(max = 20, message = "防伪码长度不能超过20")
+        private String antiFakeCode;
         @Size(max = 50, message = "批号长度不能超过50")
         private String batchNumber;
         private Double environmentTemperature;

@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface MaterialPurchaseRepository extends JpaRepository<MaterialPurchase, Long> {
-    List<MaterialPurchase> findByProductNameAndBatchNumber(String productName, String batchNumber);
-    List<MaterialPurchase> findByProductName(String productName);
-    void deleteByProductNameAndBatchNumber(String productName, String batchNumber);
+    List<MaterialPurchase> findByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
+    List<MaterialPurchase> findByAntiFakeCode(String antiFakeCode);
+    void deleteByAntiFakeCodeAndBatchNumber(String antiFakeCode, String batchNumber);
 }

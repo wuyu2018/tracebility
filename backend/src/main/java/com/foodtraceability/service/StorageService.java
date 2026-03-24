@@ -5,4 +5,5 @@ import com.foodtraceability.entity.*;
 
 public interface StorageService {
     Storage createStorage(StorageDTO dto);
+    void deleteById(Long id);
 }
