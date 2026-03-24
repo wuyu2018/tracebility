@@ -76,23 +76,26 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setLastQueriedTime(product.getLastQueriedTime());
         dto.setProduct(productInfo);
 
+        String antiFakeCode = product.getAntiFakeCode();
+        String batchNumber = product.getBatchNumber();
+
         dto.setMaterialPurchases(materialPurchaseRepository
-                .findByProductNameAndBatchNumber(product.getName(), product.getBatchNumber())
+                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
                 .stream()
                 .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
         dto.setStorages(storageRepository
-                .findByProductNameAndBatchNumber(product.getName(), product.getBatchNumber())
+                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
                 .stream()
                 .map(this::toStorageDTO).collect(Collectors.toList()));
         dto.setInspections(inspectionRepository
-                .findByProductNameAndBatchNumber(product.getName(), product.getBatchNumber())
+                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
                 .stream()
                 .map(this::toInspectionDTO).collect(Collectors.toList()));
         dto.setTransportSales(transportSaleRepository
-                .findByProductNameAndBatchNumber(product.getName(), product.getBatchNumber())
+                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
                 .stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(complaintRepository.findByProductName(product.getName()).stream()
+        dto.setComplaints(complaintRepository.findByAntiFakeCode(antiFakeCode).stream()
                 .map(this::toComplaintDTO).collect(Collectors.toList()));
 
         return dto;
@@ -112,18 +115,18 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setLastQueriedTime(product.getLastQueriedTime());
         dto.setProduct(productInfo);
 
-        String productName = product.getName();
+        String antiFakeCode = product.getAntiFakeCode();
         String batchNumber = product.getBatchNumber();
 
-        dto.setMaterialPurchases(materialPurchaseRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+        dto.setMaterialPurchases(materialPurchaseRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
                 .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
-        dto.setStorages(storageRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+        dto.setStorages(storageRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
                 .map(this::toStorageDTO).collect(Collectors.toList()));
-        dto.setInspections(inspectionRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+        dto.setInspections(inspectionRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
                 .map(this::toInspectionDTO).collect(Collectors.toList()));
-        dto.setTransportSales(transportSaleRepository.findByProductNameAndBatchNumber(productName, batchNumber).stream()
+        dto.setTransportSales(transportSaleRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(complaintRepository.findByProductName(product.getName()).stream()
+        dto.setComplaints(complaintRepository.findByAntiFakeCode(antiFakeCode).stream()
             .map(this::toComplaintDTO).collect(Collectors.toList()));
 
         return dto;
@@ -146,7 +149,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.MaterialPurchaseDTO toMaterialPurchaseDTO(MaterialPurchase mp) {
         TraceInfoDTO.MaterialPurchaseDTO dto = new TraceInfoDTO.MaterialPurchaseDTO();
-        dto.setProductName(mp.getProductName());
+        dto.setAntiFakeCode(mp.getAntiFakeCode());
         dto.setBatchNumber(mp.getBatchNumber());
         dto.setMaterialName(mp.getMaterialName());
         dto.setProducerName(mp.getProducerName());
@@ -156,7 +159,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.StorageDTO toStorageDTO(Storage s) {
         TraceInfoDTO.StorageDTO dto = new TraceInfoDTO.StorageDTO();
-        dto.setProductName(s.getProductName());
+        dto.setAntiFakeCode(s.getAntiFakeCode());
         dto.setBatchNumber(s.getBatchNumber());
         dto.setStorageTime(s.getStorageTime());
         dto.setOutboundTime(s.getOutboundTime());
@@ -167,7 +170,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.InspectionDTO toInspectionDTO(Inspection i) {
         TraceInfoDTO.InspectionDTO dto = new TraceInfoDTO.InspectionDTO();
-        dto.setProductName(i.getProductName());
+        dto.setAntiFakeCode(i.getAntiFakeCode());
         dto.setBatchNumber(i.getBatchNumber());
         dto.setSampleName(i.getSampleName());
         dto.setSampleQuantity(i.getSampleQuantity());
@@ -177,7 +180,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.TransportSaleDTO toTransportSaleDTO(TransportSale ts) {
         TraceInfoDTO.TransportSaleDTO dto = new TraceInfoDTO.TransportSaleDTO();
-        dto.setProductName(ts.getProductName());
+        dto.setAntiFakeCode(ts.getAntiFakeCode());
         dto.setBatchNumber(ts.getBatchNumber());
         dto.setEnvironmentTemperature(ts.getEnvironmentTemperature());
         dto.setProductTemperature(ts.getProductTemperature());
@@ -187,6 +190,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
 
     private TraceInfoDTO.ComplaintDTO toComplaintDTO(Complaint c) {
         TraceInfoDTO.ComplaintDTO dto = new TraceInfoDTO.ComplaintDTO();
+        dto.setAntiFakeCode(c.getAntiFakeCode());
         dto.setComplaintReason(c.getComplaintReason());
         dto.setComplaintTime(c.getComplaintTime());
         return dto;

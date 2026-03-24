@@ -132,6 +132,25 @@ public class TraceabilityController {
         return ResponseEntity.ok(traceabilityService.listAllProducts());
     }
 
+    @GetMapping("/product-detail")
+    public ResponseEntity<?> getProductDetail(@RequestParam String antiFakeCode) {
+        log.info("[产品详情] 请求 - 防伪码: {}", maskCode(antiFakeCode));
+        
+        try {
+            var result = traceabilityService.verifyAndGetTraceInfo(antiFakeCode);
+            if (result.isPresent()) {
+                log.info("[产品详情] 查找成功 - 防伪码: {}", maskCode(antiFakeCode));
+                return ResponseEntity.ok(result.get());
+            } else {
+                log.warn("[产品详情] 查找失败 - 防伪码: {}", maskCode(antiFakeCode));
+                return ResponseEntity.ok(Map.of("valid", false, "message", "未找到该产品信息"));
+            }
+        } catch (Exception e) {
+            log.error("[产品详情] 系统错误 - 防伪码: {}, 错误: {}", maskCode(antiFakeCode), e.getMessage());
+            return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
+        }
+    }
+
     @PostMapping("/purchase-info")
     public ResponseEntity<?> getPurchaseInfo(@RequestBody Map<String, String> request) {
         String antiFakeCode = request.get("antiFakeCode");

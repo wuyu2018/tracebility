@@ -122,57 +122,109 @@ public class InsertDataController {
 
     @PostMapping("/material-purchase")
     public ResponseEntity<MaterialPurchase> createMaterialPurchase(@Valid @RequestBody MaterialPurchaseDTO dto) {
-        log.debug("[原料采购] 录入采购记录 - 产品名称: {}, 原料名称: {}", dto.getProductName(), dto.getMaterialName());
+        log.debug("[原料采购] 录入采购记录 - 防伪码: {}, 原料名称: {}", dto.getAntiFakeCode(), dto.getMaterialName());
         
         try {
             MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
             log.info("[原料采购] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[原料采购] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
+            log.error("[原料采购] 录入失败 - 防伪码: {}, 错误: {}", dto.getAntiFakeCode(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/inspection")
     public ResponseEntity<Inspection> createInspection(@Valid @RequestBody InspectionDTO dto) {
-        log.debug("[出厂检验] 录入检验记录 - 产品名称: {}, 批次: {}", dto.getProductName(), dto.getBatchNumber());
+        log.debug("[出厂检验] 录入检验记录 - 防伪码: {}, 批次: {}", dto.getAntiFakeCode(), dto.getBatchNumber());
         
         try {
             Inspection created = inspectionService.createInspection(dto);
             log.info("[出厂检验] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[出厂检验] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
+            log.error("[出厂检验] 录入失败 - 防伪码: {}, 错误: {}", dto.getAntiFakeCode(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/storage")
     public ResponseEntity<Storage> createStorage(@Valid @RequestBody StorageDTO dto) {
-        log.debug("[贮存记录] 录入贮存记录 - 产品名称: {}", dto.getProductName());
+        log.debug("[贮存记录] 录入贮存记录 - 防伪码: {}", dto.getAntiFakeCode());
         
         try {
             Storage created = storageService.createStorage(dto);
             log.info("[贮存记录] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[贮存记录] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
+            log.error("[贮存记录] 录入失败 - 防伪码: {}, 错误: {}", dto.getAntiFakeCode(), e.getMessage());
             throw e;
         }
     }
 
     @PostMapping("/transport-sale")
     public ResponseEntity<TransportSale> createTransportSale(@Valid @RequestBody TransportSaleDTO dto) {
-        log.debug("[储运销售] 录入储运记录 - 产品名称: {}", dto.getProductName());
+        log.debug("[储运销售] 录入储运记录 - 防伪码: {}, 批次: {}", dto.getAntiFakeCode(), dto.getBatchNumber());
         
         try {
             TransportSale created = transportSaleService.createTransportSale(dto);
             log.info("[储运销售] 录入成功 - ID: {}", created.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
-            log.error("[储运销售] 录入失败 - 产品名称: {}, 错误: {}", dto.getProductName(), e.getMessage());
+            log.error("[储运销售] 录入失败 - 防伪码: {}, 错误: {}", dto.getAntiFakeCode(), e.getMessage());
             throw e;
+        }
+    }
+
+    @DeleteMapping("/material-purchase/{id}")
+    public ResponseEntity<?> deleteMaterialPurchase(@PathVariable Long id) {
+        log.info("[原料采购] 删除记录 - ID: {}", id);
+        try {
+            materialPurchaseService.deleteById(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[原料采购] 删除失败 - ID: {}, 错误: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "删除失败: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/inspection/{id}")
+    public ResponseEntity<?> deleteInspection(@PathVariable Long id) {
+        log.info("[检验检测] 删除记录 - ID: {}", id);
+        try {
+            inspectionService.deleteById(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[检验检测] 删除失败 - ID: {}, 错误: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "删除失败: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/storage/{id}")
+    public ResponseEntity<?> deleteStorage(@PathVariable Long id) {
+        log.info("[仓储] 删除记录 - ID: {}", id);
+        try {
+            storageService.deleteById(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[仓储] 删除失败 - ID: {}, 错误: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "删除失败: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/transport-sale/{id}")
+    public ResponseEntity<?> deleteTransportSale(@PathVariable Long id) {
+        log.info("[运输销售] 删除记录 - ID: {}", id);
+        try {
+            transportSaleService.deleteById(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[运输销售] 删除失败 - ID: {}, 错误: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "删除失败: " + e.getMessage()));
         }
     }
 }

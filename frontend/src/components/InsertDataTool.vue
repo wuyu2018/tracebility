@@ -80,24 +80,24 @@
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
                     <el-select
-                      v-if="field.prop === 'productName'"
-                      v-model="materialForm.productName"
-                      placeholder="选择产品"
+                      v-if="field.prop === 'antiFakeCode'"
+                      v-model="materialForm.antiFakeCode"
+                      placeholder="选择产品（防伪码）"
                       filterable
                       @change="onProductNameChange('material')"
                     >
                       <el-option
                         v-for="product in productList"
-                        :key="product.name"
-                        :label="product.name"
-                        :value="product.name"
+                        :key="product.antiFakeCode"
+                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
+                        :value="product.antiFakeCode"
                       />
                     </el-select>
                     <el-input
                       v-else-if="field.prop === 'batchNumber'"
                       v-model="materialForm.batchNumber"
                       placeholder="请输入批号"
-                      :disabled="!materialForm.productName"
+                      :disabled="!materialForm.antiFakeCode"
                       clearable
                     />
                     <el-input v-else v-model="materialForm[field.prop]" :placeholder="field.placeholder" />
@@ -116,20 +116,20 @@
             <table class="data-entry-table">
               <tbody>
                 <tr>
-                  <td class="field-label required">产品名称</td>
+                  <td class="field-label required">产品（防伪码）</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
                     <el-select
-                      v-model="inspectionForm.productName"
-                      placeholder="选择产品"
+                      v-model="inspectionForm.antiFakeCode"
+                      placeholder="选择产品（防伪码）"
                       filterable
                       @change="onProductNameChange('inspection')"
                     >
                       <el-option
                         v-for="product in productList"
-                        :key="product.name"
-                        :label="product.name"
-                        :value="product.name"
+                        :key="product.antiFakeCode"
+                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
+                        :value="product.antiFakeCode"
                       />
                     </el-select>
                   </td>
@@ -143,7 +143,7 @@
                     <el-input
                       v-model="inspectionForm.batchNumber"
                       placeholder="请输入批号"
-                      :disabled="!inspectionForm.productName"
+                      :disabled="!inspectionForm.antiFakeCode"
                       clearable
                     />
                   </td>
@@ -176,20 +176,20 @@
             <table class="data-entry-table">
               <tbody>
                 <tr>
-                  <td class="field-label required">产品名称</td>
+                  <td class="field-label required">产品（防伪码）</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
                     <el-select
-                      v-model="storageForm.productName"
-                      placeholder="选择产品"
+                      v-model="storageForm.antiFakeCode"
+                      placeholder="选择产品（防伪码）"
                       filterable
                       @change="onProductNameChange('storage')"
                     >
                       <el-option
                         v-for="product in productList"
-                        :key="product.name"
-                        :label="product.name"
-                        :value="product.name"
+                        :key="product.antiFakeCode"
+                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
+                        :value="product.antiFakeCode"
                       />
                     </el-select>
                   </td>
@@ -203,7 +203,7 @@
                     <el-input
                       v-model="storageForm.batchNumber"
                       placeholder="请输入批号"
-                      :disabled="!storageForm.productName"
+                      :disabled="!storageForm.antiFakeCode"
                       clearable
                     />
                   </td>
@@ -279,20 +279,20 @@
             <table class="data-entry-table">
               <tbody>
                 <tr>
-                  <td class="field-label required">产品名称</td>
+                  <td class="field-label required">产品（防伪码）</td>
                   <td class="field-icon"><el-icon><Minus /></el-icon></td>
                   <td class="field-input">
                     <el-select
-                      v-model="transportForm.productName"
-                      placeholder="选择产品"
+                      v-model="transportForm.antiFakeCode"
+                      placeholder="选择产品（防伪码）"
                       filterable
                       @change="onProductNameChange('transport')"
                     >
                       <el-option
                         v-for="product in productList"
-                        :key="product.name"
-                        :label="product.name"
-                        :value="product.name"
+                        :key="product.antiFakeCode"
+                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
+                        :value="product.antiFakeCode"
                       />
                     </el-select>
                   </td>
@@ -306,7 +306,7 @@
                     <el-input
                       v-model="transportForm.batchNumber"
                       placeholder="请输入批号"
-                      :disabled="!transportForm.productName"
+                      :disabled="!transportForm.antiFakeCode"
                       clearable
                     />
                   </td>
@@ -418,6 +418,7 @@ const productForm = reactive({
   name: '',
   specification: '',
   batchNumber: '',
+  productionDate: '',
   shelfLife: '',
   imageUrl: '',
   contactPhone: '',
@@ -425,7 +426,7 @@ const productForm = reactive({
 })
 
 const materialForm = reactive({
-  productName: '',
+  antiFakeCode: '',
   batchNumber: '',
   materialName: '',
   producerName: '',
@@ -433,7 +434,7 @@ const materialForm = reactive({
 })
 
 const inspectionForm = reactive({
-  productName: '',
+  antiFakeCode: '',
   batchNumber: '',
   sampleName: '',
   sampleQuantity: null,
@@ -441,7 +442,7 @@ const inspectionForm = reactive({
 })
 
 const storageForm = reactive({
-  productName: '',
+  antiFakeCode: '',
   batchNumber: '',
   storageTime: '',
   outboundTime: '',
@@ -450,7 +451,7 @@ const storageForm = reactive({
 })
 
 const transportForm = reactive({
-  productName: '',
+  antiFakeCode: '',
   batchNumber: '',
   environmentTemperature: null,
   productTemperature: null,
@@ -488,10 +489,6 @@ async function loadProductList() {
   }
 }
 
-function getBatchNumbers(productName) {
-  return productBatchMap.value[productName] || []
-}
-
 function onProductNameChange(formType) {
   if (formType === 'material') {
     materialForm.batchNumber = ''
@@ -505,10 +502,11 @@ function onProductNameChange(formType) {
 }
 
 const productFields = [
-  { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入12-20位防伪码', tip: '12-20位' },
+  { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入防伪码', tip: '唯一标识' },
   { prop: 'name', label: '产品名称', required: true, type: 'text', placeholder: '例：有机大米' },
   { prop: 'specification', label: '规格', required: false, type: 'text', placeholder: '例：400g、5kg', tip: '请包含单位' },
   { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '请输入批号' },
+  { prop: 'productionDate', label: '生产日期', required: true, type: 'date', placeholder: '选择生产日期' },
   { prop: 'shelfLife', label: '保质期', required: false, type: 'text', placeholder: '例：12个月', tip: '请包含单位' },
   { prop: 'imageUrl', label: '图片URL', required: false, type: 'text', placeholder: 'http://...', tip: '以http开头' },
   { prop: 'contactPhone', label: '联系电话', required: false, type: 'text', placeholder: '手机号' },
@@ -516,15 +514,15 @@ const productFields = [
 ]
 
 const materialFields = [
-  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
+  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'text' },
   { prop: 'materialName', label: '原料名称', required: true, type: 'text', placeholder: '例：优质稻谷' },
   { prop: 'producerName', label: '生产商', required: false, type: 'text', placeholder: '可选' },
   { prop: 'producerAddress', label: '生产商地址', required: false, type: 'text', placeholder: '可选' }
 ]
 
 const inspectionFields = [
-  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
+  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
   { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '请输入批号' },
   { prop: 'sampleName', label: '样品名称', required: false, type: 'text' },
   { prop: 'sampleQuantity', label: '样品数量', required: false, type: 'number' },
@@ -532,8 +530,8 @@ const inspectionFields = [
 ]
 
 const storageFields = [
-  { prop: 'productName', label: '产品名称', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'select' },
+  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
+  { prop: 'batchNumber', label: '批号', required: false, type: 'text' },
   { prop: 'storageTime', label: '入库时间', required: false, type: 'date' },
   { prop: 'outboundTime', label: '出库时间', required: false, type: 'date' },
   { prop: 'quantity', label: '数量', required: false, type: 'number', precision: 2 },
@@ -545,20 +543,21 @@ async function handleSubmit() {
   let errorMsg = ''
 
   if (activeEntity.value === 'transportSale') {
-    if (!transportForm.productName) {
+    if (!transportForm.antiFakeCode) {
       isValid = false
-      errorMsg = '产品名称不能为空'
+      errorMsg = '请选择产品（防伪码）'
     }
   } else if (activeEntity.value === 'product') {
     if (!productForm.antiFakeCode) { isValid = false; errorMsg = '防伪码不能为空' }
     else if (!productForm.name) { isValid = false; errorMsg = '产品名称不能为空' }
+    else if (!productForm.productionDate) { isValid = false; errorMsg = '生产日期不能为空' }
   } else if (activeEntity.value === 'materialPurchase') {
-    if (!materialForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
+    if (!materialForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
     else if (!materialForm.materialName) { isValid = false; errorMsg = '原料名称不能为空' }
   } else if (activeEntity.value === 'inspection') {
-    if (!inspectionForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
+    if (!inspectionForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
   } else if (activeEntity.value === 'storage') {
-    if (!storageForm.productName) { isValid = false; errorMsg = '产品名称不能为空' }
+    if (!storageForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
   }
 
   if (!isValid) {
@@ -584,6 +583,7 @@ async function handleSubmit() {
           name: formData.name,
           specification: formData.specification || null,
           batchNumber: formData.batchNumber || null,
+          productionDate: formData.productionDate || null,
           shelfLife: formData.shelfLife || null,
           imageUrl: formData.imageUrl || null,
           contactPhone: formData.contactPhone || null,
@@ -595,7 +595,7 @@ async function handleSubmit() {
 
       case 'materialPurchase':
         apiPayload = {
-          productName: formData.productName,
+          antiFakeCode: formData.antiFakeCode,
           batchNumber: formData.batchNumber || null,
           materialName: formData.materialName,
           producerName: formData.producerName || null,
@@ -606,7 +606,7 @@ async function handleSubmit() {
 
       case 'inspection':
         apiPayload = {
-          productName: formData.productName,
+          antiFakeCode: formData.antiFakeCode,
           batchNumber: formData.batchNumber || null,
           sampleName: formData.sampleName || null,
           sampleQuantity: formData.sampleQuantity ? Number(formData.sampleQuantity) : null,
@@ -617,7 +617,7 @@ async function handleSubmit() {
 
       case 'storage':
         apiPayload = {
-          productName: formData.productName,
+          antiFakeCode: formData.antiFakeCode,
           batchNumber: formData.batchNumber || null,
           storageTime: formData.storageTime ? `${formData.storageTime}T00:00:00` : null,
           outboundTime: formData.outboundTime ? `${formData.outboundTime}T00:00:00` : null,
@@ -631,7 +631,7 @@ async function handleSubmit() {
 
       case 'transportSale':
         apiPayload = {
-          productName: formData.productName,
+          antiFakeCode: formData.antiFakeCode,
           batchNumber: formData.batchNumber || null,
           environmentTemperature: formData.environmentTemperature !== null ? Number(formData.environmentTemperature) : null,
           productTemperature: formData.productTemperature !== null ? Number(formData.productTemperature) : null,

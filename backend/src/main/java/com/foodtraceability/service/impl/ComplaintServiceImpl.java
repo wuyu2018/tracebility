@@ -3,6 +3,7 @@ package com.foodtraceability.service.impl;
 import com.foodtraceability.dto.ComplaintDTO;
 import com.foodtraceability.entity.Complaint;
 import com.foodtraceability.repository.ComplaintRepository;
+import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.service.ComplaintService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,17 +14,22 @@ import java.time.LocalDateTime;
 public class ComplaintServiceImpl implements ComplaintService {
 
     private final ComplaintRepository complaintRepository;
+    private final ProductRepository productRepository;
 
-    public ComplaintServiceImpl(ComplaintRepository complaintRepository) {
+    public ComplaintServiceImpl(ComplaintRepository complaintRepository, ProductRepository productRepository) {
         this.complaintRepository = complaintRepository;
+        this.productRepository = productRepository;
     }
 
     @Override
     @Transactional
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
+        if (!productRepository.existsByAntiFakeCode(complaintDTO.getAntiFakeCode())) {
+            throw new IllegalArgumentException("防伪码不存在，请先录入产品信息");
+        }
 
         Complaint complaint = new Complaint();
-        complaint.setProductName(complaintDTO.getProductName());
+        complaint.setAntiFakeCode(complaintDTO.getAntiFakeCode());
         complaint.setComplaintReason(complaintDTO.getComplaintReason());
         complaint.setComplaintTime(LocalDateTime.now());
 
@@ -50,7 +56,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     private ComplaintDTO convertToDTO(Complaint complaint) {
         ComplaintDTO dto = new ComplaintDTO();
         dto.setId(complaint.getId());
-        dto.setProductName(complaint.getProductName());
+        dto.setAntiFakeCode(complaint.getAntiFakeCode());
         dto.setComplaintReason(complaint.getComplaintReason());
         dto.setComplaintTime(complaint.getComplaintTime());
         return dto;

@@ -15,21 +15,21 @@
         class="complaint-form"
         @submit.prevent="submitComplaint"
       >
-        <el-form-item label="产品名称" prop="productName">
+        <el-form-item label="防伪码" prop="antiFakeCode">
           <el-select
-            v-model="complaintForm.productName"
-            placeholder="请选择产品名称"
+            v-model="complaintForm.antiFakeCode"
+            placeholder="请选择产品（防伪码）"
             filterable
             clearable
           >
             <el-option
               v-for="product in productOptions"
-              :key="product.name"
-              :label="product.name"
-              :value="product.name"
+              :key="product.antiFakeCode"
+              :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
+              :value="product.antiFakeCode"
             />
           </el-select>
-          <div class="form-tip">必填项，请选择产品名称</div>
+          <div class="form-tip">必填项，请选择产品</div>
         </el-form-item>
 
         <el-form-item label="投诉原因" prop="complaintReason">
@@ -78,13 +78,13 @@ import axios from 'axios'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
-  productName: '',
+  antiFakeCode: '',
   complaintReason: '',
   complaintTime: ''
 })
 const complaintRules = {
-  productName: [
-    { required: true, message: '产品名称不能为空', trigger: 'change' }
+  antiFakeCode: [
+    { required: true, message: '请选择产品（防伪码）', trigger: 'change' }
   ],
   complaintReason: [
     { required: true, message: '投诉原因不能为空', trigger: 'blur' }
@@ -119,7 +119,7 @@ const submitComplaint = async () => {
     errorMessage.value = ''
 
     const requestData = {
-      productName: complaintForm.productName,
+      antiFakeCode: complaintForm.antiFakeCode,
       complaintReason: complaintForm.complaintReason.trim()
     }
 

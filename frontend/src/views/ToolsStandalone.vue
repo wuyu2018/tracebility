@@ -75,9 +75,10 @@
               <el-table-column prop="name" label="产品名称" />
               <el-table-column prop="batchNumber" label="批号" />
               <el-table-column prop="antiFakeCode" label="防伪码" />
-              <el-table-column label="操作" width="100">
+              <el-table-column label="操作" width="150">
                 <template #default="scope">
                   <el-button type="success" size="small" @click="downloadQrCode(scope.row)">下载</el-button>
+                  <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">详情</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -104,9 +105,10 @@
                 <el-table-column prop="name" label="产品名称" />
                 <el-table-column prop="batchNumber" label="批号" />
                 <el-table-column prop="antiFakeCode" label="防伪码" />
-                <el-table-column label="操作" width="100">
+                <el-table-column label="操作" width="150">
                   <template #default="scope">
                     <el-button type="warning" size="small" @click="generateQrCodeForProduct(scope.row)">生成</el-button>
+                    <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">详情</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -130,6 +132,22 @@
         <AddAdmin />
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 产品详情弹窗 -->
+    <el-dialog
+      v-model="productDetailVisible"
+      title="产品详情"
+      width="90%"
+      :close-on-click-modal="false"
+      destroy-on-close
+      class="product-detail-dialog"
+    >
+      <ProductDetail 
+        v-if="productDetailVisible && currentProduct" 
+        :product="currentProduct" 
+        @close="closeProductDetail"
+      />
+    </el-dialog>
   </div>
 </template>
 
@@ -138,7 +156,8 @@ import { ref, onMounted, computed } from 'vue'
 import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
 import AddAdmin from '/src/views/AddAdmin.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import ProductDetail from '../components/ProductDetail.vue'
+import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
 
@@ -164,6 +183,21 @@ const selectedPendingProducts = ref([])
 const pendingTable = ref(null)
 const batchGenerating = ref(false)
 const batchDeleting = ref(false)
+
+// 产品详情弹窗
+const productDetailVisible = ref(false)
+const currentProduct = ref(null)
+
+function viewProductDetail(product) {
+  currentProduct.value = product
+  productDetailVisible.value = true
+}
+
+function closeProductDetail() {
+  productDetailVisible.value = false
+  currentProduct.value = null
+  loadProductList()
+}
 
 function getVerifyUrl() {
   if (typeof window === 'undefined') return ''

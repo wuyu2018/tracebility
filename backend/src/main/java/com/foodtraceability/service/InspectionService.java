@@ -5,4 +5,5 @@ import com.foodtraceability.entity.*;
 
 public interface InspectionService {
     Inspection createInspection(InspectionDTO dto);
+    void deleteById(Long id);
 }

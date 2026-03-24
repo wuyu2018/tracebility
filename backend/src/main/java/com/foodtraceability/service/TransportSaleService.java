@@ -5,4 +5,5 @@ import com.foodtraceability.entity.*;
 
 public interface TransportSaleService {
     TransportSale createTransportSale(TransportSaleDTO dto);
+    void deleteById(Long id);
 }
