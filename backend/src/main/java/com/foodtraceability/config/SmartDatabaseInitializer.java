@@ -95,35 +95,35 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         log.info("[数据库初始化] 产品数据初始化完成");
 
         List<MaterialPurchase> materialPurchases = new ArrayList<>();
-        materialPurchases.add(createMaterialPurchase("有机纯牛奶", "BATCH20240101", "有机生牛乳", "绿源有机牧场", "内蒙古呼和浩特市和林格尔县"));
-        materialPurchases.add(createMaterialPurchase("有机纯牛奶", "BATCH20240101", "维生素D3", "华药生物科技", "河北省石家庄市"));
-        materialPurchases.add(createMaterialPurchase("有机橄榄油", "BATCH20240201", "有机橄榄果", "地中海橄榄庄园", "西班牙安达卢西亚"));
-        materialPurchases.add(createMaterialPurchase("有机蜂蜜", "BATCH20240301", "有机蜂蜜原料", "秦岭深山养蜂基地", "陕西省汉中市"));
+        materialPurchases.add(createMaterialPurchase("AF202400012345", "BATCH20240101", "有机生牛乳", "绿源有机牧场", "内蒙古呼和浩特市和林格尔县"));
+        materialPurchases.add(createMaterialPurchase("AF202400012345", "BATCH20240101", "维生素D3", "华药生物科技", "河北省石家庄市"));
+        materialPurchases.add(createMaterialPurchase("AF202400067890", "BATCH20240201", "有机橄榄果", "地中海橄榄庄园", "西班牙安达卢西亚"));
+        materialPurchases.add(createMaterialPurchase("AF202400099999", "BATCH20240301", "有机蜂蜜原料", "秦岭深山养蜂基地", "陕西省汉中市"));
         materialPurchaseRepository.saveAll(materialPurchases);
         log.info("[数据库初始化] 原料采购数据初始化完成");
 
         List<Storage> storages = new ArrayList<>();
-        storages.add(createStorage("有机纯牛奶", "BATCH20240101", LocalDateTime.of(2024, 1, 16, 8, 0), LocalDateTime.of(2024, 1, 18, 14, 0), 10000.0, "盒"));
-        storages.add(createStorage("有机橄榄油", "BATCH20240201", LocalDateTime.of(2024, 2, 5, 10, 0), LocalDateTime.of(2024, 2, 7, 9, 0), 5000.0, "瓶"));
-        storages.add(createStorage("有机蜂蜜", "BATCH20240301", LocalDateTime.of(2024, 3, 12, 8, 30), LocalDateTime.of(2024, 3, 14, 16, 0), 3000.0, "瓶"));
+        storages.add(createStorage("AF202400012345", "BATCH20240101", LocalDateTime.of(2024, 1, 16, 8, 0), LocalDateTime.of(2024, 1, 18, 14, 0), 10000.0, "盒"));
+        storages.add(createStorage("AF202400067890", "BATCH20240201", LocalDateTime.of(2024, 2, 5, 10, 0), LocalDateTime.of(2024, 2, 7, 9, 0), 5000.0, "瓶"));
+        storages.add(createStorage("AF202400099999", "BATCH20240301", LocalDateTime.of(2024, 3, 12, 8, 30), LocalDateTime.of(2024, 3, 14, 16, 0), 3000.0, "瓶"));
         storageRepository.saveAll(storages);
         log.info("[数据库初始化] 贮存数据初始化完成");
 
         List<Inspection> inspections = new ArrayList<>();
-        inspections.add(createInspection("有机纯牛奶", "BATCH20240101", "有机纯牛奶", 50, "250ml/盒"));
-        inspections.add(createInspection("有机橄榄油", "BATCH20240201", "有机橄榄油", 30, "500ml/瓶"));
-        inspections.add(createInspection("有机蜂蜜", "BATCH20240301", "有机蜂蜜", 20, "350g/瓶"));
+        inspections.add(createInspection("AF202400012345", "BATCH20240101", "有机纯牛奶", 50, "250ml/盒"));
+        inspections.add(createInspection("AF202400067890", "BATCH20240201", "有机橄榄油", 30, "500ml/瓶"));
+        inspections.add(createInspection("AF202400099999", "BATCH20240301", "有机蜂蜜", 20, "350g/瓶"));
         inspectionRepository.saveAll(inspections);
         log.info("[数据库初始化] 出厂检验数据初始化完成");
 
         List<TransportSale> transportSales = new ArrayList<>();
-        transportSales.add(createTransportSale("有机纯牛奶", "BATCH20240101", 4.0, 2.5, LocalDateTime.of(2024, 1, 20, 10, 0)));
-        transportSales.add(createTransportSale("有机橄榄油", "BATCH20240201", 18.0, 15.0, LocalDateTime.of(2024, 2, 10, 14, 0)));
-        transportSales.add(createTransportSale("有机蜂蜜", "BATCH20240301", 22.0, 20.0, LocalDateTime.of(2024, 3, 15, 11, 0)));
+        transportSales.add(createTransportSale("AF202400012345", "BATCH20240101", 4.0, 2.5, LocalDateTime.of(2024, 1, 20, 10, 0)));
+        transportSales.add(createTransportSale("AF202400067890", "BATCH20240201", 18.0, 15.0, LocalDateTime.of(2024, 2, 10, 14, 0)));
+        transportSales.add(createTransportSale("AF202400099999", "BATCH20240301", 22.0, 20.0, LocalDateTime.of(2024, 3, 15, 11, 0)));
         transportSaleRepository.saveAll(transportSales);
         log.info("[数据库初始化] 储运销售数据初始化完成");
 
-        complaintRepository.save(createComplaint("有机纯牛奶", "包装轻微破损", LocalDateTime.of(2024, 2, 1, 9, 30)));
+        complaintRepository.save(createComplaint("AF202400012345", "包装轻微破损", LocalDateTime.of(2024, 2, 1, 9, 30)));
         log.info("[数据库初始化] 投诉数据初始化完成");
 
         Admin admin = new Admin();
@@ -149,10 +149,10 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         return p;
     }
 
-    private MaterialPurchase createMaterialPurchase(String productName, String batchNumber, String materialName,
+    private MaterialPurchase createMaterialPurchase(String antiFakeCode, String batchNumber, String materialName,
                                                    String producerName, String producerAddress) {
         MaterialPurchase mp = new MaterialPurchase();
-        mp.setProductName(productName);
+        mp.setAntiFakeCode(antiFakeCode);
         mp.setBatchNumber(batchNumber);
         mp.setMaterialName(materialName);
         mp.setProducerName(producerName);
@@ -160,10 +160,10 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         return mp;
     }
 
-    private Storage createStorage(String productName, String batchNumber, LocalDateTime storageTime,
+    private Storage createStorage(String antiFakeCode, String batchNumber, LocalDateTime storageTime,
                                   LocalDateTime outboundTime, Double quantity, String unit) {
         Storage s = new Storage();
-        s.setProductName(productName);
+        s.setAntiFakeCode(antiFakeCode);
         s.setBatchNumber(batchNumber);
         s.setStorageTime(storageTime);
         s.setOutboundTime(outboundTime);
@@ -172,10 +172,10 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         return s;
     }
 
-    private Inspection createInspection(String productName, String batchNumber, String sampleName,
+    private Inspection createInspection(String antiFakeCode, String batchNumber, String sampleName,
                                        Integer sampleQuantity, String sampleSpecification) {
         Inspection i = new Inspection();
-        i.setProductName(productName);
+        i.setAntiFakeCode(antiFakeCode);
         i.setBatchNumber(batchNumber);
         i.setSampleName(sampleName);
         i.setSampleQuantity(sampleQuantity);
@@ -183,10 +183,10 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         return i;
     }
 
-    private TransportSale createTransportSale(String productName, String batchNumber,
+    private TransportSale createTransportSale(String antiFakeCode, String batchNumber,
                                               Double envTemp, Double productTemp, LocalDateTime time) {
         TransportSale ts = new TransportSale();
-        ts.setProductName(productName);
+        ts.setAntiFakeCode(antiFakeCode);
         ts.setBatchNumber(batchNumber);
         ts.setEnvironmentTemperature(envTemp);
         ts.setProductTemperature(productTemp);
@@ -194,9 +194,9 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         return ts;
     }
 
-    private Complaint createComplaint(String productName, String reason, LocalDateTime complaintTime) {
+    private Complaint createComplaint(String antiFakeCode, String reason, LocalDateTime complaintTime) {
         Complaint c = new Complaint();
-        c.setProductName(productName);
+        c.setAntiFakeCode(antiFakeCode);
         c.setComplaintReason(reason);
         c.setComplaintTime(complaintTime);
         return c;
