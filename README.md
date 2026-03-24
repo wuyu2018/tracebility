@@ -98,6 +98,17 @@ npm run dev
 
 前端将运行在 http://localhost:5173，并代理 `/api` 到后端。
 
+#### 访问地址说明
+
+| 页面 | 访问地址 | 说明 |
+|------|----------|------|
+| 首页 | http://localhost:5173/ | 主站 |
+| 防伪验证 | http://localhost:5173/verify | 扫码验证页面 |
+| 管理员工具 | http://localhost:5173/tools.html | 管理员登录入口 |
+| 管理员工具(登录后) | http://localhost:5173/ToolsStandalone | 登录成功后跳转 |
+
+**注意**：`tools.html` 是独立的 HTML 入口，访问后会显示管理员登录页面。登录成功后自动跳转到管理后台。
+
 ## 生产部署
 
 ### 方式一：使用部署脚本
@@ -302,6 +313,34 @@ curl http://localhost:8080/actuator/health
 
 ---
 
+## 本地测试指南
+
+### 无证书/域名本地测试
+
+本地测试时无需配置 HTTPS 和域名，直接启动即可：
+
+```bash
+# 1. 启动后端（确保 MySQL 已运行）
+cd backend
+mvn spring-boot:run
+
+# 2. 启动前端（另一个终端）
+cd frontend
+npm run dev
+```
+
+访问 http://localhost:5173 即可使用系统。
+
+### 常见问题
+
+**Q: tools.html 访问不了？**
+A: 确保通过 `http://localhost:5173/tools.html` 访问（注意是 `.html` 后缀），不是 `/ToolsStandalone`。
+
+**Q: 登录成功但跳转后显示空白？**
+A: 检查后端是否正常运行在 8080 端口。
+
+---
+
 ## 正式上线指南
 
 ### 购买域名和服务器后的修改
@@ -317,19 +356,15 @@ curl http://localhost:8080/actuator/health
 
 ### HTTPS 配置（如需）
 
-如需启用 HTTPS（TLS 终止），建议使用前置 Nginx 网关容器（`edge`）：
+如需启用 HTTPS（TLS 终止），需要：
 
-在本项目的 `docker-compose.prod.yml` 中，已集成前置网关：
-- 网关配置文件：`edge-nginx.conf`
-- 证书挂载目录：`./certs`
-- 请在项目根目录创建 `certs/` 目录，并放置证书文件
-- 证书文件名约定：
-  - `certs/fullchain.pem`
-  - `certs/privkey.pem`
+1. 在项目根目录创建 `certs/` 目录
+2. 放置证书文件：
+   - `certs/fullchain.pem`
+   - `certs/privkey.pem`
+3. 取消 `edge-nginx.conf` 中 HTTPS 部分的注释
 
-启用后：
-- 外网访问走 `https://`（密文传输）
-- 前端容器与后端容器间仍走容器内 `http`（降低证书运维复杂度）
+**注意**：本地开发测试不需要 HTTPS，直接使用 HTTP 即可。
 
 ### 一键部署清单
 
