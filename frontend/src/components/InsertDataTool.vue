@@ -583,6 +583,7 @@ async function handleSubmit() {
           antiFakeCode: formData.antiFakeCode,
           name: formData.name,
           specification: formData.specification || null,
+          batchNumber: formData.batchNumber || null,
           shelfLife: formData.shelfLife || null,
           imageUrl: formData.imageUrl || null,
           contactPhone: formData.contactPhone || null,
