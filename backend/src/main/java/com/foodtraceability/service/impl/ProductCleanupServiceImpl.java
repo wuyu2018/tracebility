@@ -58,25 +58,25 @@ public class ProductCleanupServiceImpl implements ProductCleanupService {
         LocalDateTime cutoffTime = LocalDateTime.now().minusDays(RETENTION_DAYS);
         
         List<Product> expiredProducts = productRepository.findByIsDeletedFalseAndLastQueriedTimeBefore(cutoffTime);
-        Set<String> productNamesToMaybeCleanupComplaints = new HashSet<>();
+        Set<String> antiFakeCodesToMaybeCleanupComplaints = new HashSet<>();
         for (Product p : expiredProducts) {
-            if (p.getName() != null) {
-                productNamesToMaybeCleanupComplaints.add(p.getName());
+            if (p.getAntiFakeCode() != null) {
+                antiFakeCodesToMaybeCleanupComplaints.add(p.getAntiFakeCode());
             }
         }
         
         int deletedCount = 0;
         for (Product product : expiredProducts) {
-            String productName = product.getName();
+            String antiFakeCode = product.getAntiFakeCode();
             String batchNumber = product.getBatchNumber();
             
             log.info("[产品清理] 清理产品 - 防伪码: {}, 产品名: {}, 批次: {}", 
-                maskCode(product.getAntiFakeCode()), productName, batchNumber);
+                maskCode(antiFakeCode), product.getName(), batchNumber);
             
-            materialPurchaseRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
-            storageRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
-            inspectionRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
-            transportSaleRepository.deleteByProductNameAndBatchNumber(productName, batchNumber);
+            materialPurchaseRepository.deleteByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber);
+            storageRepository.deleteByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber);
+            inspectionRepository.deleteByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber);
+            transportSaleRepository.deleteByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber);
             
             product.setIsDeleted(true);
             productRepository.save(product);
@@ -84,12 +84,12 @@ public class ProductCleanupServiceImpl implements ProductCleanupService {
             deletedCount++;
         }
 
-        // 投诉数据按 productName 关联（没有批次字段）。因此只有当该产品下已不存在任何未删除批次时，
+        // 投诉数据按 antiFakeCode 关联。因此只有当该产品下已不存在任何未删除批次时，
         // 才删除对应投诉，避免误删其它仍在保留期内的批次投诉记录。
-        for (String productName : productNamesToMaybeCleanupComplaints) {
-            List<Product> remaining = productRepository.findByNameAndIsDeletedFalse(productName);
+        for (String antiFakeCode : antiFakeCodesToMaybeCleanupComplaints) {
+            List<Product> remaining = productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode).stream().toList();
             if (remaining.isEmpty()) {
-                complaintRepository.deleteByProductName(productName);
+                complaintRepository.deleteByAntiFakeCode(antiFakeCode);
             }
         }
 
