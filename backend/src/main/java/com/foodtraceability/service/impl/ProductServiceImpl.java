@@ -89,6 +89,20 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
+    @Override
+    public List<Product> searchProducts(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return listAllProducts();
+        }
+        String kw = keyword.trim().toLowerCase();
+        return repository.findAll().stream()
+                .filter(p -> !p.getIsDeleted())
+                .filter(p -> p.getName().toLowerCase().contains(kw)
+                        || (p.getBatchNumber() != null && p.getBatchNumber().toLowerCase().contains(kw))
+                        || p.getAntiFakeCode().toLowerCase().contains(kw))
+                .toList();
+    }
+
     private String generateQrCodeAsDataUrl(String content) {
         try {
             QRCodeWriter qrCodeWriter = new QRCodeWriter();

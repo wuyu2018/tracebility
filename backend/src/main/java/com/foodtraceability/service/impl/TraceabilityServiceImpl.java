@@ -95,8 +95,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                 .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
                 .stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(complaintRepository.findByAntiFakeCode(antiFakeCode).stream()
-                .map(this::toComplaintDTO).collect(Collectors.toList()));
+        dto.setComplaints(List.of());
 
         return dto;
     }
@@ -126,8 +125,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                 .map(this::toInspectionDTO).collect(Collectors.toList()));
         dto.setTransportSales(transportSaleRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
                 .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(complaintRepository.findByAntiFakeCode(antiFakeCode).stream()
-            .map(this::toComplaintDTO).collect(Collectors.toList()));
+        dto.setComplaints(List.of());
 
         return dto;
     }

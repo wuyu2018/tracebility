@@ -11,4 +11,5 @@ public interface ProductService {
     List<Product> batchGenerateQrCodes(List<Long> productIds);
     void batchDeleteProducts(List<Long> productIds);
     List<Product> listAllProducts();
+    List<Product> searchProducts(String keyword);
 }
