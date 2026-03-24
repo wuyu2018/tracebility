@@ -15,20 +15,12 @@
         class="complaint-form"
         @submit.prevent="submitComplaint"
       >
-        <el-form-item label="防伪码" prop="antiFakeCode">
-          <el-select
-            v-model="complaintForm.antiFakeCode"
-            placeholder="请选择产品（防伪码）"
-            filterable
-            clearable
-          >
-            <el-option
-              v-for="product in productOptions"
-              :key="product.antiFakeCode"
-              :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
-              :value="product.antiFakeCode"
-            />
-          </el-select>
+        <el-form-item label="选择产品" prop="productId">
+          <ProductSelector
+            v-model="complaintForm.productId"
+            role="consumer"
+            @change="handleProductChange"
+          />
           <div class="form-tip">必填项，请选择产品</div>
         </el-form-item>
 
@@ -75,16 +67,18 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
+import ProductSelector from '@/components/ProductSelector.vue'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
+  productId: '',
   antiFakeCode: '',
   complaintReason: '',
   complaintTime: ''
 })
 const complaintRules = {
-  antiFakeCode: [
-    { required: true, message: '请选择产品（防伪码）', trigger: 'change' }
+  productId: [
+    { required: true, message: '请选择产品', trigger: 'change' }
   ],
   complaintReason: [
     { required: true, message: '投诉原因不能为空', trigger: 'blur' }
@@ -92,23 +86,16 @@ const complaintRules = {
 }
 const submitting = ref(false)
 const errorMessage = ref('')
-const productOptions = ref([])
-// Use same-origin path so HTTPS/TLS is always respected in production.
 const API_BASE_URL = '/api'
 const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
-async function loadProductList() {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/insert/products/list`)
-    productOptions.value = response.data || []
-  } catch (error) {
-    productOptions.value = []
+const handleProductChange = (product) => {
+  if (product) {
+    complaintForm.antiFakeCode = product.antiFakeCode
+  } else {
+    complaintForm.antiFakeCode = ''
   }
 }
-
-onMounted(() => {
-  loadProductList()
-})
 
 const submitComplaint = async () => {
   try {
@@ -207,6 +194,7 @@ const resetForm = () => {
   }
   errorMessage.value = ''
   complaintForm.complaintTime = ''
+  complaintForm.antiFakeCode = ''
 }
 
 

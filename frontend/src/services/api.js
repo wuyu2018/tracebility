@@ -32,6 +32,14 @@ export async function listAllProducts() {
   return data
 }
 
+export async function selectProducts(keyword, role = 'consumer') {
+  const params = new URLSearchParams()
+  if (keyword) params.append('keyword', keyword)
+  params.append('role', role)
+  const { data } = await api.get(`/products/select?${params.toString()}`)
+  return data
+}
+
 export async function createComplaint(data) {
   const { data: responseData } = await api.post('/complaint', data)
   return responseData
