@@ -35,8 +35,3 @@ public class InspectionServiceImpl implements InspectionService {
         repository.deleteById(id);
     }
 }
-        Inspection entity = new Inspection();
-        BeanUtils.copyProperties(dto, entity);
-        return repository.save(entity);
-    }
-}
