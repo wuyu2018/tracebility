@@ -43,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
         entity.setImageUrl(dto.getImageUrl());
         entity.setContactPhone(dto.getContactPhone());
         entity.setContactEmail(dto.getContactEmail());
+        entity.setIsDeleted(false);
         return repository.save(entity);
     }
 
