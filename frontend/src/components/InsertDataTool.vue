@@ -1,424 +1,273 @@
 <template>
-  <div class="insert-data-tool">
-    <el-card class="tool-card">
+  <div class="data-management">
+    <el-card class="main-card">
       <template #header>
         <div class="card-header">
-          <div>
-            <h1 class="main-title">📊 数据录入</h1>
-            <h2 class="sub-title">数据录入工具</h2>
-          </div>
-          <div class="header-tips">
-            <span class="required-tip">⭑ 请填写完整必填项</span>
-            <span class="type-tip">请选择要录入的数据类型</span>
-          </div>
+          <h1>数据管理中心</h1>
+          <p class="subtitle">产品追溯信息管理</p>
         </div>
       </template>
 
-      <!-- 数据类型切换标签页 -->
-      <el-tabs v-model="activeEntity" type="border-card" class="entity-tabs">
-        <!-- 1. 产品 -->
-        <el-tab-pane label="产品" name="product">
-          <div class="table-wrapper">
-            <table class="data-entry-table">
-              <tbody>
-                <tr v-for="field in productFields" :key="field.prop">
-                  <td class="field-label" :class="{ required: field.required }">
-                    {{ field.label }}
-                  </td>
-                  <td class="field-icon">
-                    <el-icon v-if="field.type === 'date'"><Clock /></el-icon>
-                    <el-icon v-else><Minus /></el-icon>
-                  </td>
-                  <td class="field-input">
-                    <el-input
-                      v-if="field.type === 'text'"
-                      v-model="productForm[field.prop]"
-                      :placeholder="field.placeholder"
-                      :disabled="field.disabled"
-                      clearable
-                    />
-                    <el-input-number
-                      v-else-if="field.type === 'number'"
-                      v-model="productForm[field.prop]"
-                      :min="field.min ?? 0"
-                      :max="field.max"
-                      :precision="field.precision"
-                      :placeholder="field.placeholder"
-                      controls-position="right"
-                    />
-                    <el-date-picker
-                      v-else-if="field.type === 'date'"
-                      v-model="productForm[field.prop]"
-                      type="date"
-                      format="YYYY-MM-DD"
-                      value-format="YYYY-MM-DD"
-                      placeholder="选择日期"
-                    />
-                  </td>
-                  <td class="field-action">
-                    <el-button type="text" size="small" @click="handlePlus(field)">
-                      +
-                    </el-button>
-                  </td>
-                  <td class="field-unit">
-                    <span v-if="field.unit">{{ field.unit }}</span>
-                    <span v-else-if="field.tip" class="field-tip">{{ field.tip }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </el-tab-pane>
+      <el-steps :active="currentStep" finish-status="success" class="main-steps">
+        <el-step title="产品信息" description="录入产品基本信息" />
+        <el-step title="原材料" description="录入原材料采购信息" />
+        <el-step title="生产批次" description="创建生产批次并关联原材料" />
+        <el-step title="防伪码" description="生成防伪码" />
+      </el-steps>
 
-        <!-- 2. 原材料采购 -->
-        <el-tab-pane label="原材料采购" name="materialPurchase">
-          <div class="table-wrapper">
-            <table class="data-entry-table">
-              <tbody>
-                <tr v-for="field in materialFields" :key="field.prop">
-                  <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-select
-                      v-if="field.prop === 'antiFakeCode'"
-                      v-model="materialForm.antiFakeCode"
-                      placeholder="选择产品（防伪码）"
-                      filterable
-                      @change="onProductNameChange('material')"
-                    >
-                      <el-option
-                        v-for="product in productList"
-                        :key="product.antiFakeCode"
-                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
-                        :value="product.antiFakeCode"
-                      />
-                    </el-select>
-                    <el-input
-                      v-else-if="field.prop === 'batchNumber'"
-                      v-model="materialForm.batchNumber"
-                      placeholder="请输入批号"
-                      :disabled="!materialForm.antiFakeCode"
-                      clearable
-                    />
-                    <el-input v-else v-model="materialForm[field.prop]" :placeholder="field.placeholder" />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit">{{ field.unit || '' }}</td>
-                </tr>
-              </tbody>
-            </table>
+      <div class="step-content">
+        <div v-show="currentStep === 0" class="step-panel">
+          <h2>产品信息管理</h2>
+          <el-form :model="productForm" label-width="120px" class="product-form">
+            <el-form-item label="产品名称" required>
+              <el-input v-model="productForm.name" placeholder="请输入产品名称" />
+            </el-form-item>
+            <el-form-item label="规格">
+              <el-input v-model="productForm.specification" placeholder="例：400g、5kg" />
+            </el-form-item>
+            <el-form-item label="保质期">
+              <el-input v-model="productForm.shelfLife" placeholder="例：12个月" />
+            </el-form-item>
+            <el-form-item label="产品图片">
+              <el-input v-model="productForm.imageUrl" placeholder="图片URL地址" />
+            </el-form-item>
+            <el-form-item label="联系电话">
+              <el-input v-model="productForm.contactPhone" placeholder="联系电话" />
+            </el-form-item>
+            <el-form-item label="联系邮箱">
+              <el-input v-model="productForm.contactEmail" placeholder="邮箱地址" />
+            </el-form-item>
+          </el-form>
+          <div class="form-actions">
+            <el-button type="primary" @click="submitProduct" :loading="loading">保存产品</el-button>
           </div>
-        </el-tab-pane>
 
-        <!-- 3. 检验检测 -->
-        <el-tab-pane label="检验检测" name="inspection">
-          <div class="table-wrapper">
-            <table class="data-entry-table">
-              <tbody>
-                <tr>
-                  <td class="field-label required">产品（防伪码）</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-select
-                      v-model="inspectionForm.antiFakeCode"
-                      placeholder="选择产品（防伪码）"
-                      filterable
-                      @change="onProductNameChange('inspection')"
-                    >
-                      <el-option
-                        v-for="product in productList"
-                        :key="product.antiFakeCode"
-                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
-                        :value="product.antiFakeCode"
-                      />
-                    </el-select>
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">批号</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input
-                      v-model="inspectionForm.batchNumber"
-                      placeholder="请输入批号"
-                      :disabled="!inspectionForm.antiFakeCode"
-                      clearable
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr v-for="field in inspectionFields.slice(2)" :key="field.prop">
-                  <td class="field-label" :class="{ required: field.required }">{{ field.label }}</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input-number
-                      v-if="field.type === 'number'"
-                      v-model="inspectionForm[field.prop]"
-                      :min="0"
-                      controls-position="right"
-                    />
-                    <el-input v-else v-model="inspectionForm[field.prop]" :placeholder="field.placeholder" />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit">{{ field.unit || '' }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <el-divider>已录入产品</el-divider>
+          <el-table :data="products" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="name" label="产品名称" />
+            <el-table-column prop="specification" label="规格" />
+            <el-table-column prop="shelfLife" label="保质期" />
+            <el-table-column label="操作" width="150">
+              <template #default="scope">
+                <el-button type="primary" size="small" @click="editProduct(scope.row)">编辑</el-button>
+                <el-button type="danger" size="small" @click="deleteProduct(scope.row.id)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div v-show="currentStep === 1" class="step-panel">
+          <h2>原材料采购管理</h2>
+          <el-form :model="materialForm" label-width="120px" class="product-form">
+            <el-form-item label="选择产品" required>
+              <el-select v-model="materialForm.productId" placeholder="请选择产品" @change="onProductSelect">
+                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="原料名称" required>
+              <el-input v-model="materialForm.materialName" placeholder="请输入原料名称" />
+            </el-form-item>
+            <el-form-item label="采购批次号" required>
+              <el-input v-model="materialForm.batchNumber" placeholder="请输入采购批次号" />
+            </el-form-item>
+            <el-form-item label="供应商">
+              <el-input v-model="materialForm.supplierName" placeholder="供应商名称" />
+            </el-form-item>
+            <el-form-item label="生产商">
+              <el-input v-model="materialForm.producerName" placeholder="生产商名称" />
+            </el-form-item>
+            <el-form-item label="生产商地址">
+              <el-input v-model="materialForm.producerAddress" placeholder="生产商地址" />
+            </el-form-item>
+          </el-form>
+          <div class="form-actions">
+            <el-button type="primary" @click="submitMaterial" :loading="loading">保存原材料</el-button>
+            <el-button @click="resetMaterialForm">重置</el-button>
           </div>
-        </el-tab-pane>
 
-        <!-- 4. 仓储 -->
-        <el-tab-pane label="仓储" name="storage">
-          <div class="table-wrapper">
-            <table class="data-entry-table">
-              <tbody>
-                <tr>
-                  <td class="field-label required">产品（防伪码）</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-select
-                      v-model="storageForm.antiFakeCode"
-                      placeholder="选择产品（防伪码）"
-                      filterable
-                      @change="onProductNameChange('storage')"
-                    >
-                      <el-option
-                        v-for="product in productList"
-                        :key="product.antiFakeCode"
-                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
-                        :value="product.antiFakeCode"
-                      />
-                    </el-select>
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">批号</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input
-                      v-model="storageForm.batchNumber"
-                      placeholder="请输入批号"
-                      :disabled="!storageForm.antiFakeCode"
-                      clearable
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">入库时间</td>
-                  <td class="field-icon"><el-icon><Clock /></el-icon></td>
-                  <td class="field-input">
-                    <el-date-picker
-                      v-model="storageForm.storageTime"
-                      type="date"
-                      format="YYYY-MM-DD"
-                      value-format="YYYY-MM-DD"
-                      placeholder="选择入库日期"
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">出库时间</td>
-                  <td class="field-icon"><el-icon><Clock /></el-icon></td>
-                  <td class="field-input">
-                    <el-date-picker
-                      v-model="storageForm.outboundTime"
-                      type="date"
-                      format="YYYY-MM-DD"
-                      value-format="YYYY-MM-DD"
-                      placeholder="选择出库日期"
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">数量</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input-number
-                      v-model="storageForm.quantity"
-                      :min="0"
-                      :precision="2"
-                      controls-position="right"
-                      placeholder="请输入数量"
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit">单位：{{ storageForm.unit || '千克' }}</td>
-                </tr>
-                <tr>
-                  <td class="field-label">单位</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input
-                      v-model="storageForm.unit"
-                      placeholder="例：千克、箱、个"
-                      clearable
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-              </tbody>
-            </table>
+          <el-divider>已录入原材料</el-divider>
+          <el-table :data="materials" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="materialName" label="原料名称" />
+            <el-table-column prop="batchNumber" label="批次号" />
+            <el-table-column prop="supplierName" label="供应商" />
+            <el-table-column label="操作" width="150">
+              <template #default="scope">
+                <el-button type="danger" size="small" @click="deleteMaterial(scope.row.id)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div v-show="currentStep === 2" class="step-panel">
+          <h2>生产批次管理</h2>
+          <el-form :model="batchForm" label-width="140px" class="batch-form">
+            <el-form-item label="选择产品" required>
+              <el-select v-model="batchForm.productId" placeholder="请选择产品" @change="loadMaterialsForProduct">
+                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="生产日期" required>
+              <el-date-picker v-model="batchForm.productionDate" type="date" format="YYYY-MM-DD" value-format="YYYY-MM-DD" placeholder="选择生产日期" />
+            </el-form-item>
+            <el-form-item label="保质期">
+              <el-input v-model="batchForm.shelfLife" placeholder="例：12个月" />
+            </el-form-item>
+            <el-form-item label="数量">
+              <el-input-number v-model="batchForm.quantity" :min="0" />
+            </el-form-item>
+            <el-form-item label="单位">
+              <el-input v-model="batchForm.unit" placeholder="例：千克、箱" />
+            </el-form-item>
+            <el-form-item label="选择原材料批次" required>
+              <el-select v-model="batchForm.materialIds" multiple placeholder="至少选择一个原料批次">
+                <el-option v-for="m in availableMaterials" :key="m.id" :label="`${m.materialName} (${m.batchNumber})`" :value="m.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="入库时间">
+              <el-date-picker v-model="batchForm.storageTime" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm:ss" placeholder="选择入库时间" />
+            </el-form-item>
+            <el-form-item label="出库时间">
+              <el-date-picker v-model="batchForm.outboundTime" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm:ss" placeholder="选择出库时间" />
+            </el-form-item>
+            <el-form-item label="仓库地址">
+              <el-input v-model="batchForm.warehouseLocation" placeholder="仓库地址" />
+            </el-form-item>
+            <el-form-item label="运输公司">
+              <el-input v-model="batchForm.transportCompany" placeholder="运输公司" />
+            </el-form-item>
+            <el-form-item label="车牌号">
+              <el-input v-model="batchForm.vehicleNumber" placeholder="车牌号" />
+            </el-form-item>
+            <el-form-item label="销售区域">
+              <el-input v-model="batchForm.salesRegion" placeholder="销售区域" />
+            </el-form-item>
+            <el-form-item label="收货人">
+              <el-input v-model="batchForm.receiverName" placeholder="收货人" />
+            </el-form-item>
+            <el-form-item label="收货人联系方式">
+              <el-input v-model="batchForm.receiverContact" placeholder="联系方式" />
+            </el-form-item>
+          </el-form>
+          <div class="form-actions">
+            <el-button type="primary" @click="submitBatch" :loading="loading">生成批次</el-button>
+            <el-button @click="resetBatchForm">重置</el-button>
           </div>
-        </el-tab-pane>
 
-        <!-- 5. 运输销售 -->
-        <el-tab-pane label="运输销售" name="transportSale">
-          <div class="table-wrapper">
-            <table class="data-entry-table">
-              <tbody>
-                <tr>
-                  <td class="field-label required">产品（防伪码）</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-select
-                      v-model="transportForm.antiFakeCode"
-                      placeholder="选择产品（防伪码）"
-                      filterable
-                      @change="onProductNameChange('transport')"
-                    >
-                      <el-option
-                        v-for="product in productList"
-                        :key="product.antiFakeCode"
-                        :label="`${product.name} (防伪码: ${product.antiFakeCode})`"
-                        :value="product.antiFakeCode"
-                      />
-                    </el-select>
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">批号</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input
-                      v-model="transportForm.batchNumber"
-                      placeholder="请输入批号"
-                      :disabled="!transportForm.antiFakeCode"
-                      clearable
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit"></td>
-                </tr>
-                <tr>
-                  <td class="field-label">环境温度</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input-number
-                      v-model="transportForm.environmentTemperature"
-                      :min="-50"
-                      :max="100"
-                      :precision="1"
-                      controls-position="right"
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit">单位：℃</td>
-                </tr>
-                <tr>
-                  <td class="field-label">产品温度</td>
-                  <td class="field-icon"><el-icon><Minus /></el-icon></td>
-                  <td class="field-input">
-                    <el-input-number
-                      v-model="transportForm.productTemperature"
-                      :min="-50"
-                      :max="100"
-                      :precision="1"
-                      controls-position="right"
-                    />
-                  </td>
-                  <td class="field-action"><el-button type="text" size="small">+</el-button></td>
-                  <td class="field-unit">单位：℃</td>
-                </tr>
-                <tr>
-                  <td class="field-label">记录时间</td>
-                  <td class="field-icon"><el-icon><Clock /></el-icon></td>
-                  <td class="field-input">
-                    <el-date-picker
-                      v-model="transportForm.time"
-                      type="date"
-                      format="YYYY-MM-DD"
-                      value-format="YYYY-MM-DD"
-                      placeholder="选择记录日期"
-                    />
-                  </td>
-                  <td class="field-action"></td>
-                  <td class="field-unit"></td>
-                </tr>
-              </tbody>
-            </table>
+          <el-divider>已生成批次</el-divider>
+          <el-table :data="batches" style="width: 100%">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="batchNumber" label="批次号" />
+            <el-table-column prop="product.name" label="产品名称" />
+            <el-table-column prop="productionDate" label="生产日期" />
+            <el-table-column label="操作" width="200">
+              <template #default="scope">
+                <el-button type="success" size="small" @click="goToSecurityCode(scope.row)">生成防伪码</el-button>
+                <el-button type="primary" size="small" @click="viewBatchDetail(scope.row)">详情</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div v-show="currentStep === 3" class="step-panel">
+          <h2>防伪码管理</h2>
+          <div v-if="currentBatch" class="current-batch-info">
+            <el-alert type="info" :closable="false">
+              <template #title>
+                当前批次：{{ currentBatch.batchNumber }} - {{ currentBatch.product.name }}
+              </template>
+            </el-alert>
           </div>
-        </el-tab-pane>
-      </el-tabs>
+          <div v-else class="no-batch">
+            <el-empty description="请先在生产批次中选择一个批次" />
+          </div>
 
-      <!-- 提交/重置按钮区 -->
-      <div class="submit-area">
-        <el-button type="primary" size="large" @click="handleSubmit" :loading="submitting">
-          提交 {{ currentEntityLabel }} 数据
-        </el-button>
-        <el-button @click="resetForm" size="large">重置当前表单</el-button>
+          <div class="code-generation" v-if="currentBatch">
+            <el-form label-width="100px">
+              <el-form-item label="生成数量">
+                <el-input-number v-model="codeQuantity" :min="1" :max="10000" />
+              </el-form-item>
+            </el-form>
+            <el-button type="primary" @click="generateCodes" :loading="generatingCodes">生成防伪码</el-button>
+            <el-button type="success" @click="exportCodes" :disabled="!securityCodes.length">导出防伪码</el-button>
+          </div>
+
+          <el-divider v-if="securityCodes.length">已生成的防伪码 ({{ securityCodes.length }})</el-divider>
+          <el-table v-if="securityCodes.length" :data="securityCodes" style="width: 100%" max-height="400">
+            <el-table-column prop="code" label="防伪码" />
+            <el-table-column prop="status" label="状态" width="100" />
+            <el-table-column prop="firstScanTime" label="首次扫码时间" width="180" />
+            <el-table-column prop="scanCount" label="扫码次数" width="100" />
+          </el-table>
+        </div>
       </div>
 
-      <!-- 全局操作结果提示 -->
-      <el-alert
-        v-if="resultMessage"
-        :title="resultMessage"
-        :type="resultType"
-        :closable="true"
-        @close="resultMessage = ''"
-        class="result-alert"
-      />
+      <div class="step-navigation">
+        <el-button @click="prevStep" :disabled="currentStep === 0">上一步</el-button>
+        <el-button type="primary" @click="nextStep" :disabled="currentStep === 3">下一步</el-button>
+      </div>
     </el-card>
+
+    <el-dialog v-model="batchDetailVisible" title="批次详情" width="700px">
+      <div v-if="batchDetail" class="batch-detail">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="批次号">{{ batchDetail.batchNumber }}</el-descriptions-item>
+          <el-descriptions-item label="产品名称">{{ batchDetail.product?.name }}</el-descriptions-item>
+          <el-descriptions-item label="生产日期">{{ batchDetail.productionDate }}</el-descriptions-item>
+          <el-descriptions-item label="保质期">{{ batchDetail.shelfLife }}</el-descriptions-item>
+          <el-descriptions-item label="数量">{{ batchDetail.quantity }} {{ batchDetail.unit }}</el-descriptions-item>
+        </el-descriptions>
+
+        <h4>检测报告</h4>
+        <el-form v-if="inspectionForm" :model="inspectionForm" label-width="100px">
+          <el-form-item label="样品名称">
+            <el-input v-model="inspectionForm.sampleName" />
+          </el-form-item>
+          <el-form-item label="抽样数量">
+            <el-input-number v-model="inspectionForm.sampleQuantity" :min="0" />
+          </el-form-item>
+          <el-form-item label="样品规格">
+            <el-input v-model="inspectionForm.sampleSpecification" />
+          </el-form-item>
+          <el-form-item label="检测报告图片">
+            <el-input v-model="inspectionForm.imageUrl" placeholder="图片URL" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitInspection">保存检测报告</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Clock, Minus } from '@element-plus/icons-vue'
-import {
-  createProduct,
-  createMaterialPurchase,
-  createInspection,
-  createStorage,
-  createTransportSale
-} from '../services/api'
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import axios from 'axios'
 
+const API_BASE = '/api'
 
-const submitting = ref(false)
-const resultMessage = ref('')
-const resultType = ref('success')
+const currentStep = ref(0)
+const loading = ref(false)
+const generatingCodes = ref(false)
 
-const activeEntity = ref('transportSale')
+const products = ref([])
+const materials = ref([])
+const batches = ref([])
+const securityCodes = ref([])
+const currentBatch = ref(null)
+const batchDetail = ref(null)
+const batchDetailVisible = ref(false)
+const availableMaterials = ref([])
 
-const entityLabels = {
-  product: '产品',
-  materialPurchase: '原材料采购',
-  inspection: '检验检测',
-  storage: '仓储',
-  transportSale: '运输销售'
-}
-const currentEntityLabel = computed(() => entityLabels[activeEntity.value])
+const codeQuantity = ref(100)
 
 const productForm = reactive({
-  antiFakeCode: '',
+  id: null,
   name: '',
   specification: '',
-  batchNumber: '',
-  productionDate: '',
   shelfLife: '',
   imageUrl: '',
   contactPhone: '',
@@ -426,458 +275,373 @@ const productForm = reactive({
 })
 
 const materialForm = reactive({
-  antiFakeCode: '',
-  batchNumber: '',
+  id: null,
+  productId: null,
   materialName: '',
+  batchNumber: '',
+  supplierName: '',
   producerName: '',
   producerAddress: ''
 })
 
-const inspectionForm = reactive({
-  antiFakeCode: '',
-  batchNumber: '',
-  sampleName: '',
-  sampleQuantity: null,
-  sampleSpecification: ''
-})
-
-const storageForm = reactive({
-  antiFakeCode: '',
-  batchNumber: '',
+const batchForm = reactive({
+  productId: null,
+  productionDate: '',
+  shelfLife: '',
+  quantity: null,
+  unit: '',
+  materialIds: [],
   storageTime: '',
   outboundTime: '',
-  quantity: null,
-  unit: ''
+  warehouseLocation: '',
+  transportCompany: '',
+  vehicleNumber: '',
+  salesRegion: '',
+  receiverName: '',
+  receiverContact: ''
 })
 
-const transportForm = reactive({
-  antiFakeCode: '',
-  batchNumber: '',
-  environmentTemperature: null,
-  productTemperature: null,
-  time: ''
+const inspectionForm = reactive({
+  sampleName: '',
+  sampleQuantity: null,
+  sampleSpecification: '',
+  imageUrl: ''
 })
 
-const productList = ref([])
-const productBatchMap = ref({})
-
-async function loadProductList() {
+async function loadProducts() {
   try {
-    const response = await fetch('/api/insert/products/list', { method: 'POST' })
-    const data = await response.json()
-    if (Array.isArray(data) && data.length > 0) {
-      productList.value = data
-      const batchMap = {}
-      data.forEach(product => {
-        if (product.name && product.batchNumber) {
-          if (!batchMap[product.name]) {
-            batchMap[product.name] = []
-          }
-          if (!batchMap[product.name].includes(product.batchNumber)) {
-            batchMap[product.name].push(product.batchNumber)
-          }
-        }
-      })
-      productBatchMap.value = batchMap
-    } else {
-      productList.value = []
-      productBatchMap.value = {}
-    }
-  } catch (error) {
-    productList.value = []
-    productBatchMap.value = {}
+    const res = await axios.get(`${API_BASE}/products`)
+    products.value = res.data
+  } catch (e) {
+    console.error(e)
   }
 }
 
-function onProductNameChange(formType) {
-  if (formType === 'material') {
-    materialForm.batchNumber = ''
-  } else if (formType === 'inspection') {
-    inspectionForm.batchNumber = ''
-  } else if (formType === 'storage') {
-    storageForm.batchNumber = ''
-  } else if (formType === 'transport') {
-    transportForm.batchNumber = ''
+async function loadMaterials() {
+  try {
+    const res = await axios.get(`${API_BASE}/materials`)
+    materials.value = res.data
+  } catch (e) {
+    console.error(e)
   }
 }
 
-const productFields = [
-  { prop: 'antiFakeCode', label: '防伪码', required: true, type: 'text', placeholder: '输入防伪码', tip: '唯一标识' },
-  { prop: 'name', label: '产品名称', required: true, type: 'text', placeholder: '例：有机大米' },
-  { prop: 'specification', label: '规格', required: false, type: 'text', placeholder: '例：400g、5kg', tip: '请包含单位' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '请输入批号' },
-  { prop: 'productionDate', label: '生产日期', required: true, type: 'date', placeholder: '选择生产日期' },
-  { prop: 'shelfLife', label: '保质期', required: false, type: 'text', placeholder: '例：12个月', tip: '请包含单位' },
-  { prop: 'imageUrl', label: '图片URL', required: false, type: 'text', placeholder: 'http://...', tip: '以http开头' },
-  { prop: 'contactPhone', label: '联系电话', required: false, type: 'text', placeholder: '手机号' },
-  { prop: 'contactEmail', label: '联系邮箱', required: false, type: 'text', placeholder: '邮箱' }
-]
-
-const materialFields = [
-  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'text' },
-  { prop: 'materialName', label: '原料名称', required: true, type: 'text', placeholder: '例：优质稻谷' },
-  { prop: 'producerName', label: '生产商', required: false, type: 'text', placeholder: '可选' },
-  { prop: 'producerAddress', label: '生产商地址', required: false, type: 'text', placeholder: '可选' }
-]
-
-const inspectionFields = [
-  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'text', placeholder: '请输入批号' },
-  { prop: 'sampleName', label: '样品名称', required: false, type: 'text' },
-  { prop: 'sampleQuantity', label: '样品数量', required: false, type: 'number' },
-  { prop: 'sampleSpecification', label: '样品规格', required: false, type: 'text' }
-]
-
-const storageFields = [
-  { prop: 'antiFakeCode', label: '产品（防伪码）', required: true, type: 'select' },
-  { prop: 'batchNumber', label: '批号', required: false, type: 'text' },
-  { prop: 'storageTime', label: '入库时间', required: false, type: 'date' },
-  { prop: 'outboundTime', label: '出库时间', required: false, type: 'date' },
-  { prop: 'quantity', label: '数量', required: false, type: 'number', precision: 2 },
-  { prop: 'unit', label: '单位', required: false, type: 'text', placeholder: '例：千克' }
-]
-
-async function handleSubmit() {
-  let isValid = true
-  let errorMsg = ''
-
-  if (activeEntity.value === 'transportSale') {
-    if (!transportForm.antiFakeCode) {
-      isValid = false
-      errorMsg = '请选择产品（防伪码）'
-    }
-  } else if (activeEntity.value === 'product') {
-    if (!productForm.antiFakeCode) { isValid = false; errorMsg = '防伪码不能为空' }
-    else if (!productForm.name) { isValid = false; errorMsg = '产品名称不能为空' }
-    else if (!productForm.productionDate) { isValid = false; errorMsg = '生产日期不能为空' }
-  } else if (activeEntity.value === 'materialPurchase') {
-    if (!materialForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
-    else if (!materialForm.materialName) { isValid = false; errorMsg = '原料名称不能为空' }
-  } else if (activeEntity.value === 'inspection') {
-    if (!inspectionForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
-  } else if (activeEntity.value === 'storage') {
-    if (!storageForm.antiFakeCode) { isValid = false; errorMsg = '请选择产品（防伪码）' }
+async function loadBatches() {
+  try {
+    const res = await axios.get(`${API_BASE}/batches`)
+    batches.value = res.data
+  } catch (e) {
+    console.error(e)
   }
+}
 
-  if (!isValid) {
-    ElMessage.warning(errorMsg || '请填写完整必填项')
+function onProductSelect() {
+  loadMaterialsForProduct()
+}
+
+async function loadMaterialsForProduct() {
+  if (batchForm.productId) {
+    try {
+      const res = await axios.get(`${API_BASE}/materials?productId=${batchForm.productId}`)
+      availableMaterials.value = res.data
+    } catch (e) {
+      console.error(e)
+    }
+  }
+}
+
+async function submitProduct() {
+  if (!productForm.name) {
+    ElMessage.warning('产品名称不能为空')
     return
   }
-
-  submitting.value = true
-  resultMessage.value = ''
-
+  loading.value = true
   try {
-    let response
-    const formData = { ...getCurrentForm() }
-    let apiPayload
-
-    switch (activeEntity.value) {
-      case 'product':
-        if (formData.imageUrl && !formData.imageUrl.startsWith('http')) {
-          formData.imageUrl = ''
-        }
-        apiPayload = {
-          antiFakeCode: formData.antiFakeCode,
-          name: formData.name,
-          specification: formData.specification || null,
-          batchNumber: formData.batchNumber || null,
-          productionDate: formData.productionDate || null,
-          shelfLife: formData.shelfLife || null,
-          imageUrl: formData.imageUrl || null,
-          contactPhone: formData.contactPhone || null,
-          contactEmail: formData.contactEmail || null
-        }
-        response = await createProduct(apiPayload)
-        await loadProductList(); 
-        break
-
-      case 'materialPurchase':
-        apiPayload = {
-          antiFakeCode: formData.antiFakeCode,
-          batchNumber: formData.batchNumber || null,
-          materialName: formData.materialName,
-          producerName: formData.producerName || null,
-          producerAddress: formData.producerAddress || null
-        }
-        response = await createMaterialPurchase(apiPayload)
-        break
-
-      case 'inspection':
-        apiPayload = {
-          antiFakeCode: formData.antiFakeCode,
-          batchNumber: formData.batchNumber || null,
-          sampleName: formData.sampleName || null,
-          sampleQuantity: formData.sampleQuantity ? Number(formData.sampleQuantity) : null,
-          sampleSpecification: formData.sampleSpecification || null
-        }
-        response = await createInspection(apiPayload)
-        break
-
-      case 'storage':
-        apiPayload = {
-          antiFakeCode: formData.antiFakeCode,
-          batchNumber: formData.batchNumber || null,
-          storageTime: formData.storageTime ? `${formData.storageTime}T00:00:00` : null,
-          outboundTime: formData.outboundTime ? `${formData.outboundTime}T00:00:00` : null,
-          quantity: formData.quantity !== null && formData.quantity !== ''
-                      ? Number(formData.quantity)
-                      : null,
-          unit: formData.unit || null
-        }
-        response = await createStorage(apiPayload)
-        break
-
-      case 'transportSale':
-        apiPayload = {
-          antiFakeCode: formData.antiFakeCode,
-          batchNumber: formData.batchNumber || null,
-          environmentTemperature: formData.environmentTemperature !== null ? Number(formData.environmentTemperature) : null,
-          productTemperature: formData.productTemperature !== null ? Number(formData.productTemperature) : null,
-          time: formData.time ? `${formData.time}T00:00:00` : null
-        }
-        response = await createTransportSale(apiPayload)
-        break
-
-      default:
-        ElMessage.error(`未知的实体类型: ${activeEntity.value}`)
-        submitting.value = false
-        return
+    if (productForm.id) {
+      await axios.put(`${API_BASE}/products/${productForm.id}`, productForm)
+      ElMessage.success('产品更新成功')
+    } else {
+      await axios.post(`${API_BASE}/products`, productForm)
+      ElMessage.success('产品保存成功')
     }
+    resetProductForm()
+    loadProducts()
+  } catch (e) {
+    ElMessage.error(e.response?.data?.error || '保存失败')
+  } finally {
+    loading.value = false
+  }
+}
 
-    ElMessage.success('提交成功')
-    resultMessage.value = '操作成功完成'
-    resetForm()
+function editProduct(row) {
+  Object.assign(productForm, row)
+}
 
-  } catch (error) {
-    console.error('提交失败:', error)
-    console.error('错误响应:', error.response?.data)
+async function deleteProduct(id) {
+  try {
+    await ElMessageBox.confirm('确定要删除该产品吗？', '提示', { type: 'warning' })
+    await axios.delete(`${API_BASE}/products/${id}`)
+    ElMessage.success('删除成功')
+    loadProducts()
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
 
-    let errorMessage = '提交失败'
-    if (error.response?.data) {
-      if (typeof error.response.data === 'string') {
-        errorMessage = error.response.data
-      } else if (error.response.data.message) {
-        errorMessage = error.response.data.message
-      } else if (error.response.data.error) {
-        errorMessage = error.response.data.error
+function resetProductForm() {
+  Object.keys(productForm).forEach(k => {
+    if (k === 'id') productForm[k] = null
+    else if (typeof productForm[k] === 'string') productForm[k] = ''
+    else productForm[k] = null
+  })
+}
+
+async function submitMaterial() {
+  if (!materialForm.productId || !materialForm.materialName || !materialForm.batchNumber) {
+    ElMessage.warning('请填写必填项')
+    return
+  }
+  loading.value = true
+  try {
+    if (materialForm.id) {
+      await axios.put(`${API_BASE}/materials/${materialForm.id}`, materialForm)
+      ElMessage.success('原材料更新成功')
+    } else {
+      await axios.post(`${API_BASE}/materials`, materialForm)
+      ElMessage.success('原材料保存成功')
+    }
+    resetMaterialForm()
+    loadMaterials()
+  } catch (e) {
+    ElMessage.error(e.response?.data?.error || '保存失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetMaterialForm() {
+  Object.keys(materialForm).forEach(k => {
+    if (k === 'id' || k === 'productId') materialForm[k] = null
+    else if (typeof materialForm[k] === 'string') materialForm[k] = ''
+    else materialForm[k] = null
+  })
+}
+
+async function deleteMaterial(id) {
+  try {
+    await ElMessageBox.confirm('确定要删除该原材料吗？', '提示', { type: 'warning' })
+    await axios.delete(`${API_BASE}/materials/${id}`)
+    ElMessage.success('删除成功')
+    loadMaterials()
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+async function submitBatch() {
+  if (!batchForm.productId || !batchForm.productionDate) {
+    ElMessage.warning('请填写必填项')
+    return
+  }
+  if (!batchForm.materialIds || batchForm.materialIds.length === 0) {
+    ElMessage.warning('至少选择一个原料批次')
+    return
+  }
+  loading.value = true
+  try {
+    const payload = { ...batchForm }
+    if (payload.storageTime && payload.outboundTime) {
+      payload.storage = {
+        storageTime: payload.storageTime,
+        outboundTime: payload.outboundTime,
+        warehouseLocation: payload.warehouseLocation
+      }
+      payload.transportSale = {
+        time: payload.storageTime,
+        transportCompany: payload.transportCompany,
+        vehicleNumber: payload.vehicleNumber,
+        salesRegion: payload.salesRegion,
+        receiverName: payload.receiverName,
+        receiverContact: payload.receiverContact
       }
     }
+    delete payload.storageTime
+    delete payload.outboundTime
+    delete payload.warehouseLocation
+    delete payload.transportCompany
+    delete payload.vehicleNumber
+    delete payload.salesRegion
+    delete payload.receiverName
+    delete payload.receiverContact
 
-    ElMessage.error(`${errorMessage}，请稍后重试`)
-    resultMessage.value = errorMessage || '操作失败'
-    resultType.value = 'error'
+    const res = await axios.post(`${API_BASE}/batches`, payload)
+    ElMessage.success(`批次生成成功！批次号：${res.data.batchNumber}`)
+    resetBatchForm()
+    loadBatches()
+  } catch (e) {
+    ElMessage.error(e.response?.data?.error || '生成失败')
   } finally {
-    submitting.value = false
+    loading.value = false
   }
 }
 
-function getCurrentForm() {
-  const map = {
-    product: productForm,
-    materialPurchase: materialForm,
-    inspection: inspectionForm,
-    storage: storageForm,
-    transportSale: transportForm
-  }
-  return map[activeEntity.value]
-}
-
-function resetForm() {
-  const form = getCurrentForm()
-  Object.keys(form).forEach(key => {
-    if (typeof form[key] === 'string') form[key] = ''
-    else if (typeof form[key] === 'number') form[key] = null
-    else form[key] = null
+function resetBatchForm() {
+  Object.keys(batchForm).forEach(k => {
+    if (k === 'productId' || k === 'materialIds') batchForm[k] = k === 'materialIds' ? [] : null
+    else if (typeof batchForm[k] === 'string') batchForm[k] = ''
+    else batchForm[k] = null
   })
-  ElMessage.success('表单已重置')
 }
 
-function handlePlus(field) {
-  ElMessage.info(`功能开发中: ${field.label} 附加操作`)
+function goToSecurityCode(batch) {
+  currentBatch.value = batch
+  currentStep.value = 3
+  loadSecurityCodes(batch.id)
+}
+
+async function loadSecurityCodes(batchId) {
+  try {
+    const res = await axios.get(`${API_BASE}/batches/${batchId}/security-codes`)
+    securityCodes.value = res.data
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+async function generateCodes() {
+  if (!currentBatch.value) return
+  generatingCodes.value = true
+  try {
+    const res = await axios.post(`${API_BASE}/batches/${currentBatch.value.id}/security-codes`, {
+      quantity: codeQuantity.value
+    })
+    ElMessage.success(`成功生成 ${res.data.count} 个防伪码`)
+    loadSecurityCodes(currentBatch.value.id)
+  } catch (e) {
+    ElMessage.error('生成失败')
+  } finally {
+    generatingCodes.value = false
+  }
+}
+
+function exportCodes() {
+  const content = securityCodes.value.map(c => c.code).join('\n')
+  const blob = new Blob([content], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `防伪码_${currentBatch.value.batchNumber}.txt`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function viewBatchDetail(batch) {
+  batchDetail.value = batch
+  batchDetailVisible.value = true
+}
+
+async function submitInspection() {
+  if (!batchDetail.value) return
+  try {
+    await axios.post(`${API_BASE}/batches/${batchDetail.value.id}/inspection`, inspectionForm)
+    ElMessage.success('检测报告保存成功')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+function prevStep() {
+  if (currentStep.value > 0) currentStep.value--
+}
+
+function nextStep() {
+  if (currentStep.value < 3) currentStep.value++
 }
 
 onMounted(() => {
-  loadProductList()
+  loadProducts()
+  loadMaterials()
+  loadBatches()
 })
 </script>
 
 <style scoped>
-.insert-data-tool {
-  max-width: 1000px;
+.data-management {
+  padding: 1.5rem;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1.25rem;
 }
 
-.tool-card {
+.main-card {
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
-.card-header {
+.card-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--color-primary-dark);
+}
+
+.subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+}
+
+.main-steps {
+  margin: 2rem 0;
+}
+
+.step-content {
+  min-height: 400px;
+}
+
+.step-panel h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.product-form,
+.batch-form {
+  max-width: 600px;
+}
+
+.form-actions {
+  margin-top: 1.5rem;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
   gap: 1rem;
 }
 
-.main-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-primary-dark);
-  line-height: 1.2;
-}
-
-.sub-title {
-  margin: 0.25rem 0 0;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-}
-
-.header-tips {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.required-tip {
-  color: var(--color-accent);
-  font-size: 0.9rem;
-}
-
-.type-tip {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-}
-
-.entity-tabs {
-  margin-top: 1rem;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  padding: 0.5rem 0;
-}
-
-.data-entry-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.data-entry-table td {
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #ebeef5;
-  vertical-align: middle;
-}
-
-.field-label {
-  width: 120px;
-  font-weight: 500;
-  color: var(--color-text);
-  white-space: nowrap;
-}
-
-.field-label.required::before {
-  content: '*';
-  color: var(--color-danger);
-  margin-right: 0.25rem;
-}
-
-.field-icon {
-  width: 40px;
-  text-align: center;
-  color: var(--color-text-muted);
-}
-
-.field-input {
-  min-width: 200px;
-}
-
-.field-action {
-  width: 50px;
-  text-align: center;
-}
-
-.field-unit {
-  width: 100px;
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  padding-left: 0.75rem;
-}
-
-.field-tip {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-}
-
-.submit-area {
-  margin-top: 1.75rem;
+.step-navigation {
+  margin-top: 2rem;
   display: flex;
   justify-content: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
 }
 
-.result-alert {
-  margin-top: 1.25rem;
+.current-batch-info {
+  margin-bottom: 1.5rem;
 }
 
-.el-input-number {
-  width: 100%;
+.no-batch {
+  padding: 3rem 0;
 }
 
-.el-date-editor {
-  width: 100% !important;
+.code-generation {
+  margin: 1.5rem 0;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
 }
 
-@media (max-width: 768px) {
-  .insert-data-tool {
-    padding: 1rem;
-  }
-
-  .card-header {
-    flex-direction: column;
-  }
-
-  .header-tips {
-    text-align: left;
-  }
-
-  .data-entry-table {
-    font-size: 0.875rem;
-  }
-
-  .field-label {
-    width: 100px;
-  }
-
-  .field-input {
-    min-width: 150px;
-  }
-
-  .submit-area {
-    flex-direction: column;
-  }
-
-  .submit-area .el-button {
-    width: 100%;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .tool-card {
-    background: #1e1e1e;
-    border-color: #333;
-  }
-
-  .data-entry-table td {
-    border-bottom-color: #3a3a3a;
-  }
+.batch-detail h4 {
+  margin: 1.5rem 0 1rem;
+  color: var(--color-primary);
 }
 </style>

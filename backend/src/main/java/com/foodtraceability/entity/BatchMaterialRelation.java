@@ -6,11 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "inspection")
+@Table(name = "batch_material_relation")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Inspection {
+public class BatchMaterialRelation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,15 +20,7 @@ public class Inspection {
     @JoinColumn(name = "batch_id", nullable = false)
     private ProductionBatch batch;
 
-    @Column(name = "sample_name", length = 100)
-    private String sampleName;
-
-    @Column(name = "sample_quantity")
-    private Integer sampleQuantity;
-
-    @Column(name = "sample_specification", length = 100)
-    private String sampleSpecification;
-
-    @Column(name = "image_url", length = 500)
-    private String imageUrl;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id", nullable = false)
+    private MaterialPurchase material;
 }

@@ -1,15 +1,15 @@
 package com.foodtraceability.service;
 
-import com.foodtraceability.dto.InsertDataDTO.*;
-import com.foodtraceability.entity.*;
+import com.foodtraceability.dto.ProductDTO;
+import com.foodtraceability.entity.Product;
 
 import java.util.List;
 
 public interface ProductService {
     Product createProduct(ProductDTO dto);
-    Product generateQrCode(Long productId);
-    List<Product> batchGenerateQrCodes(List<Long> productIds);
-    void batchDeleteProducts(List<Long> productIds);
+    Product updateProduct(Long id, ProductDTO dto);
+    void deleteProduct(Long id);
     List<Product> listAllProducts();
     List<Product> searchProducts(String keyword);
+    Product getProductById(Long id);
 }

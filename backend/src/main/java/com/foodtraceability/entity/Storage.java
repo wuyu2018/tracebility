@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,16 +17,9 @@ public class Storage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "anti_fake_code", nullable = false, length = 20)
-    private String antiFakeCode;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "anti_fake_code", referencedColumnName = "anti_fake_code", insertable = false, updatable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Product product;
-
-    @Column(name = "batch_number", length = 50)
-    private String batchNumber;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    private ProductionBatch batch;
 
     @Column(name = "storage_time")
     private LocalDateTime storageTime;
@@ -41,4 +32,7 @@ public class Storage {
 
     @Column(length = 20)
     private String unit;
+
+    @Column(name = "warehouse_location", length = 100)
+    private String warehouseLocation;
 }

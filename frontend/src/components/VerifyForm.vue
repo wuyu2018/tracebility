@@ -8,21 +8,11 @@
           v-model="antiFakeCode"
           type="text"
           placeholder="防伪码"
-          maxlength="20"
+          maxlength="64"
           autocomplete="off"
           :disabled="loading"
           @keydown.enter.prevent="handleSubmit"
           ref="inputRef"
-        />
-        <input
-          id="batchNumber"
-          v-model="batchNumber"
-          type="text"
-          placeholder="批次号（选填）"
-          maxlength="50"
-          autocomplete="off"
-          :disabled="loading"
-          @keydown.enter.prevent="handleSubmit"
         />
         <button type="submit" class="btn-submit" :disabled="loading">
           <span v-if="loading" class="loading-spinner"></span>
@@ -32,7 +22,7 @@
             <span class="scan-icon">扫码查询</span>
         </button>
       </div>
-      <p class="form-tip">输入防伪码快速验证，输入防伪码+批次号查看完整溯源信息</p>
+      <p class="form-tip">输入防伪码验证产品真伪并查看溯源信息</p>
       <p v-if="error" class="form-error">{{ error }}</p>
     </div>
     <div v-if="showCamera" class="camera-overlay">
@@ -52,13 +42,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { validateAntiFakeCode } from '../utils/validation'
-import { verifyAntiFakeCode, verifyAntiFakeCodeGet, verifyAntiFakeCodeWithBatch } from '../services/api'
+import { verifyAntiFakeCodeGet } from '../services/api'
 
 const emit = defineEmits(['verified', 'invalid'])
 
 const antiFakeCode = ref('')
-const batchNumber = ref('')
 const loading = ref(false)
 const error = ref('')
 const inputRef = ref(null)
@@ -91,7 +79,7 @@ async function startScan() {
         startQrScan()
       }
     }, 100)
-  } catch (error) {
+  } catch (err) {
     alert('无法访问摄像头，请确保已授予权限')
   }
 }
@@ -116,21 +104,21 @@ function startQrScan() {
 
       if (code && code.data) {
         const url = code.data
-        let antiFakeCode = ''
+        let scannedCode = ''
 
         if (url.includes('code=')) {
           const params = new URLSearchParams(url.split('?')[1])
-          antiFakeCode = params.get('code')
+          scannedCode = params.get('code')
         } else {
-          antiFakeCode = url
+          scannedCode = url
         }
 
-        if (antiFakeCode && antiFakeCode.length >= 12) {
+        if (scannedCode && scannedCode.length >= 12) {
           stopCamera()
-          await queryByCode(antiFakeCode)
+          await queryByCode(scannedCode)
         }
       }
-    } catch (error) {
+    } catch (err) {
     }
   }, 500)
 }
@@ -139,18 +127,12 @@ async function queryByCode(code) {
   loading.value = true
   try {
     const result = await verifyAntiFakeCodeGet(code)
-    if (result.valid) {
-      if (result.data) {
-        emit('verified', result.data)
-      } else if (result.productName) {
-        emit('verified', { product: { name: result.productName, specification: result.specification } })
-      } else {
-        emit('invalid', '产品信息验证通过')
-      }
+    if (result.valid && result.data) {
+      emit('verified', result.data)
     } else {
       emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
     }
-  } catch (error) {
+  } catch (err) {
     emit('invalid', '验证失败，请检查网络连接')
   } finally {
     loading.value = false
@@ -172,28 +154,15 @@ function stopCamera() {
 const handleSubmit = async () => {
   error.value = ''
 
-  const validation = validateAntiFakeCode(antiFakeCode.value)
-  if (!validation.valid) {
-    error.value = validation.message
+  if (!antiFakeCode.value || antiFakeCode.value.trim().length < 12) {
+    error.value = '防伪码长度至少12位'
     return
   }
   loading.value = true
   try {
-    let result
-    if (batchNumber.value && batchNumber.value.trim()) {
-      result = await verifyAntiFakeCodeWithBatch(antiFakeCode.value.trim(), batchNumber.value.trim())
-    } else {
-      result = await verifyAntiFakeCode(antiFakeCode.value.trim())
-    }
-
-    if (result.valid) {
-      if (result.data) {
-        emit('verified', result.data)
-      } else if (result.productName) {
-        emit('invalid', result.message || '请提供批次号以查看完整溯源信息')
-      } else {
-        emit('invalid', result.message || '产品信息验证通过')
-      }
+    const result = await verifyAntiFakeCodeGet(antiFakeCode.value.trim())
+    if (result.valid && result.data) {
+      emit('verified', result.data)
     } else {
       emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
     }
@@ -213,12 +182,6 @@ defineExpose({ focus: () => inputRef.value?.focus() })
   width: 100%;
   max-width: 480px;
   padding: 0 0.5rem;
-}
-
-@media (max-width: 480px) {
-  .verify-form {
-    padding: 0;
-  }
 }
 
 .form-group {
@@ -243,11 +206,6 @@ defineExpose({ focus: () => inputRef.value?.focus() })
 .input-wrap input:first-child {
   flex: 1;
   min-width: 150px;
-}
-
-.input-wrap input:nth-child(2) {
-  flex: 1;
-  min-width: 120px;
 }
 
 @media (max-width: 480px) {
@@ -315,5 +273,4 @@ defineExpose({ focus: () => inputRef.value?.focus() })
   opacity: 0.7;
   cursor: not-allowed;
 }
-
 </style>

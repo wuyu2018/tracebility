@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "material_purchase")
@@ -18,23 +17,34 @@ public class MaterialPurchase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "anti_fake_code", nullable = false, length = 20)
-    private String antiFakeCode;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "anti_fake_code", referencedColumnName = "anti_fake_code", insertable = false, updatable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
-    @Column(name = "batch_number", length = 50)
-    private String batchNumber;
 
     @Column(name = "material_name", nullable = false, length = 100)
     private String materialName;
+
+    @Column(name = "batch_number", nullable = false, unique = true, length = 50)
+    private String batchNumber;
+
+    @Column(name = "supplier_name", length = 100)
+    private String supplierName;
 
     @Column(name = "producer_name", length = 100)
     private String producerName;
 
     @Column(name = "producer_address", length = 255)
     private String producerAddress;
+
+    @Column(name = "purchase_date")
+    private LocalDateTime purchaseDate;
+
+    @Column(name = "quantity")
+    private Double quantity;
+
+    @Column(length = 20)
+    private String unit;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
 }

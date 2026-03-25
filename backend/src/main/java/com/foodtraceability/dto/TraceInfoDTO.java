@@ -13,77 +13,75 @@ import java.util.List;
 public class TraceInfoDTO {
 
     private ProductInfo product;
-    private List<MaterialPurchaseDTO> materialPurchases;
-    private List<StorageDTO> storages;
-    private List<InspectionDTO> inspections;
-    private List<TransportSaleDTO> transportSales;
-    private List<ComplaintDTO> complaints;
+    private BatchInfo batch;
+    private List<MaterialInfo> materials;
+    private InspectionInfo inspection;
+    private StorageInfo storage;
+    private TransportSaleInfo transportSale;
+    private String status;
+    private LocalDateTime firstScanTime;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProductInfo {
         private Long id;
-        private String antiFakeCode;
         private String name;
         private String specification;
+        private String shelfLife;
+        private String imageUrl;
+        private String contactPhone;
+        private String contactEmail;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BatchInfo {
+        private Long id;
         private String batchNumber;
         private LocalDate productionDate;
         private String shelfLife;
-        private LocalDateTime lastQueriedTime;
+        private LocalDateTime createdAt;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class MaterialPurchaseDTO {
-        private String antiFakeCode;
-        private String batchNumber;
+    public static class MaterialInfo {
         private String materialName;
+        private String batchNumber;
+        private String supplierName;
         private String producerName;
-        private String producerAddress;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class StorageDTO {
-        private String antiFakeCode;
-        private String batchNumber;
-        private LocalDateTime storageTime;
-        private LocalDateTime outboundTime;
-        private Double quantity;
-        private String unit;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class InspectionDTO {
-        private String antiFakeCode;
-        private String batchNumber;
+    public static class InspectionInfo {
         private String sampleName;
         private Integer sampleQuantity;
         private String sampleSpecification;
+        private String imageUrl;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class TransportSaleDTO {
-        private String antiFakeCode;
-        private String batchNumber;
-        private Double environmentTemperature;
-        private Double productTemperature;
-        private LocalDateTime time;
+    public static class StorageInfo {
+        private LocalDateTime storageTime;
+        private LocalDateTime outboundTime;
+        private String warehouseLocation;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ComplaintDTO {
-        private String antiFakeCode;
-        private String complaintReason;
-        private LocalDateTime complaintTime;
+    public static class TransportSaleInfo {
+        private LocalDateTime transportTime;
+        private String transportCompany;
+        private String vehicleNumber;
+        private String salesRegion;
+        private String receiverName;
     }
 }
