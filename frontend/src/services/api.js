@@ -65,7 +65,9 @@ export async function getProducts() {
   return data;
 }
 
-export const listAllProducts = getProducts;
+export async function listAllProducts() {
+  return getProducts();
+}
 
 export async function createMaterialPurchase(data) {
   const { data: responseData } = await api.post('/materials', data);
