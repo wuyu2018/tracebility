@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,16 +17,9 @@ public class TransportSale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "anti_fake_code", nullable = false, length = 20)
-    private String antiFakeCode;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "anti_fake_code", referencedColumnName = "anti_fake_code", insertable = false, updatable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Product product;
-
-    @Column(name = "batch_number", length = 50)
-    private String batchNumber;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id")
+    private ProductionBatch batch;
 
     @Column(name = "environment_temperature")
     private Double environmentTemperature;
@@ -38,4 +29,19 @@ public class TransportSale {
 
     @Column
     private LocalDateTime time;
+
+    @Column(name = "transport_company", length = 100)
+    private String transportCompany;
+
+    @Column(name = "vehicle_number", length = 50)
+    private String vehicleNumber;
+
+    @Column(name = "sales_region", length = 255)
+    private String salesRegion;
+
+    @Column(name = "receiver_name", length = 100)
+    private String receiverName;
+
+    @Column(name = "receiver_contact", length = 50)
+    private String receiverContact;
 }

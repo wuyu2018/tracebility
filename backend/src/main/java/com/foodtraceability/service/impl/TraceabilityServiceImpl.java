@@ -1,11 +1,14 @@
 package com.foodtraceability.service.impl;
 
-import com.foodtraceability.dto.*;
+import com.foodtraceability.dto.TraceInfoDTO;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import com.foodtraceability.service.TraceabilityService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,184 +16,142 @@ import java.util.stream.Collectors;
 @Service
 public class TraceabilityServiceImpl implements TraceabilityService {
 
-    private final ProductRepository productRepository;
-    private final MaterialPurchaseRepository materialPurchaseRepository;
-    private final StorageRepository storageRepository;
-    private final InspectionRepository inspectionRepository;
-    private final TransportSaleRepository transportSaleRepository;
-    private final ComplaintRepository complaintRepository;
+    @Autowired
+    private SecurityCodeRepository securityCodeRepository;
 
-    public TraceabilityServiceImpl(ProductRepository productRepository,
-                                   MaterialPurchaseRepository materialPurchaseRepository,
-                                   StorageRepository storageRepository,
-                                   InspectionRepository inspectionRepository,
-                                   TransportSaleRepository transportSaleRepository,
-                                   ComplaintRepository complaintRepository) {
-        this.productRepository = productRepository;
-        this.materialPurchaseRepository = materialPurchaseRepository;
-        this.storageRepository = storageRepository;
-        this.inspectionRepository = inspectionRepository;
-        this.transportSaleRepository = transportSaleRepository;
-        this.complaintRepository = complaintRepository;
+    @Autowired
+    private ProductionBatchRepository batchRepository;
+
+    @Autowired
+    private BatchMaterialRelationRepository relationRepository;
+
+    @Autowired
+    private InspectionRepository inspectionRepository;
+
+    @Autowired
+    private StorageRepository storageRepository;
+
+    @Autowired
+    private TransportSaleRepository transportSaleRepository;
+
+    @Override
+    @Transactional
+    public Optional<TraceInfoDTO> getTraceInfoByCode(String code) {
+        Optional<SecurityCode> securityCodeOpt = securityCodeRepository.findByCode(code);
+        
+        if (securityCodeOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        SecurityCode securityCode = securityCodeOpt.get();
+        ProductionBatch batch = securityCode.getBatch();
+        Product product = batch.getProduct();
+
+        if ("未激活".equals(securityCode.getStatus())) {
+            securityCode.setStatus("已激活");
+            securityCode.setFirstScanTime(LocalDateTime.now());
+            securityCode.setScanCount(1);
+            securityCodeRepository.save(securityCode);
+        } else {
+            securityCode.setScanCount(securityCode.getScanCount() + 1);
+            securityCodeRepository.save(securityCode);
+        }
+
+        return Optional.of(buildTraceInfoDTO(product, batch, securityCode));
     }
 
     @Override
-    public Optional<TraceInfoDTO> verifyAndGetTraceInfo(String antiFakeCode) {
-        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
-                .map(this::buildTraceInfoDTO);
+    @Transactional
+    public Optional<TraceInfoDTO> getTraceInfoByBatchNumber(String batchNumber) {
+        Optional<ProductionBatch> batchOpt = batchRepository.findByBatchNumberAndIsDeletedFalse(batchNumber);
+        
+        if (batchOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        ProductionBatch batch = batchOpt.get();
+        Product product = batch.getProduct();
+
+        return Optional.of(buildTraceInfoDTO(product, batch, null));
     }
 
-    @Override
-    public Optional<TraceInfoDTO> verifyAndGetTraceInfoWithBatch(String antiFakeCode, String batchNumber) {
-        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
-                .filter(product -> batchNumber.equals(product.getBatchNumber()))
-                // Use the already matched Product record to avoid mixing up other batches with the same product name.
-                .map(this::buildTraceInfoDTOWithBatch);
-    }
+    private TraceInfoDTO buildTraceInfoDTO(Product product, ProductionBatch batch, SecurityCode securityCode) {
+        TraceInfoDTO dto = new TraceInfoDTO();
 
-    @Override
-    public Optional<PurchaseInfoDTO> getPurchaseInfo(String antiFakeCode) {
-        return productRepository.findByAntiFakeCodeAndIsDeletedFalse(antiFakeCode)
-                .map(this::buildPurchaseInfoDTO);
-    }
+        TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
+        productInfo.setId(product.getId());
+        productInfo.setName(product.getName());
+        productInfo.setSpecification(product.getSpecification());
+        productInfo.setShelfLife(product.getShelfLife());
+        productInfo.setImageUrl(product.getImageUrl());
+        productInfo.setContactPhone(product.getContactPhone());
+        productInfo.setContactEmail(product.getContactEmail());
+        dto.setProduct(productInfo);
 
-    @Override
-    public List<PurchaseInfoDTO> listAllProducts() {
-        return productRepository.findAll().stream()
-                .filter(p -> !p.getIsDeleted())
-                .map(this::buildPurchaseInfoDTO)
+        TraceInfoDTO.BatchInfo batchInfo = new TraceInfoDTO.BatchInfo();
+        batchInfo.setId(batch.getId());
+        batchInfo.setBatchNumber(batch.getBatchNumber());
+        batchInfo.setProductionDate(batch.getProductionDate());
+        batchInfo.setShelfLife(batch.getShelfLife());
+        batchInfo.setCreatedAt(batch.getCreatedAt());
+        dto.setBatch(batchInfo);
+
+        List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batch.getId());
+        List<TraceInfoDTO.MaterialInfo> materials = relations.stream()
+                .map(r -> {
+                    MaterialPurchase m = r.getMaterial();
+                    TraceInfoDTO.MaterialInfo mi = new TraceInfoDTO.MaterialInfo();
+                    mi.setMaterialName(m.getMaterialName());
+                    mi.setBatchNumber(m.getBatchNumber());
+                    mi.setSupplierName(m.getSupplierName());
+                    mi.setProducerName(m.getProducerName());
+                    return mi;
+                })
                 .collect(Collectors.toList());
-    }
+        dto.setMaterials(materials);
 
-    private TraceInfoDTO buildTraceInfoDTOWithBatch(Product product) {
-        TraceInfoDTO dto = new TraceInfoDTO();
+        List<Inspection> inspections = inspectionRepository.findAll().stream()
+                .filter(i -> i.getBatch().getId().equals(batch.getId()))
+                .toList();
+        if (!inspections.isEmpty()) {
+            Inspection inspection = inspections.get(0);
+            TraceInfoDTO.InspectionInfo inspectionInfo = new TraceInfoDTO.InspectionInfo();
+            inspectionInfo.setSampleName(inspection.getSampleName());
+            inspectionInfo.setSampleQuantity(inspection.getSampleQuantity());
+            inspectionInfo.setSampleSpecification(inspection.getSampleSpecification());
+            inspectionInfo.setImageUrl(inspection.getImageUrl());
+            dto.setInspection(inspectionInfo);
+        }
 
-        TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
-        productInfo.setId(product.getId());
-        productInfo.setAntiFakeCode(product.getAntiFakeCode());
-        productInfo.setName(product.getName());
-        productInfo.setSpecification(product.getSpecification());
-        productInfo.setBatchNumber(product.getBatchNumber());
-        productInfo.setProductionDate(product.getProductionDate());
-        productInfo.setShelfLife(product.getShelfLife());
-        productInfo.setLastQueriedTime(product.getLastQueriedTime());
-        dto.setProduct(productInfo);
+        if (batch.getStorageId() != null) {
+            storageRepository.findById(batch.getStorageId()).ifPresent(storage -> {
+                TraceInfoDTO.StorageInfo storageInfo = new TraceInfoDTO.StorageInfo();
+                storageInfo.setStorageTime(storage.getStorageTime());
+                storageInfo.setOutboundTime(storage.getOutboundTime());
+                storageInfo.setWarehouseLocation(storage.getWarehouseLocation());
+                dto.setStorage(storageInfo);
+            });
+        }
 
-        String antiFakeCode = product.getAntiFakeCode();
-        String batchNumber = product.getBatchNumber();
+        if (batch.getTransportSaleId() != null) {
+            transportSaleRepository.findById(batch.getTransportSaleId()).ifPresent(ts -> {
+                TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
+                transportInfo.setTransportTime(ts.getTime());
+                transportInfo.setTransportCompany(ts.getTransportCompany());
+                transportInfo.setVehicleNumber(ts.getVehicleNumber());
+                transportInfo.setSalesRegion(ts.getSalesRegion());
+                transportInfo.setReceiverName(ts.getReceiverName());
+                dto.setTransportSale(transportInfo);
+            });
+        }
 
-        dto.setMaterialPurchases(materialPurchaseRepository
-                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
-                .stream()
-                .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
-        dto.setStorages(storageRepository
-                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
-                .stream()
-                .map(this::toStorageDTO).collect(Collectors.toList()));
-        dto.setInspections(inspectionRepository
-                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
-                .stream()
-                .map(this::toInspectionDTO).collect(Collectors.toList()));
-        dto.setTransportSales(transportSaleRepository
-                .findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber)
-                .stream()
-                .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(List.of());
+        if (securityCode != null) {
+            dto.setStatus(securityCode.getStatus());
+            dto.setFirstScanTime(securityCode.getFirstScanTime());
+        } else {
+            dto.setStatus("未扫码");
+        }
 
-        return dto;
-    }
-
-    private TraceInfoDTO buildTraceInfoDTO(Product product) {
-        TraceInfoDTO dto = new TraceInfoDTO();
-
-        TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
-        productInfo.setId(product.getId());
-        productInfo.setAntiFakeCode(product.getAntiFakeCode());
-        productInfo.setName(product.getName());
-        productInfo.setSpecification(product.getSpecification());
-        productInfo.setBatchNumber(product.getBatchNumber());
-        productInfo.setProductionDate(product.getProductionDate());
-        productInfo.setShelfLife(product.getShelfLife());
-        productInfo.setLastQueriedTime(product.getLastQueriedTime());
-        dto.setProduct(productInfo);
-
-        String antiFakeCode = product.getAntiFakeCode();
-        String batchNumber = product.getBatchNumber();
-
-        dto.setMaterialPurchases(materialPurchaseRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
-                .map(this::toMaterialPurchaseDTO).collect(Collectors.toList()));
-        dto.setStorages(storageRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
-                .map(this::toStorageDTO).collect(Collectors.toList()));
-        dto.setInspections(inspectionRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
-                .map(this::toInspectionDTO).collect(Collectors.toList()));
-        dto.setTransportSales(transportSaleRepository.findByAntiFakeCodeAndBatchNumber(antiFakeCode, batchNumber).stream()
-                .map(this::toTransportSaleDTO).collect(Collectors.toList()));
-        dto.setComplaints(List.of());
-
-        return dto;
-    }
-
-    private PurchaseInfoDTO buildPurchaseInfoDTO(Product product) {
-        PurchaseInfoDTO dto = new PurchaseInfoDTO();
-        dto.setProductId(product.getId());
-        dto.setName(product.getName());
-        dto.setSpecification(product.getSpecification());
-        dto.setBatchNumber(product.getBatchNumber());
-        dto.setAntiFakeCode(product.getAntiFakeCode());
-        dto.setQrCodeUrl(product.getQrCodeUrl());
-        dto.setImageUrl(product.getImageUrl());
-        dto.setContactPhone(product.getContactPhone());
-        dto.setContactEmail(product.getContactEmail());
-        dto.setLastQueriedTime(product.getLastQueriedTime());
-        return dto;
-    }
-
-    private TraceInfoDTO.MaterialPurchaseDTO toMaterialPurchaseDTO(MaterialPurchase mp) {
-        TraceInfoDTO.MaterialPurchaseDTO dto = new TraceInfoDTO.MaterialPurchaseDTO();
-        dto.setAntiFakeCode(mp.getAntiFakeCode());
-        dto.setBatchNumber(mp.getBatchNumber());
-        dto.setMaterialName(mp.getMaterialName());
-        dto.setProducerName(mp.getProducerName());
-        dto.setProducerAddress(mp.getProducerAddress());
-        return dto;
-    }
-
-    private TraceInfoDTO.StorageDTO toStorageDTO(Storage s) {
-        TraceInfoDTO.StorageDTO dto = new TraceInfoDTO.StorageDTO();
-        dto.setAntiFakeCode(s.getAntiFakeCode());
-        dto.setBatchNumber(s.getBatchNumber());
-        dto.setStorageTime(s.getStorageTime());
-        dto.setOutboundTime(s.getOutboundTime());
-        dto.setQuantity(s.getQuantity());
-        dto.setUnit(s.getUnit());
-        return dto;
-    }
-
-    private TraceInfoDTO.InspectionDTO toInspectionDTO(Inspection i) {
-        TraceInfoDTO.InspectionDTO dto = new TraceInfoDTO.InspectionDTO();
-        dto.setAntiFakeCode(i.getAntiFakeCode());
-        dto.setBatchNumber(i.getBatchNumber());
-        dto.setSampleName(i.getSampleName());
-        dto.setSampleQuantity(i.getSampleQuantity());
-        dto.setSampleSpecification(i.getSampleSpecification());
-        return dto;
-    }
-
-    private TraceInfoDTO.TransportSaleDTO toTransportSaleDTO(TransportSale ts) {
-        TraceInfoDTO.TransportSaleDTO dto = new TraceInfoDTO.TransportSaleDTO();
-        dto.setAntiFakeCode(ts.getAntiFakeCode());
-        dto.setBatchNumber(ts.getBatchNumber());
-        dto.setEnvironmentTemperature(ts.getEnvironmentTemperature());
-        dto.setProductTemperature(ts.getProductTemperature());
-        dto.setTime(ts.getTime());
-        return dto;
-    }
-
-    private TraceInfoDTO.ComplaintDTO toComplaintDTO(Complaint c) {
-        TraceInfoDTO.ComplaintDTO dto = new TraceInfoDTO.ComplaintDTO();
-        dto.setAntiFakeCode(c.getAntiFakeCode());
-        dto.setComplaintReason(c.getComplaintReason());
-        dto.setComplaintTime(c.getComplaintTime());
         return dto;
     }
 }
