@@ -20,4 +20,6 @@ public interface ProductionBatchService {
     InspectionDTO addInspection(Long batchId, InspectionDTO dto);
     StorageDTO addStorage(Long batchId, StorageDTO dto);
     TransportSaleDTO addTransportSale(Long batchId, TransportSaleDTO dto);
+    
+    ProductionBatch createQuickBatchForProduct(Long productId);
 }
