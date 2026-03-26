@@ -165,7 +165,7 @@ public class DataManagementController {
                 return ResponseEntity.badRequest().body(Map.of("error", "至少选择一个原料批次"));
             }
             ProductionBatch created = batchService.createBatch(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);  
         } catch (Exception e) {
             log.error("[生产批次管理] 创建批次失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
