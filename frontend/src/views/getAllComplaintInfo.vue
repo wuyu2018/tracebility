@@ -46,6 +46,22 @@
             />
           </el-select>
         </el-col>
+        <el-col :span="8">
+          <el-select
+            v-model="filterBatch"
+            placeholder="按批次筛选"
+            clearable
+            filterable
+            @change="handleFilter"
+          >
+            <el-option
+              v-for="batch in batchOptions"
+              :key="batch.value"
+              :label="batch.label"
+              :value="batch.value"
+            />
+          </el-select>
+        </el-col>
       </el-row>
     </div>
 
@@ -71,6 +87,18 @@
         <el-table-column prop="antiFakeCode" label="防伪码" width="150" sortable>
           <template #default="{ row }">
             <el-tag type="info">{{ row.antiFakeCode }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="productName" label="产品名称" width="150" sortable>
+          <template #default="{ row }">
+            <span>{{ row.productName || '未知产品' }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="batchNumber" label="批次号" width="120" sortable>
+          <template #default="{ row }">
+            <el-tag type="info">{{ row.batchNumber || '未知批次' }}</el-tag>
           </template>
         </el-table-column>
 
@@ -196,7 +224,9 @@ const loading = ref(false)
 const complaints = ref([])
 const searchKeyword = ref('')
 const filterProduct = ref('')
+const filterBatch = ref('')
 const productOptions = ref([])
+const batchOptions = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const deleteDialogVisible = ref(false)
@@ -213,12 +243,18 @@ const filteredComplaints = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(item =>
       item.complaintContent?.toLowerCase().includes(keyword) ||
-      item.antiFakeCode?.toLowerCase().includes(keyword)
+      item.antiFakeCode?.toLowerCase().includes(keyword) ||
+      item.productName?.toLowerCase().includes(keyword) ||
+      item.batchNumber?.toLowerCase().includes(keyword)
     )
   }
 
   if (filterProduct.value) {
-    result = result.filter(item => item.antiFakeCode === filterProduct.value)
+    result = result.filter(item => item.productName === filterProduct.value)
+  }
+
+  if (filterBatch.value) {
+    result = result.filter(item => item.batchNumber === filterBatch.value)
   }
 
   const start = (currentPage.value - 1) * pageSize.value
@@ -233,12 +269,18 @@ const totalComplaints = computed(() => {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(item =>
       item.complaintContent?.toLowerCase().includes(keyword) ||
-      item.antiFakeCode?.toLowerCase().includes(keyword)
+      item.antiFakeCode?.toLowerCase().includes(keyword) ||
+      item.productName?.toLowerCase().includes(keyword) ||
+      item.batchNumber?.toLowerCase().includes(keyword)
     )
   }
 
   if (filterProduct.value) {
-    result = result.filter(item => item.antiFakeCode === filterProduct.value)
+    result = result.filter(item => item.productName === filterProduct.value)
+  }
+
+  if (filterBatch.value) {
+    result = result.filter(item => item.batchNumber === filterBatch.value)
   }
 
   return result.length
@@ -305,23 +347,38 @@ const fetchComplaints = async () => {
         return {
           complaintId: complaintId,
           antiFakeCode: item.antiFakeCode || '',
+          productName: item.productName || '',
+          batchNumber: item.batchNumber || '',
           complaintContent: item.complaintReason || item.complaint_content || item.complaint_reason || item.complaintContent || '',
           complaintTime: item.complaintTime || item.complaint_time || new Date().toISOString(),
           rawData: item
         }
       })
 
-      const complaintAntiFakeCodes = [...new Set(complaints.value.map(item => item.antiFakeCode).filter(Boolean))]
-      complaintAntiFakeCodes.forEach(antiFakeCode => {
-        if (!productOptions.value.some(opt => opt.value === antiFakeCode)) {
-          productOptions.value.push({
-            value: antiFakeCode,
-            label: antiFakeCode
-          })
+      const uniqueProducts = new Map()
+      const uniqueBatches = new Map()
+
+      complaints.value.forEach(item => {
+        if (item.productName && !uniqueProducts.has(item.productName)) {
+          uniqueProducts.set(item.productName, item.productName)
+        }
+        if (item.batchNumber && !uniqueBatches.has(item.batchNumber)) {
+          uniqueBatches.set(item.batchNumber, item.batchNumber)
         }
       })
 
+      productOptions.value = Array.from(uniqueProducts.entries()).map(([name]) => ({
+        value: name,
+        label: name
+      }))
+
+      batchOptions.value = Array.from(uniqueBatches.entries()).map(([batch]) => ({
+        value: batch,
+        label: batch
+      }))
+
       productOptions.value.sort((a, b) => a.label.localeCompare(b.label))
+      batchOptions.value.sort((a, b) => a.label.localeCompare(b.label))
 
       ElMessage.success(`加载成功，共 ${complaints.value.length} 条投诉`)
     } else {
@@ -429,20 +486,30 @@ const confirmDelete = async () => {
 }
 
 const refreshProductOptions = () => {
-  const complaintAntiFakeCodes = [...new Set(complaints.value.map(item => item.antiFakeCode).filter(Boolean))]
-  productOptions.value = productOptions.value.filter(opt =>
-    complaintAntiFakeCodes.includes(opt.value)
-  )
-  complaintAntiFakeCodes.forEach(antiFakeCode => {
-    if (!productOptions.value.some(opt => opt.value === antiFakeCode)) {
-      productOptions.value.push({
-        value: antiFakeCode,
-        label: antiFakeCode
-      })
+  const uniqueProducts = new Map()
+  const uniqueBatches = new Map()
+
+  complaints.value.forEach(item => {
+    if (item.productName) {
+      uniqueProducts.set(item.productName, item.productName)
+    }
+    if (item.batchNumber) {
+      uniqueBatches.set(item.batchNumber, item.batchNumber)
     }
   })
 
+  productOptions.value = Array.from(uniqueProducts.entries()).map(([name]) => ({
+    value: name,
+    label: name
+  }))
+
+  batchOptions.value = Array.from(uniqueBatches.entries()).map(([batch]) => ({
+    value: batch,
+    label: batch
+  }))
+
   productOptions.value.sort((a, b) => a.label.localeCompare(b.label))
+  batchOptions.value.sort((a, b) => a.label.localeCompare(b.label))
 }
 
 const handleSearch = () => {
