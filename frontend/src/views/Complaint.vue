@@ -151,16 +151,22 @@ const handleApiError = (error) => {
     switch (status) {
       case 400:
         if (data && data.errors) {
-          if (typeof data.errors === 'object' && !Array.isArray(data.errors)) {
-            const errorMessages = Object.entries(data.errors)
-              .map(([field, message]) => `${field}: ${message}`)
-              .join('\n')
-            errorMessage.value = `验证错误：\n${errorMessages}`
-          } else if (Array.isArray(data.errors)) {
-            const errorMessages = data.errors
-              .map(err => `${err.field}: ${err.message}`)
-              .join('\n')
-            errorMessage.value = `验证错误：\n${errorMessages}`
+          try {
+            if (typeof data.errors === 'object' && !Array.isArray(data.errors) && data.errors !== null) {
+              const errorMessages = Object.entries(data.errors)
+                .map(([field, message]) => `${field}: ${message}`)
+                .join('\n')
+              errorMessage.value = `验证错误：\n${errorMessages}`
+            } else if (Array.isArray(data.errors)) {
+              const errorMessages = data.errors
+                .map(err => `${err.field || err}: ${err.message || err}`)
+                .join('\n')
+              errorMessage.value = `验证错误：\n${errorMessages}`
+            } else {
+              errorMessage.value = data.message || '请求参数有误，请检查填写内容'
+            }
+          } catch (e) {
+            errorMessage.value = data.message || '请求参数有误，请检查填写内容'
           }
         } else if (data && data.message) {
           errorMessage.value = data.message

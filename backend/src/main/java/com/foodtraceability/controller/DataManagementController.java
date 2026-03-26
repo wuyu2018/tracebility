@@ -263,4 +263,81 @@ public class DataManagementController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/insert/products/{productId}/generate-qrcode")
+    public ResponseEntity<?> generateQrCodeForProduct(@PathVariable Long productId) {
+        log.info("[产品二维码] 为产品生成二维码 - 产品ID: {}", productId);
+        try {
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "产品不存在"));
+            }
+            ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
+            SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("[产品二维码] 生成失败 - 产品ID: {}, 错误: {}", productId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/insert/products/batch-generate-qrcode")
+    public ResponseEntity<?> batchGenerateQrCodes(@RequestBody List<Long> productIds) {
+        log.info("[产品二维码] 批量生成二维码 - 产品数量: {}", productIds.size());
+        try {
+            int successCount = 0;
+            int failCount = 0;
+            for (Long productId : productIds) {
+                try {
+                    Product product = productService.getProductById(productId);
+                    if (product != null) {
+                        ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
+                        securityCodeService.generateCodes(batch.getId(), 100);
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (Exception e) {
+                    failCount++;
+                    log.warn("[产品二维码] 批量生成失败 - 产品ID: {}", productId);
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "successCount", successCount,
+                "failCount", failCount,
+                "message", String.format("批量生成完成，成功: %d，失败: %d", successCount, failCount)
+            ));
+        } catch (Exception e) {
+            log.error("[产品二维码] 批量生成失败 - 错误: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/insert/products/batch-delete")
+    public ResponseEntity<?> batchDeleteProducts(@RequestBody List<Long> productIds) {
+        log.info("[产品管理] 批量删除产品 - 产品数量: {}", productIds.size());
+        try {
+            int successCount = 0;
+            int failCount = 0;
+            for (Long productId : productIds) {
+                try {
+                    productService.deleteProduct(productId);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    log.warn("[产品管理] 批量删除失败 - 产品ID: {}", productId);
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "successCount", successCount,
+                "failCount", failCount,
+                "message", String.format("批量删除完成，成功: %d，失败: %d", successCount, failCount)
+            ));
+        } catch (Exception e) {
+            log.error("[产品管理] 批量删除失败 - 错误: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
