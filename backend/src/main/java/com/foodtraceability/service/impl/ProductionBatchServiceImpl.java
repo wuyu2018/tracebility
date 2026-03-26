@@ -191,4 +191,23 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         long counter = batchCounter.incrementAndGet();
         return "B" + dateStr + String.format("%04d", counter);
     }
+
+    @Override
+    @Transactional
+    public ProductionBatch createQuickBatchForProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("产品不存在"));
+
+        String batchNumber = generateBatchNumber();
+
+        ProductionBatch batch = new ProductionBatch();
+        batch.setBatchNumber(batchNumber);
+        batch.setProduct(product);
+        batch.setProductionDate(LocalDate.now().toString());
+        batch.setShelfLife(product.getShelfLife());
+        batch.setQuantity(0);
+        batch.setUnit("");
+        batch.setIsDeleted(false);
+        return batchRepository.save(batch);
+    }
 }
