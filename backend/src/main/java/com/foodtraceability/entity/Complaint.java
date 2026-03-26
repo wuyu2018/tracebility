@@ -25,4 +25,10 @@ public class Complaint {
 
     @Column(name = "complaint_time")
     private LocalDateTime complaintTime;
+
+    @Column(name = "product_name", length = 100)
+    private String productName;
+
+    @Column(name = "batch_number", length = 50)
+    private String batchNumber;
 }

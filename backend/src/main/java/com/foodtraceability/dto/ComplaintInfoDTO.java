@@ -22,5 +22,7 @@ public class ComplaintInfoDTO {
         private String antiFakeCode;
         private String complaintReason;
         private LocalDateTime complaintTime;
+        private String productName;
+        private String batchNumber;
     }
 }

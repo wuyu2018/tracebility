@@ -151,10 +151,17 @@ const handleApiError = (error) => {
     switch (status) {
       case 400:
         if (data && data.errors) {
-          const errorMessages = data.errors
-            .map(err => `${err.field}: ${err.message}`)
-            .join('\n')
-          errorMessage.value = `验证错误：\n${errorMessages}`
+          if (typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+            const errorMessages = Object.entries(data.errors)
+              .map(([field, message]) => `${field}: ${message}`)
+              .join('\n')
+            errorMessage.value = `验证错误：\n${errorMessages}`
+          } else if (Array.isArray(data.errors)) {
+            const errorMessages = data.errors
+              .map(err => `${err.field}: ${err.message}`)
+              .join('\n')
+            errorMessage.value = `验证错误：\n${errorMessages}`
+          }
         } else if (data && data.message) {
           errorMessage.value = data.message
         } else {
