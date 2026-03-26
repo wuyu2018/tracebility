@@ -203,9 +203,9 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         ProductionBatch batch = new ProductionBatch();
         batch.setBatchNumber(batchNumber);
         batch.setProduct(product);
-        batch.setProductionDate(LocalDate.now().toString());
+        batch.setProductionDate(LocalDate.now());
         batch.setShelfLife(product.getShelfLife());
-        batch.setQuantity(0);
+        batch.setQuantity(0.0);
         batch.setUnit("");
         batch.setIsDeleted(false);
         return batchRepository.save(batch);
