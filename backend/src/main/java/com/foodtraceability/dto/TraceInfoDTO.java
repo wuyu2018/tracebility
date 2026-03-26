@@ -20,6 +20,9 @@ public class TraceInfoDTO {
     private TransportSaleInfo transportSale;
     private String status;
     private LocalDateTime firstScanTime;
+    private Integer scanCount;
+    private Boolean isQueried;
+    private String queryTip;
 
     @Data
     @NoArgsConstructor

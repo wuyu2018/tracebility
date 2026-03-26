@@ -14,12 +14,7 @@ import java.util.Map;
 @Component
 public class TraceabilityResponseBuilder {
 
-    private static final String MSG_DUPLICATE_QUERY = "该产品已被查询过，拒绝再次查询";
     private static final String MSG_SYSTEM_ERROR = "系统错误，请稍后重试";
-
-    public ResponseEntity<Map<String, Object>> duplicateQuery() {
-        return invalid(MSG_DUPLICATE_QUERY);
-    }
 
     public ResponseEntity<Map<String, Object>> invalid(String message) {
         return ResponseEntity.ok(Map.of(

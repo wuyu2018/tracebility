@@ -78,6 +78,32 @@ public class DataManagementController {
         return ResponseEntity.ok(productService.listAllProducts());
     }
 
+    @GetMapping("/products/select")
+    public ResponseEntity<?> selectProducts(@RequestParam(required = false) String keyword,
+                                             @RequestParam(required = false, defaultValue = "consumer") String role) {
+        log.info("[产品选择] 查询产品 - 关键词: {}, 角色: {}", keyword, role);
+        try {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                return ResponseEntity.ok(productService.searchProducts(keyword.trim()));
+            }
+            return ResponseEntity.ok(productService.listAllProducts());
+        } catch (Exception e) {
+            log.error("[产品选择] 查询失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/insert/products/list")
+    public ResponseEntity<?> getProductsForInsert() {
+        log.info("[数据导入] 获取产品列表");
+        try {
+            return ResponseEntity.ok(productService.listAllProducts());
+        } catch (Exception e) {
+            log.error("[数据导入] 获取产品列表失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/products/{id}")
     public ResponseEntity<?> getProduct(@PathVariable Long id) {
         try {
