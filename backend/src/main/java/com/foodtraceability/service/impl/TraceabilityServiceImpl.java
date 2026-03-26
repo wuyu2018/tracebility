@@ -148,8 +148,20 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         if (securityCode != null) {
             dto.setStatus(securityCode.getStatus());
             dto.setFirstScanTime(securityCode.getFirstScanTime());
+            dto.setScanCount(securityCode.getScanCount());
+            
+            // 判断是否被查询过
+            if (securityCode.getScanCount() != null && securityCode.getScanCount() > 1) {
+                dto.setIsQueried(true);
+                dto.setQueryTip("该产品已被查询过 " + (securityCode.getScanCount() - 1) + " 次，首次查询时间：" + securityCode.getFirstScanTime());
+            } else {
+                dto.setIsQueried(false);
+                dto.setQueryTip(null);
+            }
         } else {
             dto.setStatus("未扫码");
+            dto.setIsQueried(false);
+            dto.setQueryTip(null);
         }
 
         return dto;
