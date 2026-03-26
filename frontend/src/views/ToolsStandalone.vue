@@ -5,7 +5,7 @@
       <el-tab-pane label="防伪工具" name="security">
         <div class="tools-page">
           <h1>防伪工具</h1>
-          <p class="tools-desc">生成防伪验证二维码及防伪码</p>
+          <p class="tools-desc">生成防伪验证二维码</p>
 
           <section class="tool-card">
             <h2>防伪验证二维码</h2>
@@ -15,33 +15,6 @@
             </div>
             <p class="qr-url">{{ verifyUrl }}</p>
             <button type="button" class="btn-download" @click="downloadQr">下载二维码</button>
-          </section>
-
-          <section class="tool-card">
-            <h2>防伪码生成器</h2>
-            <p class="card-desc">生成12-20位防伪码</p>
-            <div class="gen-form">
-              <div class="form-row">
-                <label>生成数量</label>
-                <input v-model.number="genCount" type="number" min="1" max="100" />
-              </div>
-              <div class="form-row">
-                <label>密码长度</label>
-                <input v-model="length" type="number" min="12" />
-              </div>
-              <button type="button" class="btn-generate" @click="generate">生成防伪码</button>
-            </div>
-            <div v-if="generatedCodes.length" class="codes-output">
-              <div class="codes-header">
-                <span>已生成 {{ generatedCodes.length }} 个防伪码</span>
-                <button type="button" class="btn-copy" @click="copyCodes">复制全部</button>
-              </div>
-              <div class="codes-list">
-                <div v-for="(code, i) in generatedCodes" :key="i" class="code-item">
-                  {{ code }}
-                </div>
-              </div>
-            </div>
           </section>
         </div>
       </el-tab-pane>
@@ -161,17 +134,8 @@ import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
 
-
-const length = ref(16)
-const loading = ref(false)
-const lastClickTime = ref(0)
-
 const activeTab = ref('security')
-
 const qrCanvas = ref(null)
-const genCount = ref(5)
-const startSeq = ref(1)
-const generatedCodes = ref([])
 
 // 二维码生成相关
 const productList = ref([])
@@ -225,54 +189,6 @@ function downloadQr() {
     a.href = dataUrl
     a.download = '防伪验证二维码.png'
     a.click()
-  })
-}
-
-const generate = async () => {
-  const now = Date.now()
-  if (now - lastClickTime.value < 1000) {
-    ElMessage.warning('操作太频繁，请稍后再试')
-    return
-  }
-
-  lastClickTime.value = now
-  loading.value = true
-  generatedCodes.value = []
-
-  try {
-    const baseParams = new URLSearchParams({
-      length: length.value.toString()
-    })
-    baseParams.append('numbers', '')
-    baseParams.append('uppercase', '')
-    baseParams.append('lowercase', '')
-
-    const baseUrl = 'https://60s.viki.moe/v2/password'
-    const requestUrl = `${baseUrl}?${baseParams.toString()}`
-
-    const requests = Array(genCount.value).fill().map(() =>
-      fetch(requestUrl).then(res => res.json())
-    )
-
-    const results = await Promise.all(requests)
-    generatedCodes.value = results.map(item => item.data.password)
-
-    ElMessage.success(`成功生成 ${genCount.value} 个防伪码`)
-
-  } catch (error) {
-    console.error(error)
-    ElMessage.error('获取失败，请重试')
-  } finally {
-    loading.value = false
-  }
-}
-
-function copyCodes() {
-  const text = generatedCodes.value.join('\n')
-  navigator.clipboard.writeText(text).then(() => {
-    alert('已复制到剪贴板')
-  }).catch(() => {
-    alert('复制失败，请手动复制')
   })
 }
 
@@ -578,157 +494,6 @@ onMounted(() => {
 .btn-download:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
-}
-
-.gen-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.form-row label {
-  min-width: 80px;
-  font-size: 0.95rem;
-  color: var(--color-text);
-}
-
-.form-row input {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e0e6e1;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-row input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.btn-generate {
-  padding: 0.75rem;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: white;
-  border-radius: var(--radius);
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-generate:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.codes-output {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.codes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.btn-copy {
-  padding: 0.35rem 0.75rem;
-  background: rgba(45, 90, 61, 0.1);
-  color: var(--color-primary);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-copy:hover {
-  background: rgba(45, 90, 61, 0.2);
-}
-
-.codes-list {
-  max-height: 200px;
-  overflow-y: auto;
-  background: var(--color-bg);
-  border-radius: var(--radius);
-  padding: 0.5rem;
-}
-
-.code-item {
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.code-item:last-child {
-  border-bottom: none;
-}
-
-.tools-tabs {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.qr-gen-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.qr-gen-form .form-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.qr-gen-form .form-row label {
-  min-width: 80px;
-  font-size: 0.95rem;
-  color: var(--color-text);
-}
-
-.qr-gen-form .el-select {
-  flex: 1;
-}
-
-.qr-display {
-  margin-top: 2rem;
-  text-align: center;
-  padding: 1.5rem;
-  background: var(--color-bg);
-  border-radius: var(--radius);
-}
-
-.qr-display h3 {
-  margin-bottom: 1rem;
-  color: var(--color-primary);
-}
-
-.qr-image {
-  max-width: 250px;
-  border-radius: var(--radius);
-  border: 2px solid #eee;
-}
-
-.qr-code-text {
-  margin: 1rem 0;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
 }
 
 .batch-actions {

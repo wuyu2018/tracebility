@@ -147,7 +147,7 @@ export async function generateQrCode(productId) {
 }
 
 export async function batchGenerateQrCodes(productIds) {
-  const { data } = await api.post('/insert/products/batch-generate-qrcode', { productIds });
+  const { data } = await api.post('/insert/products/batch-generate-qrcode',  productIds );
   return data;
 }
 
