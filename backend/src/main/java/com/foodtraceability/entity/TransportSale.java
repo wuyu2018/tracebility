@@ -1,5 +1,7 @@
 package com.foodtraceability.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TransportSale {
 
     @Id
@@ -19,6 +22,7 @@ public class TransportSale {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProductionBatch batch;
 
     @Column(name = "environment_temperature")
