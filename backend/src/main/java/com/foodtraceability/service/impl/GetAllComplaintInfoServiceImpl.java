@@ -47,6 +47,8 @@ public class GetAllComplaintInfoServiceImpl implements GetAllComplaintInfoServic
         info.setAntiFakeCode(complaint.getAntiFakeCode());
         info.setComplaintReason(complaint.getComplaintReason());
         info.setComplaintTime(complaint.getComplaintTime());
+        info.setProductName(complaint.getProductName());
+        info.setBatchNumber(complaint.getBatchNumber());
         return info;
     }
 }
