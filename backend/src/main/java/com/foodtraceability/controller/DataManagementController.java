@@ -23,15 +23,18 @@ public class DataManagementController {
     private final MaterialPurchaseService materialPurchaseService;
     private final ProductionBatchService batchService;
     private final SecurityCodeService securityCodeService;
+    private final TraceabilityService traceabilityService;
 
     public DataManagementController(ProductService productService,
                                    MaterialPurchaseService materialPurchaseService,
                                    ProductionBatchService batchService,
-                                   SecurityCodeService securityCodeService) {
+                                   SecurityCodeService securityCodeService,
+                                   TraceabilityService traceabilityService) {
         this.productService = productService;
         this.materialPurchaseService = materialPurchaseService;
         this.batchService = batchService;
         this.securityCodeService = securityCodeService;
+        this.traceabilityService = traceabilityService;
     }
 
     @PostMapping("/products")
@@ -111,6 +114,25 @@ public class DataManagementController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/product-detail")
+    public ResponseEntity<?> getProductDetail(@RequestParam String antiFakeCode) {
+        try {
+            return traceabilityService.getTraceInfoByCode(antiFakeCode)
+                    .map(result -> ResponseEntity.ok((Object) result))
+                    .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
+        } catch (Exception e) {
+            log.error("[产品详情] 获取失败 - 防伪码: {}, 错误: {}", maskCode(antiFakeCode), e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private String maskCode(String code) {
+        if (code == null || code.length() <= 8) {
+            return "***";
+        }
+        return code.substring(0, 4) + "****" + code.substring(code.length() - 4);
     }
 
     @PostMapping("/materials")
