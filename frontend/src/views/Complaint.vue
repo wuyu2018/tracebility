@@ -72,7 +72,6 @@ import ProductSelector from '@/components/ProductSelector.vue'
 const complaintFormRef = ref()
 const complaintForm = reactive({
   productId: '',
-  antiFakeCode: '',
   complaintReason: '',
   complaintTime: ''
 })
@@ -91,9 +90,9 @@ const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
 const handleProductChange = (product) => {
   if (product) {
-    complaintForm.antiFakeCode = product.antiFakeCode
+    complaintForm.productId = product.id
   } else {
-    complaintForm.antiFakeCode = ''
+    complaintForm.productId = ''
   }
 }
 
@@ -106,7 +105,7 @@ const submitComplaint = async () => {
     errorMessage.value = ''
 
     const requestData = {
-      antiFakeCode: complaintForm.antiFakeCode,
+      productId: complaintForm.productId,
       complaintReason: complaintForm.complaintReason.trim()
     }
 
@@ -207,7 +206,7 @@ const resetForm = () => {
   }
   errorMessage.value = ''
   complaintForm.complaintTime = ''
-  complaintForm.antiFakeCode = ''
+  complaintForm.productId = ''
 }
 
 

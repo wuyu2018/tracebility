@@ -2,9 +2,11 @@ package com.foodtraceability.service.impl;
 
 import com.foodtraceability.dto.ComplaintDTO;
 import com.foodtraceability.entity.Complaint;
+import com.foodtraceability.entity.Product;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.ComplaintRepository;
 import com.foodtraceability.service.ComplaintService;
+import com.foodtraceability.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +23,17 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Autowired
     private ComplaintRepository complaintRepository;
 
+    @Autowired
+    private ProductService productService;
+
     @Override
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
         if (complaintDTO == null) {
             throw new BusinessException("投诉信息不能为空");
         }
 
-        if (complaintDTO.getAntiFakeCode() == null || complaintDTO.getAntiFakeCode().isBlank()) {
-            throw new BusinessException("防伪码不能为空");
+        if (complaintDTO.getProductId() == null) {
+            throw new BusinessException("请选择要投诉的产品");
         }
 
         if (complaintDTO.getComplaintReason() == null || complaintDTO.getComplaintReason().isBlank()) {
@@ -36,25 +41,32 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         try {
+            Product product = productService.getProductById(complaintDTO.getProductId());
+
             Complaint complaint = new Complaint();
-            complaint.setAntiFakeCode(complaintDTO.getAntiFakeCode());
+            complaint.setProductName(product.getName());
+            complaint.setAntiFakeCode(product.getAntiFakeCode());
             complaint.setComplaintReason(complaintDTO.getComplaintReason());
             complaint.setComplaintTime(LocalDateTime.now());
 
             Complaint savedComplaint = complaintRepository.save(complaint);
-            log.info("[投诉创建] 投诉已保存 - ID: {}, 防伪码: {}", 
-                savedComplaint.getId(), savedComplaint.getAntiFakeCode());
+            log.info("[投诉创建] 投诉已保存 - ID: {}, 产品: {}",
+                savedComplaint.getId(), savedComplaint.getProductName());
 
             ComplaintDTO resultDTO = new ComplaintDTO();
             resultDTO.setId(savedComplaint.getId());
+            resultDTO.setProductId(complaintDTO.getProductId());
+            resultDTO.setProductName(savedComplaint.getProductName());
             resultDTO.setAntiFakeCode(savedComplaint.getAntiFakeCode());
             resultDTO.setComplaintReason(savedComplaint.getComplaintReason());
             resultDTO.setComplaintTime(savedComplaint.getComplaintTime());
 
             return resultDTO;
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("[投诉创建] 保存投诉失败 - 防伪码: {}, 错误: {}", 
-                complaintDTO.getAntiFakeCode(), e.getMessage(), e);
+            log.error("[投诉创建] 保存投诉失败 - 产品ID: {}, 错误: {}",
+                complaintDTO.getProductId(), e.getMessage(), e);
             throw new BusinessException("投诉保存失败，请稍后重试");
         }
     }
@@ -79,11 +91,12 @@ public class ComplaintServiceImpl implements ComplaintService {
             complaint.setComplaintReason(complaintReason);
 
             Complaint updatedComplaint = complaintRepository.save(complaint);
-            log.info("[投诉更新] 投诉原因已更新 - ID: {}, 防伪码: {}", 
-                updatedComplaint.getId(), updatedComplaint.getAntiFakeCode());
+            log.info("[投诉更新] 投诉原因已更新 - ID: {}, 产品: {}",
+                updatedComplaint.getId(), updatedComplaint.getProductName());
 
             ComplaintDTO resultDTO = new ComplaintDTO();
             resultDTO.setId(updatedComplaint.getId());
+            resultDTO.setProductName(updatedComplaint.getProductName());
             resultDTO.setAntiFakeCode(updatedComplaint.getAntiFakeCode());
             resultDTO.setComplaintReason(updatedComplaint.getComplaintReason());
             resultDTO.setComplaintTime(updatedComplaint.getComplaintTime());
