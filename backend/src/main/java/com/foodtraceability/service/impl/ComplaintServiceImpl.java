@@ -97,7 +97,6 @@ public class ComplaintServiceImpl implements ComplaintService {
             ComplaintDTO resultDTO = new ComplaintDTO();
             resultDTO.setId(updatedComplaint.getId());
             resultDTO.setProductName(updatedComplaint.getProductName());
-            resultDTO.setAntiFakeCode(updatedComplaint.getAntiFakeCode());
             resultDTO.setComplaintReason(updatedComplaint.getComplaintReason());
             resultDTO.setComplaintTime(updatedComplaint.getComplaintTime());
 
