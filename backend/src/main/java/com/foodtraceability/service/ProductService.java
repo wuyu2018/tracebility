@@ -4,6 +4,7 @@ import com.foodtraceability.dto.ProductDTO;
 import com.foodtraceability.entity.Product;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductService {
     Product createProduct(ProductDTO dto);
@@ -12,4 +13,5 @@ public interface ProductService {
     List<Product> listAllProducts();
     List<Product> searchProducts(String keyword);
     Product getProductById(Long id);
+    Optional<Product> getProductByAntiFakeCode(String antiFakeCode);
 }

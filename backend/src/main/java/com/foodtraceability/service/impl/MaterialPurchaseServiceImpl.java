@@ -59,11 +59,13 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MaterialPurchase> listAllMaterialPurchases() {
         return repository.findByIsDeletedFalse();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MaterialPurchase> getMaterialPurchasesByProductId(Long productId) {
         return repository.findByProductIdAndIsDeletedFalse(productId);
     }

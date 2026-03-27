@@ -362,4 +362,68 @@ public class DataManagementController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/insert/material-purchase")
+    public ResponseEntity<?> insertMaterialPurchase(@RequestBody Map<String, Object> request) {
+        try {
+            String antiFakeCode = (String) request.get("antiFakeCode");
+            if (antiFakeCode == null || antiFakeCode.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "防伪码不能为空"));
+            }
+            Product product = productService.getProductByAntiFakeCode(antiFakeCode)
+                    .orElseThrow(() -> new RuntimeException("产品不存在"));
+
+            MaterialPurchaseDTO dto = new MaterialPurchaseDTO();
+            dto.setProductId(product.getId());
+            dto.setProductName(product.getName());
+            dto.setMaterialName((String) request.get("materialName"));
+            dto.setBatchNumber((String) request.get("batchNumber"));
+            dto.setProducerName((String) request.get("producerName"));
+            dto.setProducerAddress((String) request.get("producerAddress"));
+            dto.setSupplierName((String) request.get("supplierName"));
+
+            MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            log.error("[原材料管理] 插入原材料失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/insert/material-purchase/{id}")
+    public ResponseEntity<?> deleteInsertMaterialPurchase(@PathVariable Long id) {
+        try {
+            materialPurchaseService.deleteMaterialPurchase(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[原材料管理] 删除原材料失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/insert/material-purchase")
+    public ResponseEntity<?> listInsertMaterialPurchases(@RequestParam(required = false) Long productId) {
+        try {
+            if (productId != null) {
+                return ResponseEntity.ok(materialPurchaseService.getMaterialPurchasesByProductId(productId));
+            }
+            return ResponseEntity.ok(materialPurchaseService.listAllMaterialPurchases());
+        } catch (Exception e) {
+            log.error("[原材料管理] 获取原材料列表失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/insert/materials")
+    public ResponseEntity<?> listInsertMaterials(@RequestParam(required = false) Long productId) {
+        return listInsertMaterialPurchases(productId);
+    }
+
+    @GetMapping("/insert/batches")
+    public ResponseEntity<?> listInsertBatches(@RequestParam(required = false) Long productId) {
+        if (productId != null) {
+            return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
+        }
+        return ResponseEntity.ok(batchService.listAllBatches());
+    }
 }

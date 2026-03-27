@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -60,5 +61,11 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Product> getProductByAntiFakeCode(String antiFakeCode) {
+        return repository.findByAntiFakeCode(antiFakeCode);
     }
 }
