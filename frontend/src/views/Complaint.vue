@@ -163,8 +163,8 @@ const handleApiError = (error) => {
     switch (status) {
       case 400:
         if (data && data.errors) {
-          const errorMessages = data.errors
-            .map(err => `${err.field}: ${err.message}`)
+          const errorMessages = Object.entries(data.errors)
+            .map(([field, message]) => `${field}: ${message}`)
             .join('\n')
           errorMessage.value = `验证错误：\n${errorMessages}`
         } else if (data && data.message) {
