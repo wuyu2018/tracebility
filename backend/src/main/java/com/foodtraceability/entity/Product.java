@@ -36,4 +36,7 @@ public class Product {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    @Column(name = "anti_fake_code", length = 100)
+    private String antiFakeCode;
 }
