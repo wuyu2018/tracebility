@@ -111,19 +111,24 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     }
 
     @Override
-    public List<ProductionBatch> listAllBatches() {
-        return batchRepository.findByIsDeletedFalse();
+    public List<ProductionBatchDTO> listAllBatches() {
+        return batchRepository.findByIsDeletedFalse().stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public List<ProductionBatch> getBatchesByProductId(Long productId) {
-        return batchRepository.findByProductIdAndIsDeletedFalse(productId);
+    public List<ProductionBatchDTO> getBatchesByProductId(Long productId) {
+        return batchRepository.findByProductIdAndIsDeletedFalse(productId).stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public ProductionBatch getBatchById(Long id) {
-        return batchRepository.findById(id)
+    public ProductionBatchDTO getBatchById(Long id) {
+        ProductionBatch batch = batchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
+        return toDTO(batch);
     }
 
     @Override
@@ -209,5 +214,21 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         batch.setUnit("");
         batch.setIsDeleted(false);
         return batchRepository.save(batch);
+    }
+
+    private ProductionBatchDTO toDTO(ProductionBatch batch) {
+        ProductionBatchDTO dto = new ProductionBatchDTO();
+        dto.setId(batch.getId());
+        dto.setBatchNumber(batch.getBatchNumber());
+        if (batch.getProduct() != null) {
+            dto.setProductId(batch.getProduct().getId());
+            dto.setProductName(batch.getProduct().getName());
+        }
+        dto.setProductionDate(batch.getProductionDate());
+        dto.setShelfLife(batch.getShelfLife());
+        dto.setQuantity(batch.getQuantity());
+        dto.setUnit(batch.getUnit());
+        dto.setCreatedAt(batch.getCreatedAt());
+        return dto;
     }
 }

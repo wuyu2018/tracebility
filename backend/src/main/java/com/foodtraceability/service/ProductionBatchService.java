@@ -12,9 +12,9 @@ public interface ProductionBatchService {
     ProductionBatch createBatch(ProductionBatchDTO dto);
     ProductionBatch updateBatch(Long id, ProductionBatchDTO dto);
     void deleteBatch(Long id);
-    List<ProductionBatch> listAllBatches();
-    List<ProductionBatch> getBatchesByProductId(Long productId);
-    ProductionBatch getBatchById(Long id);
+    List<ProductionBatchDTO> listAllBatches();
+    List<ProductionBatchDTO> getBatchesByProductId(Long productId);
+    ProductionBatchDTO getBatchById(Long id);
     ProductionBatch getBatchByBatchNumber(String batchNumber);
     
     InspectionDTO addInspection(Long batchId, InspectionDTO dto);
