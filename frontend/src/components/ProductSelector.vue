@@ -12,9 +12,9 @@
     >
       <el-option
         v-for="product in productOptions"
-        :key="role === 'admin' ? product.antiFakeCode : product.id"
+        :key="product.id"
         :label="formatLabel(product)"
-        :value="role === 'admin' ? product.antiFakeCode : product.id"
+        :value="product.name"
       />
     </el-select>
     <div class="selector-tip">{{ tipText }}</div>
@@ -46,20 +46,15 @@ const loading = ref(false)
 const API_BASE_URL = '/api'
 
 const placeholderText = computed(() => {
-  return props.role === 'admin' ? '请选择或搜索产品（防伪码）' : '请选择或搜索产品名称'
+  return '请选择或搜索产品'
 })
 
 const tipText = computed(() => {
-  return props.role === 'admin' ? '可按产品名称、批号或防伪码搜索' : '可按产品名称或批号搜索'
+  return '可按产品名称搜索'
 })
 
 const formatLabel = (product) => {
-  if (props.role === 'admin') {
-    return `${product.name || ''} | 批号: ${product.batchNumber || ''} | 防伪码: ${product.antiFakeCode || ''}`
-  } else {
-    const dateStr = product.productionDate ? ` | 生产日期: ${product.productionDate}` : ''
-    return `${product.name || ''} (批号: ${product.batchNumber || ''}${dateStr})`
-  }
+  return product.name || ''
 }
 
 const searchProducts = async (keyword) => {
@@ -82,9 +77,7 @@ const searchProducts = async (keyword) => {
 }
 
 const handleChange = (value) => {
-  const product = productOptions.value.find(p => 
-    (props.role === 'admin' ? p.antiFakeCode : p.id) === value
-  )
+  const product = productOptions.value.find(p => p.name === value)
   emit('update:modelValue', value)
   emit('change', product)
 }
