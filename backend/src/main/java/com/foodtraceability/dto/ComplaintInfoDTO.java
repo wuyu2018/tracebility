@@ -19,7 +19,6 @@ public class ComplaintInfoDTO {
     @AllArgsConstructor
     public static class ComplaintInfo {
         private Long id;
-        private String antiFakeCode;
         private String complaintReason;
         private LocalDateTime complaintTime;
         private String productName;
