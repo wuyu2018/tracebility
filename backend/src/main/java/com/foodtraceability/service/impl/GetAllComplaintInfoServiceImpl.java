@@ -44,7 +44,6 @@ public class GetAllComplaintInfoServiceImpl implements GetAllComplaintInfoServic
     private ComplaintInfoDTO.ComplaintInfo convertToComplaintInfoDTO(Complaint complaint) {
         ComplaintInfoDTO.ComplaintInfo info = new ComplaintInfoDTO.ComplaintInfo();
         info.setId(complaint.getId());
-        info.setAntiFakeCode(complaint.getAntiFakeCode());
         info.setComplaintReason(complaint.getComplaintReason());
         info.setComplaintTime(complaint.getComplaintTime());
         info.setProductName(complaint.getProductName());

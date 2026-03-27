@@ -15,9 +15,9 @@
         class="complaint-form"
         @submit.prevent="submitComplaint"
       >
-        <el-form-item label="选择产品" prop="productId">
+        <el-form-item label="选择产品" prop="productName">
           <ProductSelector
-            v-model="complaintForm.productId"
+            v-model="complaintForm.productName"
             role="consumer"
             @change="handleProductChange"
           />
@@ -71,12 +71,12 @@ import ProductSelector from '@/components/ProductSelector.vue'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
-  productId: '',
+  productName: '',
   complaintReason: '',
   complaintTime: ''
 })
 const complaintRules = {
-  productId: [
+  productName: [
     { required: true, message: '请选择产品', trigger: 'change' }
   ],
   complaintReason: [
@@ -90,9 +90,9 @@ const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
 const handleProductChange = (product) => {
   if (product) {
-    complaintForm.productId = product.id
+    complaintForm.productName = product.name
   } else {
-    complaintForm.productId = ''
+    complaintForm.productName = ''
   }
 }
 
@@ -105,7 +105,7 @@ const submitComplaint = async () => {
     errorMessage.value = ''
 
     const requestData = {
-      productId: complaintForm.productId,
+      productName: complaintForm.productName,
       complaintReason: complaintForm.complaintReason.trim()
     }
 

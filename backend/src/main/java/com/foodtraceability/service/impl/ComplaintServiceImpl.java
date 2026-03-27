@@ -45,7 +45,6 @@ public class ComplaintServiceImpl implements ComplaintService {
 
             Complaint complaint = new Complaint();
             complaint.setProductName(product.getName());
-            complaint.setAntiFakeCode(product.getAntiFakeCode());
             complaint.setComplaintReason(complaintDTO.getComplaintReason());
             complaint.setComplaintTime(LocalDateTime.now());
 
@@ -57,7 +56,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             resultDTO.setId(savedComplaint.getId());
             resultDTO.setProductId(complaintDTO.getProductId());
             resultDTO.setProductName(savedComplaint.getProductName());
-            resultDTO.setAntiFakeCode(savedComplaint.getAntiFakeCode());
+
             resultDTO.setComplaintReason(savedComplaint.getComplaintReason());
             resultDTO.setComplaintTime(savedComplaint.getComplaintTime());
 
