@@ -62,4 +62,21 @@ public class TraceabilityController {
                         "message", "未找到该产品信息"
                 )));
     }
+
+    @GetMapping("/batches")
+    public ResponseEntity<?> listAllBatches() {
+        return ResponseEntity.ok(traceabilityService.listAllBatches());
+    }
+
+    @GetMapping("/materials")
+    public ResponseEntity<?> listAllMaterials() {
+        return ResponseEntity.ok(traceabilityService.listAllMaterials());
+    }
+
+    @GetMapping("/product-detail")
+    public ResponseEntity<?> getProductDetail(@RequestParam Long productId) {
+        return traceabilityService.getProductDetail(productId)
+                .map(product -> ResponseEntity.ok(product))
+                .orElse(ResponseEntity.ok(Map.of("error", "产品不存在")));
+    }
 }

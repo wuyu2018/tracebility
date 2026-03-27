@@ -53,6 +53,44 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<?> listAllBatches() {
+        return productRepository.findAll().stream()
+                .map(p -> {
+                    if (p.getBatchNumber() == null || p.getBatchNumber().isBlank()) {
+                        return null;
+                    }
+                    return java.util.Map.of(
+                            "id", p.getId(),
+                            "productName", p.getName() != null ? p.getName() : "",
+                            "batchNumber", p.getBatchNumber(),
+                            "productionDate", p.getProductionDate() != null ? p.getProductionDate().toString() : "",
+                            "specification", p.getSpecification() != null ? p.getSpecification() : ""
+                    );
+                })
+                .filter(p -> p != null)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<?> listAllMaterials() {
+        return materialPurchaseRepository.findAll().stream()
+                .map(mp -> java.util.Map.of(
+                        "id", mp.getId(),
+                        "productName", mp.getProductName() != null ? mp.getProductName() : "",
+                        "batchNumber", mp.getBatchNumber() != null ? mp.getBatchNumber() : "",
+                        "materialName", mp.getMaterialName() != null ? mp.getMaterialName() : "",
+                        "producerName", mp.getProducerName() != null ? mp.getProducerName() : "",
+                        "producerAddress", mp.getProducerAddress() != null ? mp.getProducerAddress() : ""
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Product> getProductDetail(Long productId) {
+        return productRepository.findById(productId);
+    }
+
     private TraceInfoDTO buildTraceInfoDTO(Product product) {
         TraceInfoDTO dto = new TraceInfoDTO();
 
