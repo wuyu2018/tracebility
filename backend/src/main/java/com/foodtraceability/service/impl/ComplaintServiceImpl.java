@@ -2,11 +2,9 @@ package com.foodtraceability.service.impl;
 
 import com.foodtraceability.dto.ComplaintDTO;
 import com.foodtraceability.entity.Complaint;
-import com.foodtraceability.entity.Product;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.ComplaintRepository;
 import com.foodtraceability.service.ComplaintService;
-import com.foodtraceability.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +21,13 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Autowired
     private ComplaintRepository complaintRepository;
 
-    @Autowired
-    private ProductService productService;
-
     @Override
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
         if (complaintDTO == null) {
             throw new BusinessException("投诉信息不能为空");
         }
 
-        if (complaintDTO.getProductId() == null) {
+        if (complaintDTO.getProductName() == null || complaintDTO.getProductName().isBlank()) {
             throw new BusinessException("请选择要投诉的产品");
         }
 
@@ -41,10 +36,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         try {
-            Product product = productService.getProductById(complaintDTO.getProductId());
-
             Complaint complaint = new Complaint();
-            complaint.setProductName(product.getName());
+            complaint.setProductName(complaintDTO.getProductName());
             complaint.setComplaintReason(complaintDTO.getComplaintReason());
             complaint.setComplaintTime(LocalDateTime.now());
 
@@ -54,9 +47,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
             ComplaintDTO resultDTO = new ComplaintDTO();
             resultDTO.setId(savedComplaint.getId());
-            resultDTO.setProductId(complaintDTO.getProductId());
             resultDTO.setProductName(savedComplaint.getProductName());
-
             resultDTO.setComplaintReason(savedComplaint.getComplaintReason());
             resultDTO.setComplaintTime(savedComplaint.getComplaintTime());
 
@@ -64,8 +55,8 @@ public class ComplaintServiceImpl implements ComplaintService {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("[投诉创建] 保存投诉失败 - 产品ID: {}, 错误: {}",
-                complaintDTO.getProductId(), e.getMessage(), e);
+            log.error("[投诉创建] 保存投诉失败 - 产品: {}, 错误: {}",
+                complaintDTO.getProductName(), e.getMessage(), e);
             throw new BusinessException("投诉保存失败，请稍后重试");
         }
     }

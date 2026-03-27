@@ -13,15 +13,11 @@ import java.time.LocalDateTime;
 public class ComplaintDTO {
     private Long id;
 
-    @NotNull(message = "产品ID不能为空")
-    private Long productId;
+    @NotBlank(message = "产品名称不能为空")
+    private String productName;
 
     @NotBlank(message = "投诉原因不能为空")
     private String complaintReason;
 
     private LocalDateTime complaintTime;
-
-    private String productName;
-
-    private String batchNumber;
 }
