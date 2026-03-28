@@ -2,6 +2,7 @@ package com.foodtraceability.controller;
 
 import com.foodtraceability.dto.*;
 import com.foodtraceability.entity.*;
+import com.foodtraceability.repository.*;
 import com.foodtraceability.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,17 +25,26 @@ public class DataManagementController {
     private final ProductionBatchService batchService;
     private final SecurityCodeService securityCodeService;
     private final TraceabilityService traceabilityService;
+    private final InspectionRepository inspectionRepository;
+    private final StorageRepository storageRepository;
+    private final TransportSaleRepository transportSaleRepository;
 
     public DataManagementController(ProductService productService,
                                    MaterialPurchaseService materialPurchaseService,
                                    ProductionBatchService batchService,
                                    SecurityCodeService securityCodeService,
-                                   TraceabilityService traceabilityService) {
+                                   TraceabilityService traceabilityService,
+                                   InspectionRepository inspectionRepository,
+                                   StorageRepository storageRepository,
+                                   TransportSaleRepository transportSaleRepository) {
         this.productService = productService;
         this.materialPurchaseService = materialPurchaseService;
         this.batchService = batchService;
         this.securityCodeService = securityCodeService;
         this.traceabilityService = traceabilityService;
+        this.inspectionRepository = inspectionRepository;
+        this.storageRepository = storageRepository;
+        this.transportSaleRepository = transportSaleRepository;
     }
 
     @PostMapping("/products")
@@ -425,5 +435,35 @@ public class DataManagementController {
             return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
         }
         return ResponseEntity.ok(batchService.listAllBatches());
+    }
+
+    @GetMapping("/insert/inspections")
+    public ResponseEntity<?> listAllInspections() {
+        try {
+            return ResponseEntity.ok(inspectionRepository.findAll());
+        } catch (Exception e) {
+            log.error("[检验检测] 获取列表失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/insert/storages")
+    public ResponseEntity<?> listAllStorages() {
+        try {
+            return ResponseEntity.ok(storageRepository.findAll());
+        } catch (Exception e) {
+            log.error("[仓储] 获取列表失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/insert/transport-sales")
+    public ResponseEntity<?> listAllTransportSales() {
+        try {
+            return ResponseEntity.ok(transportSaleRepository.findAll());
+        } catch (Exception e) {
+            log.error("[运输销售] 获取列表失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }
