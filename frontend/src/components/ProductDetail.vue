@@ -52,11 +52,23 @@
               <el-form-item label="原料名称" required>
                 <el-input v-model="materialForm.materialName" placeholder="请输入原料名称" />
               </el-form-item>
+              <el-form-item label="供应商">
+                <el-input v-model="materialForm.supplierName" placeholder="请输入供应商名称" />
+              </el-form-item>
               <el-form-item label="生产商">
                 <el-input v-model="materialForm.producerName" placeholder="请输入生产商名称" />
               </el-form-item>
               <el-form-item label="生产商地址">
                 <el-input v-model="materialForm.producerAddress" placeholder="请输入生产商地址" />
+              </el-form-item>
+              <el-form-item label="采购时间">
+                <el-date-picker v-model="materialForm.purchaseDate" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm:ss" placeholder="选择采购时间" />
+              </el-form-item>
+              <el-form-item label="数量">
+                <el-input-number v-model="materialForm.quantity" :min="0" placeholder="数量" />
+              </el-form-item>
+              <el-form-item label="单位">
+                <el-input v-model="materialForm.unit" placeholder="如：kg、吨、箱" />
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="submitMaterialForm" :loading="submitting">提交</el-button>
@@ -69,8 +81,10 @@
           <el-table :data="materialList" stripe class="business-table" v-loading="loading">
             <el-table-column prop="batchNumber" label="批号" />
             <el-table-column prop="materialName" label="原料名称" />
+            <el-table-column prop="purchaseDate" label="采购时间" :formatter="formatDateTime" />
+            <el-table-column prop="quantity" label="数量" />
+            <el-table-column prop="unit" label="单位" />
             <el-table-column prop="producerName" label="生产商" />
-            <el-table-column prop="producerAddress" label="生产商地址" />
             <el-table-column label="操作" width="100">
               <template #default="scope">
                 <el-button type="danger" size="small" @click="deleteMaterial(scope.row.id)">删除</el-button>
@@ -311,8 +325,12 @@ const materialForm = reactive({
   antiFakeCode: '',
   batchNumber: '',
   materialName: '',
+  supplierName: '',
   producerName: '',
-  producerAddress: ''
+  producerAddress: '',
+  purchaseDate: '',
+  quantity: null,
+  unit: ''
 })
 
 const inspectionForm = reactive({
@@ -347,6 +365,11 @@ function formatDate(row, column, cellValue) {
   return cellValue.split('T')[0]
 }
 
+function formatDateTime(row, column, cellValue) {
+  if (!cellValue) return '-'
+  return cellValue.replace('T', ' ').substring(0, 16)
+}
+
 function initFormAntiFakeCode() {
   const code = props.product.antiFakeCode
   materialForm.antiFakeCode = code
@@ -357,7 +380,7 @@ function initFormAntiFakeCode() {
 
 function resetForms() {
   Object.keys(materialForm).forEach(key => {
-    if (key !== 'antiFakeCode') materialForm[key] = ''
+    if (key !== 'antiFakeCode') materialForm[key] = key === 'quantity' ? null : ''
   })
   Object.keys(inspectionForm).forEach(key => {
     if (key !== 'antiFakeCode') inspectionForm[key] = key === 'sampleQuantity' ? null : ''
@@ -416,8 +439,12 @@ async function submitMaterialForm() {
       antiFakeCode: materialForm.antiFakeCode,
       batchNumber: materialForm.batchNumber || null,
       materialName: materialForm.materialName,
+      supplierName: materialForm.supplierName || null,
       producerName: materialForm.producerName || null,
-      producerAddress: materialForm.producerAddress || null
+      producerAddress: materialForm.producerAddress || null,
+      purchaseDate: materialForm.purchaseDate || null,
+      quantity: materialForm.quantity,
+      unit: materialForm.unit || null
     })
     ElMessage.success('添加成功')
     cancelAddForm()
