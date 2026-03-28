@@ -440,7 +440,18 @@ public class DataManagementController {
     @GetMapping("/insert/inspections")
     public ResponseEntity<?> listAllInspections() {
         try {
-            return ResponseEntity.ok(inspectionRepository.findAll());
+            var inspections = inspectionRepository.findAll();
+            var result = inspections.stream().map(i -> {
+                var dto = new java.util.HashMap<String, Object>();
+                dto.put("id", i.getId());
+                dto.put("batchId", i.getBatch() != null ? i.getBatch().getId() : null);
+                dto.put("sampleName", i.getSampleName());
+                dto.put("sampleQuantity", i.getSampleQuantity());
+                dto.put("sampleSpecification", i.getSampleSpecification());
+                dto.put("imageUrl", i.getImageUrl());
+                return dto;
+            }).toList();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[检验检测] 获取列表失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -450,7 +461,19 @@ public class DataManagementController {
     @GetMapping("/insert/storages")
     public ResponseEntity<?> listAllStorages() {
         try {
-            return ResponseEntity.ok(storageRepository.findAll());
+            var storages = storageRepository.findAll();
+            var result = storages.stream().map(s -> {
+                var dto = new java.util.HashMap<String, Object>();
+                dto.put("id", s.getId());
+                dto.put("batchId", s.getBatch() != null ? s.getBatch().getId() : null);
+                dto.put("storageTime", s.getStorageTime());
+                dto.put("outboundTime", s.getOutboundTime());
+                dto.put("quantity", s.getQuantity());
+                dto.put("unit", s.getUnit());
+                dto.put("warehouseLocation", s.getWarehouseLocation());
+                return dto;
+            }).toList();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[仓储] 获取列表失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -460,7 +483,22 @@ public class DataManagementController {
     @GetMapping("/insert/transport-sales")
     public ResponseEntity<?> listAllTransportSales() {
         try {
-            return ResponseEntity.ok(transportSaleRepository.findAll());
+            var transportSales = transportSaleRepository.findAll();
+            var result = transportSales.stream().map(t -> {
+                var dto = new java.util.HashMap<String, Object>();
+                dto.put("id", t.getId());
+                dto.put("batchId", t.getBatch() != null ? t.getBatch().getId() : null);
+                dto.put("transportCompany", t.getTransportCompany());
+                dto.put("vehicleNumber", t.getVehicleNumber());
+                dto.put("salesRegion", t.getSalesRegion());
+                dto.put("receiverName", t.getReceiverName());
+                dto.put("receiverContact", t.getReceiverContact());
+                dto.put("environmentTemperature", t.getEnvironmentTemperature());
+                dto.put("productTemperature", t.getProductTemperature());
+                dto.put("time", t.getTime());
+                return dto;
+            }).toList();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[运输销售] 获取列表失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
