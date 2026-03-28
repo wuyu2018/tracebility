@@ -359,9 +359,15 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/products/batch-delete")
-    public ResponseEntity<?> batchDeleteProducts(@RequestBody List<Long> productIds) {
-        log.info("[产品管理] 批量删除产品 - 产品数量: {}", productIds.size());
+    public ResponseEntity<?> batchDeleteProducts(@RequestBody Map<String, Object> request) {
+        log.info("[产品管理] 批量删除产品");
         try {
+            @SuppressWarnings("unchecked")
+            List<Long> productIds = (List<Long>) request.get("productIds");
+            if (productIds == null || productIds.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "产品ID列表不能为空"));
+            }
+            log.info("[产品管理] 批量删除产品 - 产品数量: {}", productIds.size());
             int successCount = 0;
             int failCount = 0;
             for (Long productId : productIds) {
