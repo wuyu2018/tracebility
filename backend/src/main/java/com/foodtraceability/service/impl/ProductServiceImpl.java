@@ -38,6 +38,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private SecurityCodeRepository securityCodeRepository;
 
+    @Autowired
+    private MaterialPurchaseRepository materialPurchaseRepository;
+
     @Override
     @Transactional
     public Product createProduct(ProductDTO dto) {
@@ -60,6 +63,9 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         log.info("[产品删除] 开始删除产品 ID: {}", id);
+        
+        // 先删除直接关联的原材料记录
+        materialPurchaseRepository.deleteAll(materialPurchaseRepository.findByProductIdAndIsDeletedFalse(id));
         
         // 直接删除所有关联数据（按依赖关系顺序）
         securityCodeRepository.deleteAll(securityCodeRepository.findAll().stream()
