@@ -40,6 +40,8 @@ services:
         reservations:
           memory: 512M
           cpus: '0.25'
+    ports:
+      - "3306:3306"
 
   backend:
     build:
