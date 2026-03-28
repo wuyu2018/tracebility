@@ -4,6 +4,7 @@ import com.foodtraceability.dto.*;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import com.foodtraceability.service.*;
+import org.springframework.beans.BeanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -308,7 +309,9 @@ public class DataManagementController {
             SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
             
             product.setQrCodeUrl("/qrcode/" + product.getId());
-            productService.updateProduct(productId, product);
+            ProductDTO dto = new ProductDTO();
+            BeanUtils.copyProperties(product, dto);
+            productService.updateProduct(productId, dto);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -331,7 +334,9 @@ public class DataManagementController {
                         securityCodeService.generateCodes(batch.getId(), 100);
                         
                         product.setQrCodeUrl("/qrcode/" + product.getId());
-                        productService.updateProduct(productId, product);
+                        ProductDTO dto = new ProductDTO();
+                        BeanUtils.copyProperties(product, dto);
+                        productService.updateProduct(productId, dto);
                         
                         successCount++;
                     } else {
