@@ -13,15 +13,27 @@
       <div class="stats-row">
         <div class="stat-item">
           <span class="stat-value">{{ productList.length }}</span>
-          <span class="stat-label">产品总数</span>
+          <span class="stat-label">产品</span>
         </div>
         <div class="stat-item">
           <span class="stat-value">{{ materialList.length }}</span>
-          <span class="stat-label">原材料记录</span>
+          <span class="stat-label">原材料</span>
         </div>
         <div class="stat-item">
           <span class="stat-value">{{ batchList.length }}</span>
-          <span class="stat-label">生产批次</span>
+          <span class="stat-label">批次</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ inspectionList.length }}</span>
+          <span class="stat-label">检验检测</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ storageList.length }}</span>
+          <span class="stat-label">仓储</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ transportList.length }}</span>
+          <span class="stat-label">运输销售</span>
         </div>
       </div>
     </el-card>
@@ -84,6 +96,51 @@
           </el-table>
         </div>
       </el-tab-pane>
+
+      <el-tab-pane label="检验检测" name="inspections">
+        <div class="tab-content">
+          <h3>所有检验检测记录 ({{ inspectionList.length }})</h3>
+          <el-table :data="inspectionList" stripe v-loading="loading" max-height="500">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="batchId" label="批次ID" width="80" />
+            <el-table-column prop="sampleName" label="样品名称" />
+            <el-table-column prop="sampleQuantity" label="样品数量" width="100" />
+            <el-table-column prop="sampleSpecification" label="样品规格" />
+            <el-table-column prop="imageUrl" label="检测报告图片" />
+          </el-table>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="仓储" name="storages">
+        <div class="tab-content">
+          <h3>所有仓储记录 ({{ storageList.length }})</h3>
+          <el-table :data="storageList" stripe v-loading="loading" max-height="500">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="batchId" label="批次ID" width="80" />
+            <el-table-column prop="storageTime" label="入库时间" :formatter="formatDateTime" width="160" />
+            <el-table-column prop="outboundTime" label="出库时间" :formatter="formatDateTime" width="160" />
+            <el-table-column prop="quantity" label="数量" width="80" />
+            <el-table-column prop="unit" label="单位" width="60" />
+            <el-table-column prop="warehouseLocation" label="仓库地址" />
+          </el-table>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="运输销售" name="transport">
+        <div class="tab-content">
+          <h3>所有运输销售记录 ({{ transportList.length }})</h3>
+          <el-table :data="transportList" stripe v-loading="loading" max-height="500">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="batchId" label="批次ID" width="80" />
+            <el-table-column prop="transportCompany" label="运输公司" />
+            <el-table-column prop="vehicleNumber" label="车牌号" />
+            <el-table-column prop="salesRegion" label="销售区域" />
+            <el-table-column prop="receiverName" label="收货人" />
+            <el-table-column prop="receiverContact" label="联系方式" />
+            <el-table-column prop="time" label="记录时间" :formatter="formatDateTime" width="160" />
+          </el-table>
+        </div>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -101,29 +158,44 @@ const loading = ref(false)
 const productList = ref([])
 const materialList = ref([])
 const batchList = ref([])
+const inspectionList = ref([])
+const storageList = ref([])
+const transportList = ref([])
 
 function formatDate(row, column, cellValue) {
   if (!cellValue) return '-'
-  return cellValue.split('T')[0]
+  if (typeof cellValue === 'string' && cellValue.includes('T')) {
+    return cellValue.split('T')[0]
+  }
+  return cellValue
 }
 
 function formatDateTime(row, column, cellValue) {
   if (!cellValue) return '-'
-  return cellValue.replace('T', ' ').substring(0, 16)
+  if (typeof cellValue === 'string' && cellValue.includes('T')) {
+    return cellValue.replace('T', ' ').substring(0, 16)
+  }
+  return cellValue
 }
 
 async function loadAllData() {
   loading.value = true
   try {
-    const [productsRes, materialsRes, batchesRes] = await Promise.all([
+    const [productsRes, materialsRes, batchesRes, inspectionsRes, storagesRes, transportsRes] = await Promise.all([
       axios.get(`${API_BASE}/products`),
       axios.get(`${API_BASE}/materials`),
-      axios.get(`${API_BASE}/batches`)
+      axios.get(`${API_BASE}/batches`),
+      axios.get(`${API_BASE}/insert/inspections`),
+      axios.get(`${API_BASE}/insert/storages`),
+      axios.get(`${API_BASE}/insert/transport-sales`)
     ])
     
     productList.value = productsRes.data
     materialList.value = materialsRes.data
     batchList.value = batchesRes.data
+    inspectionList.value = inspectionsRes.data
+    storageList.value = storagesRes.data
+    transportList.value = transportsRes.data
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -153,14 +225,16 @@ onMounted(() => {
 
 .stats-row {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
   padding: 0.5rem 0;
+  flex-wrap: wrap;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-width: 60px;
 }
 
 .stat-value {
@@ -170,7 +244,7 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 
