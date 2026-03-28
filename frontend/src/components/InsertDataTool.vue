@@ -80,6 +80,15 @@
             <el-form-item label="生产商地址">
               <el-input v-model="materialForm.producerAddress" placeholder="生产商地址" />
             </el-form-item>
+            <el-form-item label="采购时间">
+              <el-date-picker v-model="materialForm.purchaseDate" type="datetime" format="YYYY-MM-DD HH:mm" value-format="YYYY-MM-DDTHH:mm:ss" placeholder="选择采购时间" />
+            </el-form-item>
+            <el-form-item label="数量">
+              <el-input-number v-model="materialForm.quantity" :min="0" placeholder="数量" />
+            </el-form-item>
+            <el-form-item label="单位">
+              <el-input v-model="materialForm.unit" placeholder="如：kg、吨、箱" />
+            </el-form-item>
           </el-form>
           <div class="form-actions">
             <el-button type="primary" @click="submitMaterial" :loading="loading">保存原材料</el-button>
@@ -91,6 +100,9 @@
             <el-table-column prop="id" label="ID" width="60" />
             <el-table-column prop="materialName" label="原料名称" />
             <el-table-column prop="batchNumber" label="批次号" />
+            <el-table-column prop="purchaseDate" label="采购时间" width="160" />
+            <el-table-column prop="quantity" label="数量" width="80" />
+            <el-table-column prop="unit" label="单位" width="60" />
             <el-table-column prop="supplierName" label="供应商" />
             <el-table-column label="操作" width="150">
               <template #default="scope">
@@ -281,7 +293,10 @@ const materialForm = reactive({
   batchNumber: '',
   supplierName: '',
   producerName: '',
-  producerAddress: ''
+  producerAddress: '',
+  purchaseDate: '',
+  quantity: null,
+  unit: ''
 })
 
 const batchForm = reactive({
