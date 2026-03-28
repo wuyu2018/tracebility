@@ -60,24 +60,35 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         log.info("[产品删除] 开始删除产品 ID: {}", id);
-        Product entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("产品不存在"));
         
-        List<ProductionBatch> batches = batchRepository.findByProductIdAndIsDeletedFalse(id);
-        log.info("[产品删除] 找到 {} 个关联批次", batches.size());
+        // 直接删除所有关联数据（按依赖关系顺序）
+        securityCodeRepository.deleteAll(securityCodeRepository.findAll().stream()
+            .filter(sc -> sc.getBatch() != null && sc.getBatch().getProduct() != null 
+                && sc.getBatch().getProduct().getId().equals(id)).toList());
+        
+        inspectionRepository.deleteAll(inspectionRepository.findAll().stream()
+            .filter(i -> i.getBatch() != null && i.getBatch().getProduct() != null 
+                && i.getBatch().getProduct().getId().equals(id)).toList());
+        
+        storageRepository.deleteAll(storageRepository.findAll().stream()
+            .filter(s -> s.getBatch() != null && s.getBatch().getProduct() != null 
+                && s.getBatch().getProduct().getId().equals(id)).toList());
+        
+        transportSaleRepository.deleteAll(transportSaleRepository.findAll().stream()
+            .filter(t -> t.getBatch() != null && t.getBatch().getProduct() != null 
+                && t.getBatch().getProduct().getId().equals(id)).toList());
+        
+        List<ProductionBatch> batches = batchRepository.findAll().stream()
+            .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(id)).toList();
         
         for (ProductionBatch batch : batches) {
-            log.info("[产品删除] 删除批次 ID: {}", batch.getId());
-            securityCodeRepository.deleteAll(securityCodeRepository.findByBatchId(batch.getId()));
-            inspectionRepository.deleteAll(inspectionRepository.findByBatch(batch));
-            storageRepository.deleteAll(storageRepository.findByBatch(batch));
-            transportSaleRepository.deleteAll(transportSaleRepository.findByBatch(batch));
             relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
-            batchRepository.delete(batch);
         }
         
-        log.info("[产品删除] 删除产品 ID: {}", id);
-        repository.delete(entity);
+        batchRepository.deleteAll(batches);
+        
+        repository.deleteById(id);
+        log.info("[产品删除] 删除完成");
     }
 
     @Override
