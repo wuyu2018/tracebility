@@ -2,9 +2,7 @@ package com.foodtraceability.service.impl;
 
 import com.foodtraceability.dto.ProductDTO;
 import com.foodtraceability.entity.Product;
-import com.foodtraceability.entity.ProductionBatch;
 import com.foodtraceability.repository.ProductRepository;
-import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.service.ProductService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +16,6 @@ import java.util.Optional;
 public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository repository;
-
-    @Autowired
-    private ProductionBatchRepository batchRepository;
 
     @Override
     @Transactional
@@ -43,17 +38,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(Long id) {
+        // 只清除防伪码和二维码，不删除产品
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
-        
-        // 先软删除关联的批次
-        List<ProductionBatch> batches = batchRepository.findByProductIdAndIsDeletedFalse(id);
-        for (ProductionBatch batch : batches) {
-            batch.setIsDeleted(true);
-            batchRepository.save(batch);
-        }
-        
-        entity.setIsDeleted(true);
+        entity.setAntiFakeCode(null);
+        entity.setQrCodeUrl(null);
         repository.save(entity);
     }
 
