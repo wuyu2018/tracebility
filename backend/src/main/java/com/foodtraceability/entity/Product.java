@@ -39,4 +39,7 @@ public class Product {
 
     @Column(name = "anti_fake_code", length = 100)
     private String antiFakeCode;
+
+    @Column(name = "qr_code_url", length = 500)
+    private String qrCodeUrl;
 }
