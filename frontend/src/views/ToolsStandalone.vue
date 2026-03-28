@@ -215,11 +215,11 @@ async function loadProductList() {
 }
 
 const productsWithQrCode = computed(() => {
-  return productList.value.filter(p => p.qrCodeUrl)
+  return productList.value.filter(p => p.antiFakeCode)
 })
 
 const productsWithoutQrCode = computed(() => {
-  return productList.value.filter(p => !p.qrCodeUrl)
+  return productList.value.filter(p => !p.antiFakeCode)
 })
 
 function handleSelectionChange(selection) {
@@ -243,11 +243,43 @@ function clearPendingSelection() {
 }
 
 function downloadQrCode(row) {
-  if (!row.qrCodeUrl) return
-  const a = document.createElement('a')
-  a.href = row.qrCodeUrl
-  a.download = `防伪码_${row.antiFakeCode}.png`
-  a.click()
+  if (!row.antiFakeCode) {
+    ElMessage.warning('该产品暂无防伪码')
+    return
+  }
+  QRCode.toDataURL(row.antiFakeCode, { width: 300, margin: 2 }).then((dataUrl) => {
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `防伪码_${row.antiFakeCode}.png`
+    a.click()
+  })
+}
+
+async function generateQrCodeForProduct(row) {
+  if (!row.id) {
+    ElMessage.error('产品ID无效')
+    return
+  }
+  
+  // 如果产品没有防伪码，先调用API生成
+  if (!row.antiFakeCode) {
+    try {
+      await generateQrCode(row.id)
+      await loadProductList()
+      // 找到更新后的产品
+      const updatedProduct = productList.value.find(p => p.id === row.id)
+      if (updatedProduct && updatedProduct.antiFakeCode) {
+        downloadQrCode(updatedProduct)
+      }
+      ElMessage.success(`产品 ${row.name} 防伪码生成成功`)
+    } catch (error) {
+      console.error('Generate QR code failed:', error)
+      ElMessage.error('防伪码生成失败: ' + (error.message || '请重试'))
+    }
+  } else {
+    // 已有防伪码，直接生成二维码并下载
+    downloadQrCode(row)
+  }
 }
 
 async function batchGenerateSelectedQrCodes() {
@@ -325,12 +357,14 @@ function batchDownloadQrCodes() {
   if (!selectedProducts.value.length) return
   
   selectedProducts.value.forEach((product, index) => {
-    if (product.qrCodeUrl) {
+    if (product.antiFakeCode) {
       setTimeout(() => {
-        const a = document.createElement('a')
-        a.href = product.qrCodeUrl
-        a.download = `防伪码_${product.antiFakeCode}.png`
-        a.click()
+        QRCode.toDataURL(product.antiFakeCode, { width: 300, margin: 2 }).then((dataUrl) => {
+          const a = document.createElement('a')
+          a.href = dataUrl
+          a.download = `防伪码_${product.antiFakeCode}.png`
+          a.click()
+        })
       }, index * 200)
     }
   })

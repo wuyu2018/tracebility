@@ -3,11 +3,12 @@ package com.foodtraceability.service.impl;
 import com.foodtraceability.dto.SecurityCodeDTO;
 import com.foodtraceability.dto.SecurityCodeGenerateResponse;
 import com.foodtraceability.entity.ProductionBatch;
+import com.foodtraceability.entity.Product;
 import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
 import com.foodtraceability.service.SecurityCodeService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,9 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
 
     @Autowired
     private ProductionBatchRepository batchRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -41,6 +45,15 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
             securityCode.setScanCount(0);
             codeRepository.save(securityCode);
             codes.add(code);
+        }
+
+        // 将第一个防伪码设置到产品的 antiFakeCode
+        if (!codes.isEmpty()) {
+            Product product = batch.getProduct();
+            if (product != null) {
+                product.setAntiFakeCode(codes.get(0));
+                productRepository.save(product);
+            }
         }
 
         SecurityCodeGenerateResponse response = new SecurityCodeGenerateResponse();
