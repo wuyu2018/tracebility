@@ -1,10 +1,8 @@
 package com.foodtraceability.service.impl;
 
 import com.foodtraceability.dto.ProductDTO;
-import com.foodtraceability.entity.Product;
-import com.foodtraceability.entity.ProductionBatch;
-import com.foodtraceability.repository.ProductRepository;
-import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.entity.*;
+import com.foodtraceability.repository.*;
 import com.foodtraceability.service.ProductService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -21,6 +18,18 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductionBatchRepository batchRepository;
+
+    @Autowired
+    private InspectionRepository inspectionRepository;
+
+    @Autowired
+    private StorageRepository storageRepository;
+
+    @Autowired
+    private TransportSaleRepository transportSaleRepository;
+
+    @Autowired
+    private BatchMaterialRelationRepository relationRepository;
 
     @Override
     @Transactional
@@ -46,11 +55,14 @@ public class ProductServiceImpl implements ProductService {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
         
-        // 软删除关联的批次
         List<ProductionBatch> batches = batchRepository.findByProductIdAndIsDeletedFalse(id);
+        
         for (ProductionBatch batch : batches) {
-            batch.setIsDeleted(true);
-            batchRepository.save(batch);
+            inspectionRepository.deleteAll(inspectionRepository.findByBatch(batch));
+            storageRepository.deleteAll(storageRepository.findByBatch(batch));
+            transportSaleRepository.deleteAll(transportSaleRepository.findByBatch(batch));
+            relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
+            batchRepository.delete(batch);
         }
         
         entity.setIsDeleted(true);
@@ -88,7 +100,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Product> getProductByAntiFakeCode(String antiFakeCode) {
+    public java.util.Optional<Product> getProductByAntiFakeCode(String antiFakeCode) {
         return repository.findByAntiFakeCode(antiFakeCode);
     }
 }
