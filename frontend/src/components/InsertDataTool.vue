@@ -508,7 +508,8 @@ async function loadSecurityCodes(batchId) {
     const res = await axios.get(`${API_BASE}/batches/${batchId}/security-codes`)
     securityCodes.value = res.data
   } catch (e) {
-    console.error(e)
+    console.error('加载防伪码失败:', e)
+    ElMessage.error('加载防伪码失败')
   }
 }
 
