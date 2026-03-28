@@ -368,27 +368,27 @@ public class DataManagementController {
             if (idsNode == null || !idsNode.isArray()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "产品ID列表格式错误"));
             }
-            log.info("[产品管理] 批量删除产品 - 产品数量: {}", idsNode.size());
+            log.info("[产品管理] 清除产品二维码 - 产品数量: {}", idsNode.size());
             int successCount = 0;
             int failCount = 0;
             for (com.fasterxml.jackson.databind.JsonNode idNode : idsNode) {
                 try {
                     Long productId = idNode.asLong();
-                    productService.deleteProduct(productId);
+                    productService.clearQrCode(productId);
                     successCount++;
                 } catch (Exception e) {
                     failCount++;
-                    log.warn("[产品管理] 批量删除失败 - 产品ID: {}", idNode.asText());
+                    log.warn("[产品管理] 清除二维码失败 - 产品ID: {}", idNode.asText());
                 }
             }
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "successCount", successCount,
                 "failCount", failCount,
-                "message", String.format("批量删除完成，成功: %d，失败: %d", successCount, failCount)
+                "message", String.format("清除完成，成功: %d，失败: %d", successCount, failCount)
             ));
         } catch (Exception e) {
-            log.error("[产品管理] 批量删除失败 - 错误: {}", e.getMessage());
+            log.error("[产品管理] 清除二维码失败 - 错误: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

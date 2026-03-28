@@ -38,7 +38,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void deleteProduct(Long id) {
-        // 只清除防伪码和二维码，不删除产品
+        Product entity = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("产品不存在"));
+        entity.setIsDeleted(true);
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void clearQrCode(Long id) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
         entity.setAntiFakeCode(null);
