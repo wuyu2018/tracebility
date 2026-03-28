@@ -4,7 +4,6 @@ import com.foodtraceability.dto.*;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import com.foodtraceability.service.*;
-import org.springframework.beans.BeanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -308,9 +307,9 @@ public class DataManagementController {
             ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
             SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
             
-            product.setQrCodeUrl("/qrcode/" + product.getId());
             ProductDTO dto = new ProductDTO();
-            BeanUtils.copyProperties(product, dto);
+            dto.setId(product.getId());
+            dto.setQrCodeUrl("/qrcode/" + product.getId());
             productService.updateProduct(productId, dto);
             
             return ResponseEntity.ok(response);
@@ -333,9 +332,9 @@ public class DataManagementController {
                         ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
                         securityCodeService.generateCodes(batch.getId(), 100);
                         
-                        product.setQrCodeUrl("/qrcode/" + product.getId());
                         ProductDTO dto = new ProductDTO();
-                        BeanUtils.copyProperties(product, dto);
+                        dto.setId(product.getId());
+                        dto.setQrCodeUrl("/qrcode/" + product.getId());
                         productService.updateProduct(productId, dto);
                         
                         successCount++;
