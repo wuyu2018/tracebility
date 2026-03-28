@@ -147,7 +147,8 @@ const handleLogin = async () => {
     adminUsername.value = response.data.username
     localStorage.setItem('adminUsername', response.data.username)
     errorMsg.value = ''
-    window.location.href = '/ToolsStandalone'
+    // 使用完整 URL，避免在网关/非根路径部署时跳转失败
+    window.location.assign(`${window.location.origin}/ToolsStandalone`)
     return 
   } catch (error) {
     console.error('登录失败:', error)
