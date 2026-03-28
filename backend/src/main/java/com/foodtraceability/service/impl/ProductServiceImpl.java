@@ -65,8 +65,7 @@ public class ProductServiceImpl implements ProductService {
             batchRepository.delete(batch);
         }
         
-        entity.setIsDeleted(true);
-        repository.save(entity);
+        repository.delete(entity);
     }
 
     @Override
