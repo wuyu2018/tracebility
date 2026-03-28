@@ -47,7 +47,6 @@
         <dl>
           <dt>入库时间</dt><dd>{{ formatDateTime(traceData.storage.storageTime) }}</dd>
           <dt>出库时间</dt><dd>{{ formatDateTime(traceData.storage.outboundTime) }}</dd>
-          <dt>仓库地址</dt><dd>{{ traceData.storage.warehouseLocation || '-' }}</dd>
         </dl>
       </section>
 
@@ -55,10 +54,7 @@
         <h3>运输销售</h3>
         <dl>
           <dt>运输时间</dt><dd>{{ formatDateTime(traceData.transportSale.transportTime) }}</dd>
-          <dt>运输公司</dt><dd>{{ traceData.transportSale.transportCompany || '-' }}</dd>
-          <dt>车牌号</dt><dd>{{ traceData.transportSale.vehicleNumber || '-' }}</dd>
           <dt>销售区域</dt><dd>{{ traceData.transportSale.salesRegion || '-' }}</dd>
-          <dt>收货人</dt><dd>{{ traceData.transportSale.receiverName || '-' }}</dd>
         </dl>
       </section>
 
