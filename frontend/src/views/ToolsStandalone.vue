@@ -51,7 +51,7 @@
               <el-table-column label="操作" width="150">
                 <template #default="scope">
                   <el-button type="success" size="small" @click="downloadQrCode(scope.row)">下载</el-button>
-                  <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">详情</el-button>
+                  <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">数据总览</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -81,7 +81,7 @@
                 <el-table-column label="操作" width="150">
                   <template #default="scope">
                     <el-button type="warning" size="small" @click="generateQrCodeForProduct(scope.row)">生成</el-button>
-                    <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">详情</el-button>
+                    <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">数据总览</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -109,17 +109,13 @@
     <!-- 产品详情弹窗 -->
     <el-dialog
       v-model="productDetailVisible"
-      title="产品详情"
+      title="管理员数据总览"
       width="90%"
       :close-on-click-modal="false"
       destroy-on-close
       class="product-detail-dialog"
     >
-      <ProductDetail 
-        v-if="productDetailVisible && currentProduct" 
-        :product="currentProduct" 
-        @close="closeProductDetail"
-      />
+      <ProductDetail />
     </el-dialog>
   </div>
 </template>
@@ -159,8 +155,6 @@ function viewProductDetail(product) {
 
 function closeProductDetail() {
   productDetailVisible.value = false
-  currentProduct.value = null
-  loadProductList()
 }
 
 function getVerifyUrl() {
