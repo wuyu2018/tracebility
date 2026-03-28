@@ -50,6 +50,7 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SecurityCodeDTO> getCodesByBatchId(Long batchId) {
         return codeRepository.findByBatchId(batchId).stream()
                 .map(this::toDTO)
@@ -57,6 +58,7 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SecurityCodeDTO getCodeByCode(String code) {
         return codeRepository.findByCode(code)
                 .map(this::toDTO)
@@ -64,6 +66,7 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SecurityCodeDTO> exportCodes(Long batchId) {
         return getCodesByBatchId(batchId);
     }
