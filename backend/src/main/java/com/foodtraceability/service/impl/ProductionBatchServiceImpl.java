@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.annotation.PostConstruct;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -41,6 +43,17 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     private TransportSaleRepository transportSaleRepository;
 
     private static final AtomicLong batchCounter = new AtomicLong(0);
+
+    @PostConstruct
+    public void initBatchCounter() {
+        batchRepository.findAll().stream()
+                .map(ProductionBatch::getBatchNumber)
+                .filter(n -> n != null && n.matches("B\\d{8}\\d{4}"))
+                .map(n -> n.substring(9))
+                .mapToLong(Long::parseLong)
+                .max()
+                .ifPresent(max -> batchCounter.set(max));
+    }
 
     @Override
     @Transactional
