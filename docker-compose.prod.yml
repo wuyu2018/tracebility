@@ -120,9 +120,9 @@ services:
     container_name: food-traceability-edge
     depends_on:
       frontend:
-        condition: service_started   # 改为 service_started
+        condition: service_started   
       backend:
-        condition: service_started   # 改为 service_started
+        condition: service_started  
     volumes:
       - ./edge-nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certs:/etc/nginx/certs:ro
