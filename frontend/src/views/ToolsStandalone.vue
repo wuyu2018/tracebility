@@ -337,22 +337,6 @@ async function batchGenerateQrCodes() {
   }
 }
 
-async function generateQrCodeForProduct(row) {
-  const productId = row.id
-  if (!productId) {
-    ElMessage.error('产品ID无效')
-    return
-  }
-  try {
-    await generateQrCode(productId)
-    ElMessage.success(`产品 ${row.name} 二维码生成成功`)
-    await loadProductList()
-  } catch (error) {
-    console.error('Generate QR code failed:', error)
-    ElMessage.error('二维码生成失败: ' + (error.message || '请重试'))
-  }
-}
-
 function batchDownloadQrCodes() {
   if (!selectedProducts.value.length) return
   
