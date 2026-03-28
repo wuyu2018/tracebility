@@ -116,7 +116,7 @@ services:
           cpus: '0.25'
 
   edge:
-    image: nginx:alpine
+    image: nginx
     container_name: food-traceability-edge
     depends_on:
       frontend:
