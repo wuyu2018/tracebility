@@ -71,6 +71,24 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
             }
         }
 
+        if (dto.getStorage() != null) {
+            Storage storage = new Storage();
+            BeanUtils.copyProperties(dto.getStorage(), storage);
+            storage.setBatch(batch);
+            storage = storageRepository.save(storage);
+            batch.setStorageId(storage.getId());
+            batchRepository.save(batch);
+        }
+
+        if (dto.getTransportSale() != null) {
+            TransportSale transportSale = new TransportSale();
+            BeanUtils.copyProperties(dto.getTransportSale(), transportSale);
+            transportSale.setBatch(batch);
+            transportSale = transportSaleRepository.save(transportSale);
+            batch.setTransportSaleId(transportSale.getId());
+            batchRepository.save(batch);
+        }
+
         return batch;
     }
 
@@ -96,6 +114,38 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         }
         if (dto.getUnit() != null) {
             batch.setUnit(dto.getUnit());
+        }
+
+        if (dto.getStorage() != null) {
+            Storage storage;
+            if (batch.getStorageId() != null) {
+                storage = storageRepository.findById(batch.getStorageId()).orElse(new Storage());
+            } else {
+                storage = new Storage();
+            }
+            BeanUtils.copyProperties(dto.getStorage(), storage);
+            storage.setBatch(batch);
+            storage = storageRepository.save(storage);
+            if (batch.getStorageId() == null) {
+                batch.setStorageId(storage.getId());
+                batchRepository.save(batch);
+            }
+        }
+
+        if (dto.getTransportSale() != null) {
+            TransportSale transportSale;
+            if (batch.getTransportSaleId() != null) {
+                transportSale = transportSaleRepository.findById(batch.getTransportSaleId()).orElse(new TransportSale());
+            } else {
+                transportSale = new TransportSale();
+            }
+            BeanUtils.copyProperties(dto.getTransportSale(), transportSale);
+            transportSale.setBatch(batch);
+            transportSale = transportSaleRepository.save(transportSale);
+            if (batch.getTransportSaleId() == null) {
+                batch.setTransportSaleId(transportSale.getId());
+                batchRepository.save(batch);
+            }
         }
 
         return batchRepository.save(batch);
