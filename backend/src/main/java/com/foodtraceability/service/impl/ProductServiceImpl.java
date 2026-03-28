@@ -64,17 +64,24 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long id) {
         log.info("[产品删除] 开始删除产品 ID: {}", id);
         
-        // 1. 先删除 batch_material_relation（指向 material_purchase）
+        // 1. 找出所有关联的批次
         List<ProductionBatch> batches = batchRepository.findAll().stream()
             .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(id)).toList();
+        
+        // 2. 删除所有关联的 material_purchase（可能被 batch_material_relation 引用）
+        List<MaterialPurchase> materials = materialPurchaseRepository.findAll().stream()
+            .filter(m -> m.getProduct() != null && m.getProduct().getId().equals(id)).toList();
+        List<Long> materialIds = materials.stream().map(MaterialPurchase::getId).toList();
+        
+        // 3. 先删 batch_material_relation（因为它引用 material_purchase）
         for (ProductionBatch batch : batches) {
             relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
         }
         
-        // 2. 再删除直接关联的原材料记录
-        materialPurchaseRepository.deleteAll(materialPurchaseRepository.findByProductIdAndIsDeletedFalse(id));
+        // 4. 再删 material_purchase
+        materialPurchaseRepository.deleteAll(materials);
         
-        // 3. 按依赖关系删除其他关联数据
+        // 5. 按依赖关系删除其他关联数据
         securityCodeRepository.deleteAll(securityCodeRepository.findAll().stream()
             .filter(sc -> sc.getBatch() != null && sc.getBatch().getProduct() != null 
                 && sc.getBatch().getProduct().getId().equals(id)).toList());
@@ -91,10 +98,10 @@ public class ProductServiceImpl implements ProductService {
             .filter(t -> t.getBatch() != null && t.getBatch().getProduct() != null 
                 && t.getBatch().getProduct().getId().equals(id)).toList());
         
-        // 4. 删除批次
+        // 6. 删除批次
         batchRepository.deleteAll(batches);
         
-        // 5. 最后删除产品
+        // 7. 最后删除产品
         repository.deleteById(id);
         log.info("[产品删除] 删除完成");
     }
