@@ -48,13 +48,12 @@
               <el-table-column prop="name" label="产品名称" />
               <el-table-column prop="batchNumber" label="批号" />
               <el-table-column prop="antiFakeCode" label="防伪码" />
-              <el-table-column label="操作" width="150">
-                <template #default="scope">
-                  <el-button type="success" size="small" @click="downloadQrCode(scope.row)">下载</el-button>
-                  <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">数据总览</el-button>
-                </template>
-              </el-table-column>
             </el-table>
+            
+            <div class="overview-actions" style="margin-top: 1rem;">
+              <el-button type="primary" @click="viewProductDetail">数据总览</el-button>
+            </div>
+            
             <div v-if="productsWithoutQrCode.length > 0" class="pending-section">
               <h3>待生成二维码的产品 ({{ productsWithoutQrCode.length }})</h3>
               <div class="batch-actions">
@@ -78,10 +77,9 @@
                 <el-table-column prop="name" label="产品名称" />
                 <el-table-column prop="batchNumber" label="批号" />
                 <el-table-column prop="antiFakeCode" label="防伪码" />
-                <el-table-column label="操作" width="150">
+                <el-table-column label="操作" width="100">
                   <template #default="scope">
                     <el-button type="warning" size="small" @click="generateQrCodeForProduct(scope.row)">生成</el-button>
-                    <el-button type="primary" size="small" @click="viewProductDetail(scope.row)">数据总览</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -148,8 +146,7 @@ const batchDeleting = ref(false)
 const productDetailVisible = ref(false)
 const currentProduct = ref(null)
 
-function viewProductDetail(product) {
-  currentProduct.value = product
+function viewProductDetail() {
   productDetailVisible.value = true
 }
 
