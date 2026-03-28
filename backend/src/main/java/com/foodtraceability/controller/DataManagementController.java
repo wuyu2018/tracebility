@@ -306,6 +306,10 @@ public class DataManagementController {
             }
             ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
             SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
+            
+            product.setQrCodeUrl("/qrcode/" + product.getId());
+            productService.updateProduct(productId, product);
+            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[产品二维码] 生成失败 - 产品ID: {}, 错误: {}", productId, e.getMessage());
@@ -325,6 +329,10 @@ public class DataManagementController {
                     if (product != null) {
                         ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
                         securityCodeService.generateCodes(batch.getId(), 100);
+                        
+                        product.setQrCodeUrl("/qrcode/" + product.getId());
+                        productService.updateProduct(productId, product);
+                        
                         successCount++;
                     } else {
                         failCount++;
