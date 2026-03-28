@@ -262,7 +262,7 @@ const batchDetail = ref(null)
 const batchDetailVisible = ref(false)
 const availableMaterials = ref([])
 
-const codeQuantity = ref(100)
+const codeQuantity = ref(0)
 
 const productForm = reactive({
   id: null,
@@ -515,6 +515,19 @@ async function loadSecurityCodes(batchId) {
 
 async function generateCodes() {
   if (!currentBatch.value) return
+  if (codeQuantity.value <= 0) {
+    ElMessage.warning('请输入要生成的防伪码数量')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确定要为批次 ${currentBatch.value.batchNumber} 生成 ${codeQuantity.value} 个防伪码吗？`,
+      '确认生成',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch {
+    return
+  }
   generatingCodes.value = true
   try {
     const res = await axios.post(`${API_BASE}/batches/${currentBatch.value.id}/security-codes`, {
