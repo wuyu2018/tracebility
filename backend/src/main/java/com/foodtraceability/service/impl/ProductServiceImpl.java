@@ -64,10 +64,17 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(Long id) {
         log.info("[产品删除] 开始删除产品 ID: {}", id);
         
-        // 先删除直接关联的原材料记录
+        // 1. 先删除 batch_material_relation（指向 material_purchase）
+        List<ProductionBatch> batches = batchRepository.findAll().stream()
+            .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(id)).toList();
+        for (ProductionBatch batch : batches) {
+            relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
+        }
+        
+        // 2. 再删除直接关联的原材料记录
         materialPurchaseRepository.deleteAll(materialPurchaseRepository.findByProductIdAndIsDeletedFalse(id));
         
-        // 直接删除所有关联数据（按依赖关系顺序）
+        // 3. 按依赖关系删除其他关联数据
         securityCodeRepository.deleteAll(securityCodeRepository.findAll().stream()
             .filter(sc -> sc.getBatch() != null && sc.getBatch().getProduct() != null 
                 && sc.getBatch().getProduct().getId().equals(id)).toList());
@@ -84,15 +91,10 @@ public class ProductServiceImpl implements ProductService {
             .filter(t -> t.getBatch() != null && t.getBatch().getProduct() != null 
                 && t.getBatch().getProduct().getId().equals(id)).toList());
         
-        List<ProductionBatch> batches = batchRepository.findAll().stream()
-            .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(id)).toList();
-        
-        for (ProductionBatch batch : batches) {
-            relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
-        }
-        
+        // 4. 删除批次
         batchRepository.deleteAll(batches);
         
+        // 5. 最后删除产品
         repository.deleteById(id);
         log.info("[产品删除] 删除完成");
     }
