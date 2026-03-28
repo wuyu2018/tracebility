@@ -274,7 +274,8 @@ async function generateQrCodeForProduct(row) {
       ElMessage.success(`产品 ${row.name} 防伪码生成成功`)
     } catch (error) {
       console.error('Generate QR code failed:', error)
-      ElMessage.error('防伪码生成失败: ' + (error.message || '请重试'))
+      const errMsg = error.response?.data?.error || error.message || '请重试'
+      ElMessage.error('防伪码生成失败: ' + errMsg)
     }
   } else {
     // 已有防伪码，直接生成二维码并下载
