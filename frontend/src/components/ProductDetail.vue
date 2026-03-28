@@ -23,7 +23,7 @@
     </el-card>
 
     <!-- 业务数据 Tab -->
-    <el-tabs v-model="activeBusinessTab" type="border-card" class="business-tabs">
+    <el-tabs v-model="activeBusinessTab" type="border-card" class="business-tabs" v-if="product.antiFakeCode">
       <!-- 原材料采购 -->
       <el-tab-pane label="原材料采购" name="material">
         <div class="business-section">
@@ -99,6 +99,7 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+    <el-empty v-else description="该产品暂无防伪码，无法查看追溯信息" />
   </div>
 </template>
 
@@ -114,6 +115,7 @@ const props = defineProps({
 })
 
 const loading = ref(false)
+const activeBusinessTab = ref('material')
 
 // 业务数据列表
 const materialList = ref([])
@@ -134,6 +136,10 @@ function formatDateTime(row, column, cellValue) {
 }
 
 async function loadBusinessData() {
+  if (!props.product.antiFakeCode) {
+    loading.value = false
+    return
+  }
   loading.value = true
   try {
     const antiFakeCode = props.product.antiFakeCode
