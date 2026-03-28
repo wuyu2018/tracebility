@@ -359,24 +359,26 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/products/batch-delete")
-    public ResponseEntity<?> batchDeleteProducts(@RequestBody Map<String, Object> request) {
-        log.info("[产品管理] 批量删除产品");
+    public ResponseEntity<?> batchDeleteProducts(@RequestBody String body) {
+        log.info("[产品管理] 批量删除产品 - 请求体: {}", body);
         try {
-            @SuppressWarnings("unchecked")
-            List<Long> productIds = (List<Long>) request.get("productIds");
-            if (productIds == null || productIds.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "产品ID列表不能为空"));
+            // 解析 JSON 字符串
+            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+            com.fasterxml.jackson.databind.JsonNode idsNode = node.get("productIds");
+            if (idsNode == null || !idsNode.isArray()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "产品ID列表格式错误"));
             }
-            log.info("[产品管理] 批量删除产品 - 产品数量: {}", productIds.size());
+            log.info("[产品管理] 批量删除产品 - 产品数量: {}", idsNode.size());
             int successCount = 0;
             int failCount = 0;
-            for (Long productId : productIds) {
+            for (com.fasterxml.jackson.databind.JsonNode idNode : idsNode) {
                 try {
+                    Long productId = idNode.asLong();
                     productService.deleteProduct(productId);
                     successCount++;
                 } catch (Exception e) {
                     failCount++;
-                    log.warn("[产品管理] 批量删除失败 - 产品ID: {}", productId);
+                    log.warn("[产品管理] 批量删除失败 - 产品ID: {}", idNode.asText());
                 }
             }
             return ResponseEntity.ok(Map.of(
