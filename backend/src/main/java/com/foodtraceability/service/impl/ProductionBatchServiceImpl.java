@@ -111,6 +111,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductionBatchDTO> listAllBatches() {
         return batchRepository.findByIsDeletedFalse().stream()
                 .map(this::toDTO)
@@ -118,6 +119,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductionBatchDTO> getBatchesByProductId(Long productId) {
         return batchRepository.findByProductIdAndIsDeletedFalse(productId).stream()
                 .map(this::toDTO)
@@ -125,6 +127,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductionBatchDTO getBatchById(Long id) {
         ProductionBatch batch = batchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
