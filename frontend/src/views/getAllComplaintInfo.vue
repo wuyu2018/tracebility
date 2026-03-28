@@ -74,55 +74,49 @@
         style="width: 100%"
         @sort-change="handleSortChange"
         @selection-change="handleSelectionChange"
+        :scrollbar="{ minSize: 10 }"
       >
-        <el-table-column type="selection" width="55" />
-        <el-table-column type="index" label="序号" width="60" align="center" />
+        <el-table-column type="selection" width="50" />
+        <el-table-column type="index" label="序号" width="55" align="center" />
 
-        <el-table-column prop="complaintId" label="投诉编号" width="120" sortable>
+        <el-table-column prop="antiFakeCode" label="防伪码" min-width="130" sortable>
           <template #default="{ row }">
-            <el-tag type="info">{{ row.complaintId }}</el-tag>
+            <el-tag type="info" size="small">{{ row.antiFakeCode || '-' }}</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column prop="antiFakeCode" label="防伪码" width="150" sortable>
-          <template #default="{ row }">
-            <el-tag type="info">{{ row.antiFakeCode }}</el-tag>
-          </template>
-        </el-table-column>
-
-        <el-table-column prop="productName" label="产品名称" width="150" sortable>
+        <el-table-column prop="productName" label="产品名称" min-width="120" sortable>
           <template #default="{ row }">
             <span>{{ row.productName || '未知产品' }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column prop="batchNumber" label="批次号" width="120" sortable>
+        <el-table-column prop="batchNumber" label="批次号" min-width="100" sortable>
           <template #default="{ row }">
-            <el-tag type="info">{{ row.batchNumber || '未知批次' }}</el-tag>
+            <el-tag type="info" size="small">{{ row.batchNumber || '-' }}</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column prop="complaintContent" label="投诉内容" minWidth="200">
+        <el-table-column prop="complaintContent" label="投诉内容" min-width="150">
           <template #default="{ row }">
             <div class="content-truncate" :title="row.complaintContent">
-              {{ truncateContent(row.complaintContent, 50) }}
+              {{ truncateContent(row.complaintContent, 30) }}
             </div>
           </template>
         </el-table-column>
 
-        <el-table-column prop="complaintTime" label="投诉时间" width="180" sortable>
+        <el-table-column prop="complaintTime" label="投诉时间" width="150" sortable>
           <template #default="{ row }">
             {{ formatDateTime(row.complaintTime) }}
           </template>
         </el-table-column>
 
         <!-- 操作列 - 删除按钮 -->
-        <el-table-column label="操作" width="100" align="center" fixed="right">
+        <el-table-column label="操作" width="80" align="center">
           <template #default="{ row }">
             <el-button
               type="danger"
               size="small"
-              :icon="Delete"
               @click="handleDelete(row)"
               :loading="deletingId === row.complaintId"
             >
@@ -686,12 +680,37 @@ const formatDateTime = (dateString) => {
     align-items: flex-start;
   }
 
-  .filter-section .el-row {
-    margin-bottom: 0;
+  .filter-section :deep(.el-row) {
+    flex-direction: column;
   }
 
-  .filter-section .el-col {
+  .filter-section :deep(.el-col) {
+    width: 100% !important;
     margin-bottom: 0.75rem;
+  }
+
+  .table-section :deep(.el-table) {
+    font-size: 0.85rem;
+  }
+
+  .table-section :deep(.el-table__header) {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .complaint-admin-container {
+    padding: 0.75rem;
+  }
+
+  .table-section {
+    padding: 0.75rem;
+    overflow-x: auto;
+  }
+
+  .pagination-section {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
 </style>
