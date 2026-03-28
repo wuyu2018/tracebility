@@ -10,6 +10,7 @@ public interface ProductService {
     Product createProduct(ProductDTO dto);
     Product updateProduct(Long id, ProductDTO dto);
     void deleteProduct(Long id);
+    void clearQrCode(Long id);
     List<Product> listAllProducts();
     List<Product> searchProducts(String keyword);
     Product getProductById(Long id);
