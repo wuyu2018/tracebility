@@ -137,10 +137,10 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             transportSaleRepository.findById(batch.getTransportSaleId()).ifPresent(ts -> {
                 TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
                 transportInfo.setTransportTime(ts.getTime());
-                transportInfo.setTransportCompany(ts.getTransportCompany());
-                transportInfo.setVehicleNumber(ts.getVehicleNumber());
+                transportInfo.setTransportCompany(null);
+                transportInfo.setVehicleNumber(null);
                 transportInfo.setSalesRegion(ts.getSalesRegion());
-                transportInfo.setReceiverName(ts.getReceiverName());
+                transportInfo.setReceiverName(null);
                 dto.setTransportSale(transportInfo);
             });
         }
