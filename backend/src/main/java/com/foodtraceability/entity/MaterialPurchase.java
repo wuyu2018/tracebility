@@ -9,7 +9,9 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "material_purchase")
+@Table(name = "material_purchase", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"product_id", "batch_number"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,7 +30,7 @@ public class MaterialPurchase {
     @Column(name = "material_name", nullable = false, length = 100)
     private String materialName;
 
-    @Column(name = "batch_number", nullable = false, unique = true, length = 50)
+    @Column(name = "batch_number", nullable = false, length = 50)
     private String batchNumber;
 
     @Column(name = "supplier_name", length = 100)
