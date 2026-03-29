@@ -200,8 +200,6 @@ function downloadQrCode(row) {
   })
 }
 
-const verifyUrl = computed(() => getVerifyUrl())
-
 function drawQr() {
   const url = getVerifyUrl()
   if (!qrCanvas.value || !url) return
