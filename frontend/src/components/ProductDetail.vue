@@ -67,9 +67,9 @@
                 <el-tag v-else type="info" size="small">无</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="qrCodeUrl" label="二维码">
+            <el-table-column prop="antiFakeCode" label="二维码">
               <template #default="{ row }">
-                <el-tag v-if="row.qrCodeUrl" type="success" size="small">有</el-tag>
+                <el-tag v-if="row.antiFakeCode" type="success" size="small">有</el-tag>
                 <el-tag v-else type="info" size="small">无</el-tag>
               </template>
             </el-table-column>
