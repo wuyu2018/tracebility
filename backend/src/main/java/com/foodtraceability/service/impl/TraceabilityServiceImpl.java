@@ -57,7 +57,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             securityCodeRepository.save(securityCode);
         }
 
-        return Optional.of(buildTraceInfoDTO(product, batch, securityCode));
+        return Optional.of(buildTraceInfoDTO(product, batch, securityCode, false));
     }
 
     @Override
@@ -72,10 +72,26 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         ProductionBatch batch = batchOpt.get();
         Product product = batch.getProduct();
 
-        return Optional.of(buildTraceInfoDTO(product, batch, null));
+        return Optional.of(buildTraceInfoDTO(product, batch, null, false));
     }
 
-    private TraceInfoDTO buildTraceInfoDTO(Product product, ProductionBatch batch, SecurityCode securityCode) {
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<TraceInfoDTO> getTraceInfoByCodeForAdmin(String code) {
+        Optional<SecurityCode> securityCodeOpt = securityCodeRepository.findByCode(code);
+        
+        if (securityCodeOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        SecurityCode securityCode = securityCodeOpt.get();
+        ProductionBatch batch = securityCode.getBatch();
+        Product product = batch.getProduct();
+
+        return Optional.of(buildTraceInfoDTO(product, batch, securityCode, true));
+    }
+
+    private TraceInfoDTO buildTraceInfoDTO(Product product, ProductionBatch batch, SecurityCode securityCode, boolean forAdmin) {
         TraceInfoDTO dto = new TraceInfoDTO();
 
         TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
@@ -137,10 +153,16 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             transportSaleRepository.findById(batch.getTransportSaleId()).ifPresent(ts -> {
                 TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
                 transportInfo.setTransportTime(ts.getTime());
-                transportInfo.setTransportCompany(null);
-                transportInfo.setVehicleNumber(null);
+                if (forAdmin) {
+                    transportInfo.setTransportCompany(ts.getTransportCompany());
+                    transportInfo.setVehicleNumber(ts.getVehicleNumber());
+                    transportInfo.setReceiverName(ts.getReceiverName());
+                } else {
+                    transportInfo.setTransportCompany(null);
+                    transportInfo.setVehicleNumber(null);
+                    transportInfo.setReceiverName(null);
+                }
                 transportInfo.setSalesRegion(ts.getSalesRegion());
-                transportInfo.setReceiverName(null);
                 dto.setTransportSale(transportInfo);
             });
         }
@@ -150,7 +172,6 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             dto.setFirstScanTime(securityCode.getFirstScanTime());
             dto.setScanCount(securityCode.getScanCount());
             
-            // 判断是否被查询过
             if (securityCode.getScanCount() != null && securityCode.getScanCount() > 1) {
                 dto.setIsQueried(true);
                 dto.setQueryTip("该产品已被查询过 " + (securityCode.getScanCount() - 1) + " 次，首次查询时间：" + securityCode.getFirstScanTime());

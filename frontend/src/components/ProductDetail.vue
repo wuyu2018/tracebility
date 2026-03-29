@@ -367,7 +367,7 @@ async function viewProductTrace(product) {
   traceDialogVisible.value = true
   
   try {
-    const res = await axios.get(`${API_BASE}/product-detail?antiFakeCode=${encodeURIComponent(product.antiFakeCode)}`)
+    const res = await axios.get(`${API_BASE}/admin/product-detail?antiFakeCode=${encodeURIComponent(product.antiFakeCode)}`)
     if (res.data && !res.data.error) {
       currentTrace.value = res.data
     } else {
