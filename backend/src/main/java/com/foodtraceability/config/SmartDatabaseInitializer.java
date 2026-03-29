@@ -91,11 +91,15 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         productRepository.saveAll(products);
         log.info("[数据库初始化] 产品数据初始化完成");
 
-        Admin admin = new Admin();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        adminRepository.save(admin);
-        log.info("[数据库初始化] 管理员账号初始化完成 (admin/admin123)");
+        if (adminRepository.findByUsername("admin").isEmpty()) {
+            Admin admin = new Admin();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            adminRepository.save(admin);
+            log.info("[数据库初始化] 管理员账号初始化完成 (admin/admin123)");
+        } else {
+            log.info("[数据库初始化] 管理员账号已存在，跳过初始化");
+        }
     }
 
     private Product createProduct(String name, String specification, String shelfLife, String imageUrl, String phone, String email) {
