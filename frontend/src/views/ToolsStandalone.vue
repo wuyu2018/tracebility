@@ -200,28 +200,6 @@ function downloadQrCode(row) {
   })
 }
 
-function drawQr() {
-  const url = getVerifyUrl()
-  if (!qrCanvas.value || !url) return
-  QRCode.toCanvas(qrCanvas.value, url, {
-    width: 200,
-    margin: 2,
-  }, (err) => {
-    if (err) console.error(err)
-  })
-}
-
-function downloadQr() {
-  const url = getVerifyUrl()
-  if (!url) return
-  QRCode.toDataURL(url, { width: 400, margin: 2 }).then((dataUrl) => {
-    const a = document.createElement('a')
-    a.href = dataUrl
-    a.download = '防伪验证二维码.png'
-    a.click()
-  })
-}
-
 async function loadProductList() {
   try {
     const response = await fetch('/api/insert/products/list', {
@@ -276,19 +254,6 @@ function selectAllPending() {
 function clearPendingSelection() {
   pendingTable.value?.clearSelection()
   selectedPendingProducts.value = []
-}
-
-function downloadQrCode(row) {
-  if (!row.antiFakeCode) {
-    ElMessage.warning('该产品暂无防伪码')
-    return
-  }
-  QRCode.toDataURL(row.antiFakeCode, { width: 300, margin: 2 }).then((dataUrl) => {
-    const a = document.createElement('a')
-    a.href = dataUrl
-    a.download = `防伪码_${row.antiFakeCode}.png`
-    a.click()
-  })
 }
 
 async function generateQrCodeForProduct(row) {
