@@ -187,7 +187,7 @@
           <div v-if="currentBatch" class="current-batch-info">
             <el-alert type="info" :closable="false">
               <template #title>
-                当前批次：{{ currentBatch.batchNumber }} - {{ currentBatch.product.name }}
+                当前批次：{{ currentBatch.batchNumber }} - {{ currentBatch.productName }}
               </template>
             </el-alert>
           </div>
@@ -225,7 +225,7 @@
       <div v-if="batchDetail" class="batch-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="批次号">{{ batchDetail.batchNumber }}</el-descriptions-item>
-          <el-descriptions-item label="产品名称">{{ batchDetail.product?.name }}</el-descriptions-item>
+          <el-descriptions-item label="产品名称">{{ batchDetail.productName }}</el-descriptions-item>
           <el-descriptions-item label="生产日期">{{ batchDetail.productionDate }}</el-descriptions-item>
           <el-descriptions-item label="保质期">{{ batchDetail.shelfLife }}</el-descriptions-item>
           <el-descriptions-item label="数量">{{ batchDetail.quantity }} {{ batchDetail.unit }}</el-descriptions-item>

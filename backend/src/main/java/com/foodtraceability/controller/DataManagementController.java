@@ -138,6 +138,18 @@ public class DataManagementController {
         }
     }
 
+    @GetMapping("/admin/product-detail")
+    public ResponseEntity<?> getProductDetailForAdmin(@RequestParam String antiFakeCode) {
+        try {
+            return traceabilityService.getTraceInfoByCodeForAdmin(antiFakeCode)
+                    .map(result -> ResponseEntity.ok((Object) result))
+                    .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
+        } catch (Exception e) {
+            log.error("[管理员产品详情] 获取失败 - 防伪码: {}, 错误: {}", maskCode(antiFakeCode), e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     private String maskCode(String code) {
         if (code == null || code.length() <= 8) {
             return "***";
