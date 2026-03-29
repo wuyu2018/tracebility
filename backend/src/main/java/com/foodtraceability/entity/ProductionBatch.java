@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "production_batch")
+@Table(name = "production_batch", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"product_id", "batch_number"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,7 +23,7 @@ public class ProductionBatch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "batch_number", nullable = false, unique = true, length = 50)
+    @Column(name = "batch_number", nullable = false, length = 50)
     private String batchNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
