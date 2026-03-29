@@ -171,7 +171,7 @@
           <el-table :data="batches" style="width: 100%">
             <el-table-column prop="id" label="ID" width="60" />
             <el-table-column prop="batchNumber" label="批次号" />
-            <el-table-column prop="product.name" label="产品名称" />
+            <el-table-column prop="productName" label="产品名称" />
             <el-table-column prop="productionDate" label="生产日期" />
             <el-table-column label="操作" width="200">
               <template #default="scope">
@@ -184,15 +184,29 @@
 
         <div v-show="currentStep === 3" class="step-panel">
           <h2>防伪码管理</h2>
+          
+          <el-divider>已生成批次</el-divider>
+          <el-table :data="batches" style="width: 100%" @row-click="selectBatch" highlight-current-row>
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="batchNumber" label="批次号" />
+            <el-table-column prop="productName" label="产品名称" />
+            <el-table-column prop="productionDate" label="生产日期" />
+            <el-table-column label="操作" width="100">
+              <template #default="scope">
+                <el-button type="info" size="small" @click.stop="viewBatchDetail(scope.row)">详情</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
           <div v-if="currentBatch" class="current-batch-info">
-            <el-alert type="info" :closable="false">
+            <el-alert type="success" :closable="false">
               <template #title>
-                当前批次：{{ currentBatch.batchNumber }} - {{ currentBatch.productName }}
+                已选择批次：{{ currentBatch.batchNumber }} - {{ currentBatch.productName }}
               </template>
             </el-alert>
           </div>
           <div v-else class="no-batch">
-            <el-empty description="请先在生产批次中选择一个批次" />
+            <el-empty description="请点击上方批次列表选择批次" />
           </div>
 
           <div class="code-generation" v-if="currentBatch">
@@ -510,6 +524,11 @@ function resetBatchForm() {
     else if (typeof batchForm[k] === 'string') batchForm[k] = ''
     else batchForm[k] = null
   })
+}
+
+function selectBatch(row) {
+  currentBatch.value = row
+  loadSecurityCodes(row.id)
 }
 
 function goToSecurityCode(batch) {
