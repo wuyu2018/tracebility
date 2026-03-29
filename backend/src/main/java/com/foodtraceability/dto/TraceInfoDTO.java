@@ -86,5 +86,6 @@ public class TraceInfoDTO {
         private String vehicleNumber;
         private String salesRegion;
         private String receiverName;
+        private String receiverContact;
     }
 }
