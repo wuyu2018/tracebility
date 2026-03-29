@@ -157,10 +157,12 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                     transportInfo.setTransportCompany(ts.getTransportCompany());
                     transportInfo.setVehicleNumber(ts.getVehicleNumber());
                     transportInfo.setReceiverName(ts.getReceiverName());
+                    transportInfo.setReceiverContact(ts.getReceiverContact());
                 } else {
                     transportInfo.setTransportCompany(null);
                     transportInfo.setVehicleNumber(null);
                     transportInfo.setReceiverName(null);
+                    transportInfo.setReceiverContact(null);
                 }
                 transportInfo.setSalesRegion(ts.getSalesRegion());
                 dto.setTransportSale(transportInfo);
