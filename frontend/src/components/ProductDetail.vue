@@ -167,7 +167,7 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog v-model="traceDialogVisible" title="产品完整溯源链路" width="800px" destroy-on-close>
+    <el-dialog v-model="traceDialogVisible" title="产品完整溯源链路" width="95%" destroy-on-close class="product-trace-dialog">
       <div v-if="currentTrace" class="trace-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="产品名称">{{ currentTrace.product?.name }}</el-descriptions-item>
@@ -230,7 +230,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-model="batchDialogVisible" title="批次详情" width="700px" destroy-on-close>
+    <el-dialog v-model="batchDialogVisible" title="批次详情" width="95%" destroy-on-close class="batch-detail-dialog">
       <div v-if="currentBatch" class="batch-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="批次号">{{ currentBatch.batchNumber }}</el-descriptions-item>
@@ -451,11 +451,13 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .stats-row {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 0.5rem 0;
   flex-wrap: wrap;
 }
@@ -464,17 +466,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 60px;
+  min-width: 50px;
+  padding: 0.5rem;
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-primary);
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
 }
 
@@ -484,6 +487,7 @@ onMounted(() => {
 
 .tab-content {
   padding: 1rem 0;
+  overflow-x: auto;
 }
 
 .tab-content h3 {
@@ -495,16 +499,17 @@ onMounted(() => {
 .search-section {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid #eee;
+  flex-wrap: wrap;
 }
 
 .section-title {
-  margin: 1.5rem 0 0.75rem;
+  margin: 1rem 0 0.5rem;
   padding: 0.5rem 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--color-primary);
   border-bottom: 2px solid var(--color-accent-light);
 }
@@ -522,12 +527,99 @@ onMounted(() => {
 }
 
 .trace-detail {
-  max-height: 60vh;
+  max-height: 70vh;
   overflow-y: auto;
 }
 
 .batch-detail {
-  max-height: 60vh;
+  max-height: 70vh;
   overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .product-detail {
+    padding: 0.5rem 0;
+  }
+  
+  .info-card :deep(.el-card__header) {
+    padding: 1rem 0.75rem;
+  }
+  
+  .stats-row {
+    gap: 0.5rem;
+  }
+  
+  .stat-item {
+    min-width: 40px;
+    padding: 0.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+  
+  .stat-label {
+    font-size: 0.65rem;
+  }
+  
+  .tab-content :deep(.el-table) {
+    font-size: 0.8rem;
+  }
+  
+  .tab-content :deep(.el-table__header th),
+  .tab-content :deep(.el-table__body td) {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-section :deep(.el-input) {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-item {
+    min-width: 35px;
+    padding: 0.2rem;
+  }
+  
+  .stat-value {
+    font-size: 0.9rem;
+  }
+  
+  .stat-label {
+    font-size: 0.6rem;
+  }
+  
+  .tab-content h3 {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-trace-dialog :deep(.el-dialog),
+  .batch-detail-dialog :deep(.el-dialog) {
+    max-width: 95%;
+    margin: 1vh auto;
+  }
+  
+  .trace-detail :deep(.el-descriptions),
+  .batch-detail :deep(.el-descriptions) {
+    font-size: 0.85rem;
+  }
+  
+  .trace-detail :deep(.el-descriptions__cell),
+  .batch-detail :deep(.el-descriptions__cell) {
+    padding: 0.5rem;
+  }
+  
+  .trace-detail :deep(.el-table),
+  .batch-detail :deep(.el-table) {
+    font-size: 0.8rem;
+  }
 }
 </style>
