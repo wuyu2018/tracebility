@@ -158,6 +158,48 @@ function getVerifyUrl() {
   return window.location.origin + '/'
 }
 
+function getVerifyUrlWithCode(code) {
+  return getVerifyUrl() + '?code=' + code
+}
+
+const verifyUrl = computed(() => getVerifyUrl())
+
+function drawQr() {
+  const url = getVerifyUrl()
+  if (!qrCanvas.value || !url) return
+  QRCode.toCanvas(qrCanvas.value, url, {
+    width: 200,
+    margin: 2,
+  }, (err) => {
+    if (err) console.error(err)
+  })
+}
+
+function downloadQr() {
+  const url = getVerifyUrl()
+  if (!url) return
+  QRCode.toDataURL(url, { width: 400, margin: 2 }).then((dataUrl) => {
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = '防伪验证二维码.png'
+    a.click()
+  })
+}
+
+function downloadQrCode(row) {
+  if (!row.antiFakeCode) {
+    ElMessage.warning('该产品暂无防伪码')
+    return
+  }
+  const url = getVerifyUrlWithCode(row.antiFakeCode)
+  QRCode.toDataURL(url, { width: 300, margin: 2 }).then((dataUrl) => {
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `防伪码_${row.antiFakeCode}.png`
+    a.click()
+  })
+}
+
 const verifyUrl = computed(() => getVerifyUrl())
 
 function drawQr() {
@@ -340,7 +382,8 @@ function batchDownloadQrCodes() {
   selectedProducts.value.forEach((product, index) => {
     if (product.antiFakeCode) {
       setTimeout(() => {
-        QRCode.toDataURL(product.antiFakeCode, { width: 300, margin: 2 }).then((dataUrl) => {
+        const url = getVerifyUrlWithCode(product.antiFakeCode)
+        QRCode.toDataURL(url, { width: 300, margin: 2 }).then((dataUrl) => {
           const a = document.createElement('a')
           a.href = dataUrl
           a.download = `防伪码_${product.antiFakeCode}.png`
