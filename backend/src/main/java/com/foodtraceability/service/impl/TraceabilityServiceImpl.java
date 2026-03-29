@@ -102,6 +102,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setImageUrl(product.getImageUrl());
         productInfo.setContactPhone(product.getContactPhone());
         productInfo.setContactEmail(product.getContactEmail());
+        productInfo.setAntiFakeCode(product.getAntiFakeCode());
         dto.setProduct(productInfo);
 
         TraceInfoDTO.BatchInfo batchInfo = new TraceInfoDTO.BatchInfo();
