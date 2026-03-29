@@ -46,7 +46,6 @@
             <el-table-column prop="id" label="ID" width="60" />
             <el-table-column prop="name" label="产品名称" />
             <el-table-column prop="specification" label="规格" />
-            <el-table-column prop="batchNumber" label="批号" />
             <el-table-column prop="antiFakeCode" label="防伪码">
               <template #default="{ row }">
                 <el-tag v-if="row.antiFakeCode" type="warning" size="small">{{ row.antiFakeCode }}</el-tag>

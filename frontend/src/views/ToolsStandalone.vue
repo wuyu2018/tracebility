@@ -46,8 +46,7 @@
             >
               <el-table-column type="selection" width="55" />
               <el-table-column prop="name" label="产品名称" />
-              <el-table-column prop="batchNumber" label="批号" />
-              <el-table-column prop="antiFakeCode" label="防伪码" />
+                <el-table-column prop="antiFakeCode" label="防伪码" />
             </el-table>
             
             <div class="overview-actions" style="margin-top: 1rem;">
