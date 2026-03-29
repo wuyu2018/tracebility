@@ -166,20 +166,6 @@
             <el-button type="primary" @click="submitBatch" :loading="loading">生成批次</el-button>
             <el-button @click="resetBatchForm">重置</el-button>
           </div>
-
-          <el-divider>已生成批次</el-divider>
-          <el-table :data="batches" style="width: 100%">
-            <el-table-column prop="id" label="ID" width="60" />
-            <el-table-column prop="batchNumber" label="批次号" />
-            <el-table-column prop="productName" label="产品名称" />
-            <el-table-column prop="productionDate" label="生产日期" />
-            <el-table-column label="操作" width="200">
-              <template #default="scope">
-                <el-button type="success" size="small" @click="goToSecurityCode(scope.row)">生成防伪码</el-button>
-                <el-button type="primary" size="small" @click="viewBatchDetail(scope.row)">详情</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
         </div>
 
         <div v-show="currentStep === 3" class="step-panel">
