@@ -71,8 +71,9 @@
 
 <script setup>
 import { ref, reactive, onMounted ,nextTick } from 'vue'
-import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { adminLogin, storeCaptcha } from '../services/api'
+import { setToken, setUsername } from '../utils/auth'
 
 // Use same-origin path so HTTPS/TLS is always respected in production.
 const API_BASE_URL = '/api'
@@ -103,10 +104,7 @@ const generateCaptcha = () => {
   credentials.captchaInput = ''
   
   if (credentials.username && credentials.username.trim()) {
-    axios.post(`${API_BASE_URL}/captcha`, {
-      username: credentials.username,
-      captcha: captcha
-    }).catch(err => {
+    storeCaptcha(credentials.username, captcha).catch(err => {
       console.error('验证码存储失败:', err)
     })
   }
@@ -132,32 +130,38 @@ const handleLogin = async () => {
   errorMsg.value = '' 
 
   try {
-    await axios.post(`${API_BASE_URL}/captcha`, {
-      username: credentials.username,
-      captcha: currentCaptcha.value
-    })
+    // 先存储验证码
+    await storeCaptcha(credentials.username, currentCaptcha.value)
     
-    const response = await axios.post(`${API_BASE_URL}/login`, {
-      username: credentials.username,
-      password: credentials.password,
-      captcha: credentials.captchaInput
-    })
+    // 登录获取 JWT Token
+    const response = await adminLogin(
+      credentials.username,
+      credentials.password,
+      credentials.captchaInput
+    )
 
+    // 保存 Token 和用户信息
+    setToken(response.data.token, response.data.tokenType)
+    setUsername(response.data.username)
+    
     loginSuccess.value = true
     adminUsername.value = response.data.username
     localStorage.setItem('adminUsername', response.data.username)
     errorMsg.value = ''
+    
     // 使用完整 URL，避免在网关/非根路径部署时跳转失败
     window.location.assign(`${window.location.origin}/ToolsStandalone`)
     return 
   } catch (error) {
     console.error('登录失败:', error)
     if (error.response) {
-      errorMsg.value = error.response.data
+      errorMsg.value = error.response.data?.message || error.response.data || '登录失败'
       console.error('错误详情:', error.response.data);
-    }else if (error.request) {
+    } else if (error.request) {
       errorMsg.value = '网络错误，请稍后重试'
-    } 
+    } else {
+      errorMsg.value = error.message || '登录失败，请稍后重试'
+    }
     generateCaptcha()
   } finally {
     loading.value = false

@@ -21,6 +21,12 @@
                   <span>公司与产品介绍</span>
                 </button>
               </li>
+              <li v-if="isAdminLoggedIn">
+                <button type="button" class="dropdown-item" @click="handleLogout">
+                  <span class="item-icon">🚪</span>
+                  <span>退出登录</span>
+                </button>
+              </li>
             </ul>
           </transition>
         </div>
@@ -30,12 +36,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { isAuthenticated, removeToken } from '../utils/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const isOpen = ref(false)
 const dropdownRef = ref(null)
+
+const isAdminLoggedIn = computed(() => isAuthenticated())
+
+const handleLogout = () => {
+  isOpen.value = false
+  removeToken()
+  ElMessage.success('已退出登录')
+  router.push('/')
+}
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value

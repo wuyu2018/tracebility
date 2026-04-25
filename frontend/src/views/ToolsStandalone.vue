@@ -1,5 +1,11 @@
 <template>
   <div class="tools-standalone">
+    <!-- 顶部用户信息栏 -->
+    <div class="user-bar" v-if="isAdminLoggedIn">
+      <span class="user-info">👤 {{ username }}</span>
+      <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
+    </div>
+
     <!-- 添加标签页切换 -->
     <el-tabs v-model="activeTab" class="tools-tabs">
       <el-tab-pane label="防伪工具" name="security">
@@ -126,9 +132,22 @@ import ProductDetail from '../components/ProductDetail.vue'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
+import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const activeTab = ref('security')
 const qrCanvas = ref(null)
+
+// 认证状态
+const isAdminLoggedIn = computed(() => isAuthenticated())
+const username = computed(() => getUsername() || '管理员')
+
+const handleLogout = () => {
+  removeToken()
+  ElMessage.success('已退出登录')
+  router.push('/admin')
+}
 
 // 二维码生成相关
 const productList = ref([])
@@ -406,8 +425,29 @@ onMounted(() => {
   min-height: 100vh;
   background: var(--color-bg);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   padding: 2rem 1rem;
+}
+
+.user-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.user-info {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 .tools-standalone :deep(.el-tabs__content) {

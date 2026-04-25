@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -7,7 +7,42 @@ const api = axios.create({
   },
 })
 
-export async function verifyAntiFakeCodeGet(code) {
+// ==================== 认证相关 ====================
+
+/**
+ * 存储验证码
+ */
+export async function storeCaptcha(username, captcha) {
+  const { data } = await api.post('/captcha', { username, captcha })
+  return data
+}
+
+/**
+ * 管理员登录
+ */
+export async function adminLogin(username, password, captcha) {
+  const { data } = await api.post('/login', {
+    username,
+    password,
+    captcha
+  })
+  return data
+}
+
+/**
+ * 管理员注册
+ */
+export async function registerAdmin(username, password, currentPassword, currentAdminUsername) {
+  const { data } = await api.post('/admin/register', {
+    username,
+    password,
+    currentPassword,
+    currentAdminUsername
+  })
+  return data
+}
+
+// ==================== 防伪验证 ====================
   const { data } = await api.get('/verify', { params: { code } })
   return data
 }
