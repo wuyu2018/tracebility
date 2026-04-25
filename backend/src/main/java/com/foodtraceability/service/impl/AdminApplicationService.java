@@ -45,7 +45,7 @@ public class AdminApplicationService implements AdminService {
         String captcha = loginDTO.getCaptcha();
 
         checkAccountLockStatus(username);
-        // validateCaptcha(username, captcha);  // 暂时禁用验证码
+        validateCaptcha(username, captcha);
         Admin admin = findAdminByUsernameAndValidatePassword(username, password);
 
         loginAttemptService.loginSucceeded(username);
