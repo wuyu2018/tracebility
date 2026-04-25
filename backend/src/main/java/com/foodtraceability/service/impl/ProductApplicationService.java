@@ -44,7 +44,32 @@ public class ProductApplicationService implements ProductService {
     public Product updateProduct(Long id, ProductDTO dto) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new DomainException("产品不存在"));
-        BeanUtils.copyProperties(dto, entity);
+
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
+        }
+        if (dto.getSpecification() != null) {
+            entity.setSpecification(dto.getSpecification());
+        }
+        if (dto.getShelfLife() != null) {
+            entity.setShelfLife(dto.getShelfLife());
+        }
+        if (dto.getImageUrl() != null) {
+            entity.setImageUrl(dto.getImageUrl());
+        }
+        if (dto.getContactPhone() != null) {
+            entity.setContactPhone(dto.getContactPhone());
+        }
+        if (dto.getContactEmail() != null) {
+            entity.setContactEmail(dto.getContactEmail());
+        }
+        if (dto.getQrCodeUrl() != null) {
+            entity.setQrCodeUrl(dto.getQrCodeUrl());
+        }
+        if (dto.getAntiFakeCode() != null) {
+            entity.setAntiFakeCode(dto.getAntiFakeCode());
+        }
+
         return repository.save(entity);
     }
 
