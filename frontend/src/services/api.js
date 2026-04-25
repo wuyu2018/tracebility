@@ -186,3 +186,66 @@ export async function batchDeleteProducts(productIds) {
   const { data } = await api.post('/insert/products/batch-delete', { productIds });
   return data;
 }
+
+// ==================== 产品详情查询 ====================
+
+export async function getProductDetail(antiFakeCode) {
+  const { data } = await api.get('/product-detail', { params: { antiFakeCode } });
+  return data;
+}
+
+export async function getAdminProductDetail(antiFakeCode) {
+  const { data } = await api.get('/admin/product-detail', { params: { antiFakeCode } });
+  return data;
+}
+
+// ==================== 数据导入接口 ====================
+
+export async function getProductsForInsert() {
+  const { data } = await api.post('/insert/products/list');
+  return data;
+}
+
+export async function insertMaterialPurchase(data) {
+  const { data: responseData } = await api.post('/insert/material-purchase', data);
+  return responseData;
+}
+
+export async function getInsertMaterials(productId) {
+  const params = productId ? `?productId=${productId}` : '';
+  const { data } = await api.get(`/insert/materials${params}`);
+  return data;
+}
+
+export async function deleteInsertMaterialPurchase(id) {
+  const { data } = await api.delete(`/insert/material-purchase/${id}`);
+  return data;
+}
+
+export async function getInsertBatches(productId) {
+  const params = productId ? `?productId=${productId}` : '';
+  const { data } = await api.get(`/insert/batches${params}`);
+  return data;
+}
+
+export async function getAllInspections() {
+  const { data } = await api.get('/insert/inspections');
+  return data;
+}
+
+export async function getAllStorages() {
+  const { data } = await api.get('/insert/storages');
+  return data;
+}
+
+export async function getAllTransportSales() {
+  const { data } = await api.get('/insert/transport-sales');
+  return data;
+}
+
+// ==================== 批量操作 ====================
+
+export async function batchDeleteComplaints(ids) {
+  const { data } = await api.delete('/deleteComplaintInfo/batch', { data: ids });
+  return data;
+}

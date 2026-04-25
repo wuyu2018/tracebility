@@ -211,7 +211,8 @@ import {
 import {
   getAllComplaintInfo,
   listAllProducts,
-  deleteComplaintInfo
+  deleteComplaintInfo,
+  batchDeleteComplaints
 } from '../services/api'
 
 const loading = ref(false)
@@ -408,14 +409,12 @@ const confirmBatchDelete = async () => {
   const complaintIds = selectedComplaints.value.map(c => c.complaintId)
 
   try {
-    for (const id of complaintIds) {
-      await deleteComplaintInfo(id)
-    }
+    const response = await batchDeleteComplaints(complaintIds)
 
     const deletedIds = new Set(complaintIds)
     complaints.value = complaints.value.filter(item => !deletedIds.has(item.complaintId))
 
-    ElMessage.success(`批量删除成功，共删除 ${complaintIds.length} 条投诉`)
+    ElMessage.success(`批量删除成功，共删除 ${response.successCount || complaintIds.length} 条投诉`)
     batchDeleteDialogVisible.value = false
     selectedComplaints.value = []
 
