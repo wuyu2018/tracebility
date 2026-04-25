@@ -26,6 +26,9 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private CaptchaStorage captchaStorage;
+
     @Override
     public LoginResponseDTO login(AdminLoginDTO loginDTO) {
         String username = loginDTO.getUsername();
@@ -36,7 +39,7 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("验证码不能为空");
         }
 
-        String expectedCaptcha = CaptchaStorage.getCaptcha(username);
+        String expectedCaptcha = captchaStorage.getCaptcha(username);
         if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
             throw new BusinessException("验证码错误");
         }
