@@ -7,10 +7,10 @@ import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.AdminRepository;
 import com.foodtraceability.service.AdminService;
 import com.foodtraceability.util.CaptchaStorage;
+import com.foodtraceability.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -21,10 +21,10 @@ public class AdminServiceImpl implements AdminService {
     private AdminRepository adminRepository;
 
     @Autowired
-    private CaptchaStorage captchaStorage;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private JwtTokenProvider jwtTokenProvider;
 
     @Override
     public LoginResponseDTO login(AdminLoginDTO loginDTO) {
@@ -36,7 +36,7 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("验证码不能为空");
         }
 
-        String expectedCaptcha = captchaStorage.getCaptcha(username);
+        String expectedCaptcha = CaptchaStorage.getCaptcha(username);
         if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
             throw new BusinessException("验证码错误");
         }
@@ -52,8 +52,13 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("账号或密码错误");
         }
 
+        String token = jwtTokenProvider.generateTokenByUsername(username);
+
         LoginResponseDTO response = new LoginResponseDTO();
         response.setUsername(admin.getUsername());
+        response.setToken(token);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(jwtTokenProvider.getExpirationTime() / 1000);
 
         return response;
     }
