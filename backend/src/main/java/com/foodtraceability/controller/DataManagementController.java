@@ -318,12 +318,10 @@ public class DataManagementController {
             }
             ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
             SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
-            
-            ProductDTO dto = new ProductDTO();
-            dto.setId(product.getId());
-            dto.setQrCodeUrl("/qrcode/" + product.getId());
-            productService.updateProduct(productId, dto);
-            
+
+            String antiFakeCode = response.getCodes().isEmpty() ? null : response.getCodes().get(0);
+            productService.updateQrCode(productId, "/qrcode/" + product.getId(), antiFakeCode);
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[产品二维码] 生成失败 - 产品ID: {}, 错误: {}", productId, e.getMessage());
@@ -342,13 +340,11 @@ public class DataManagementController {
                     Product product = productService.getProductById(productId);
                     if (product != null) {
                         ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
-                        securityCodeService.generateCodes(batch.getId(), 100);
-                        
-                        ProductDTO dto = new ProductDTO();
-                        dto.setId(product.getId());
-                        dto.setQrCodeUrl("/qrcode/" + product.getId());
-                        productService.updateProduct(productId, dto);
-                        
+                        var response = securityCodeService.generateCodes(batch.getId(), 100);
+
+                        String antiFakeCode = response.getCodes().isEmpty() ? null : response.getCodes().get(0);
+                        productService.updateQrCode(productId, "/qrcode/" + product.getId(), antiFakeCode);
+
                         successCount++;
                     } else {
                         failCount++;

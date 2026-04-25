@@ -44,33 +44,18 @@ public class ProductApplicationService implements ProductService {
     public Product updateProduct(Long id, ProductDTO dto) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new DomainException("产品不存在"));
-
-        if (dto.getName() != null) {
-            entity.setName(dto.getName());
-        }
-        if (dto.getSpecification() != null) {
-            entity.setSpecification(dto.getSpecification());
-        }
-        if (dto.getShelfLife() != null) {
-            entity.setShelfLife(dto.getShelfLife());
-        }
-        if (dto.getImageUrl() != null) {
-            entity.setImageUrl(dto.getImageUrl());
-        }
-        if (dto.getContactPhone() != null) {
-            entity.setContactPhone(dto.getContactPhone());
-        }
-        if (dto.getContactEmail() != null) {
-            entity.setContactEmail(dto.getContactEmail());
-        }
-        if (dto.getQrCodeUrl() != null) {
-            entity.setQrCodeUrl(dto.getQrCodeUrl());
-        }
-        if (dto.getAntiFakeCode() != null) {
-            entity.setAntiFakeCode(dto.getAntiFakeCode());
-        }
-
+        BeanUtils.copyProperties(dto, entity);
         return repository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void updateQrCode(Long id, String qrCodeUrl, String antiFakeCode) {
+        Product entity = repository.findById(id)
+                .orElseThrow(() -> new DomainException("产品不存在"));
+        entity.setQrCodeUrl(qrCodeUrl);
+        entity.setAntiFakeCode(antiFakeCode);
+        repository.save(entity);
     }
 
     @Override
