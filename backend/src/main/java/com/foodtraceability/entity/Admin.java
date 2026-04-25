@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "admin")
@@ -21,4 +22,15 @@ public class Admin {
 
     @Column(name = "password", length = 100, nullable = false)
     private String password;
+
+    public boolean validatePassword(String rawPassword, PasswordEncoder encoder) {
+        return encoder.matches(rawPassword, this.password);
+    }
+
+    public static Admin create(String username, String encodedPassword) {
+        Admin admin = new Admin();
+        admin.setUsername(username);
+        admin.setPassword(encodedPassword);
+        return admin;
+    }
 }

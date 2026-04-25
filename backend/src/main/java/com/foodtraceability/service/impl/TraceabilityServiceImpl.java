@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,52 +15,44 @@ import java.util.stream.Collectors;
 @Service
 public class TraceabilityServiceImpl implements TraceabilityService {
 
-    @Autowired
-    private SecurityCodeRepository securityCodeRepository;
+    private final SecurityCodeRepository securityCodeRepository;
+    private final ProductionBatchRepository batchRepository;
+    private final BatchMaterialRelationRepository relationRepository;
+    private final InspectionRepository inspectionRepository;
+    private final StorageRepository storageRepository;
+    private final TransportSaleRepository transportSaleRepository;
 
     @Autowired
-    private ProductionBatchRepository batchRepository;
-
-    @Autowired
-    private BatchMaterialRelationRepository relationRepository;
-
-    @Autowired
-    private InspectionRepository inspectionRepository;
-
-    @Autowired
-    private StorageRepository storageRepository;
-
-    @Autowired
-    private TransportSaleRepository transportSaleRepository;
+    public TraceabilityServiceImpl(SecurityCodeRepository securityCodeRepository,
+                                   ProductionBatchRepository batchRepository,
+                                   BatchMaterialRelationRepository relationRepository,
+                                   InspectionRepository inspectionRepository,
+                                   StorageRepository storageRepository,
+                                   TransportSaleRepository transportSaleRepository) {
+        this.securityCodeRepository = securityCodeRepository;
+        this.batchRepository = batchRepository;
+        this.relationRepository = relationRepository;
+        this.inspectionRepository = inspectionRepository;
+        this.storageRepository = storageRepository;
+        this.transportSaleRepository = transportSaleRepository;
+    }
 
     @Override
     @Transactional
     public Optional<TraceInfoDTO> getTraceInfoByCode(String code) {
         Optional<SecurityCode> securityCodeOpt = securityCodeRepository.findByCode(code);
-        
+
         if (securityCodeOpt.isEmpty()) {
             return Optional.empty();
         }
 
         SecurityCode securityCode = securityCodeOpt.get();
+        securityCode.recordQueryAndActivateIfNeeded();
+        securityCodeRepository.save(securityCode);
+
         ProductionBatch batch = securityCode.getBatch();
         Product product = batch.getProduct();
 
-        // 判断是否为首次查询
-        boolean isFirstQuery = securityCode.getScanCount() == null || securityCode.getScanCount() == 0;
-        
-        if ("未激活".equals(securityCode.getStatus())) {
-            securityCode.setStatus("已激活");
-            securityCode.setFirstScanTime(LocalDateTime.now());
-            securityCode.setScanCount(1);
-            securityCodeRepository.save(securityCode);
-        } else {
-            securityCode.setScanCount(securityCode.getScanCount() + 1);
-            securityCodeRepository.save(securityCode);
-        }
-
-        // 如果是重复查询（scanCount > 1），返回 valid=false，提示已被查询过
-        // buildTraceInfoDTO 中会设置 isFirstQuery 和 queryTip
         return Optional.of(buildTraceInfoDTO(product, batch, securityCode, false));
     }
 
@@ -69,7 +60,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     @Transactional
     public Optional<TraceInfoDTO> getTraceInfoByBatchNumber(String batchNumber) {
         Optional<ProductionBatch> batchOpt = batchRepository.findByBatchNumberAndIsDeletedFalse(batchNumber);
-        
+
         if (batchOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -84,7 +75,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     @Transactional(readOnly = true)
     public Optional<TraceInfoDTO> getTraceInfoByCodeForAdmin(String code) {
         Optional<SecurityCode> securityCodeOpt = securityCodeRepository.findByCode(code);
-        
+
         if (securityCodeOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -99,6 +90,29 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     private TraceInfoDTO buildTraceInfoDTO(Product product, ProductionBatch batch, SecurityCode securityCode, boolean forAdmin) {
         TraceInfoDTO dto = new TraceInfoDTO();
 
+        dto.setProduct(buildProductInfo(product));
+        dto.setBatch(buildBatchInfo(batch));
+        dto.setMaterials(buildMaterialInfos(batch.getId()));
+        dto.setInspection(findInspection(batch.getId()));
+        dto.setStorage(findStorage(batch.getStorageId()));
+        dto.setTransportSale(findTransportSale(batch.getTransportSaleId(), forAdmin));
+
+        if (securityCode != null) {
+            dto.setStatus(securityCode.getStatus());
+            dto.setFirstScanTime(securityCode.getFirstScanTime());
+            dto.setScanCount(securityCode.getQueryCount());
+            dto.setIsQueried(securityCode.isRepeatedQuery());
+            dto.setQueryTip(buildQueryTip(securityCode));
+        } else {
+            dto.setStatus("未扫码");
+            dto.setIsQueried(false);
+            dto.setQueryTip(null);
+        }
+
+        return dto;
+    }
+
+    private TraceInfoDTO.ProductInfo buildProductInfo(Product product) {
         TraceInfoDTO.ProductInfo productInfo = new TraceInfoDTO.ProductInfo();
         productInfo.setId(product.getId());
         productInfo.setName(product.getName());
@@ -108,18 +122,22 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         productInfo.setContactPhone(product.getContactPhone());
         productInfo.setContactEmail(product.getContactEmail());
         productInfo.setAntiFakeCode(product.getAntiFakeCode());
-        dto.setProduct(productInfo);
+        return productInfo;
+    }
 
+    private TraceInfoDTO.BatchInfo buildBatchInfo(ProductionBatch batch) {
         TraceInfoDTO.BatchInfo batchInfo = new TraceInfoDTO.BatchInfo();
         batchInfo.setId(batch.getId());
         batchInfo.setBatchNumber(batch.getBatchNumber());
         batchInfo.setProductionDate(batch.getProductionDate());
         batchInfo.setShelfLife(batch.getShelfLife());
         batchInfo.setCreatedAt(batch.getCreatedAt());
-        dto.setBatch(batchInfo);
+        return batchInfo;
+    }
 
-        List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batch.getId());
-        List<TraceInfoDTO.MaterialInfo> materials = relations.stream()
+    private List<TraceInfoDTO.MaterialInfo> buildMaterialInfos(Long batchId) {
+        List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batchId);
+        return relations.stream()
                 .map(r -> {
                     MaterialPurchase m = r.getMaterial();
                     TraceInfoDTO.MaterialInfo mi = new TraceInfoDTO.MaterialInfo();
@@ -130,72 +148,65 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                     return mi;
                 })
                 .collect(Collectors.toList());
-        dto.setMaterials(materials);
+    }
 
+    private TraceInfoDTO.InspectionInfo findInspection(Long batchId) {
         List<Inspection> inspections = inspectionRepository.findAll().stream()
-                .filter(i -> i.getBatch().getId().equals(batch.getId()))
+                .filter(i -> batchId.equals(i.getBatch().getId()))
                 .toList();
-        if (!inspections.isEmpty()) {
-            Inspection inspection = inspections.get(0);
-            TraceInfoDTO.InspectionInfo inspectionInfo = new TraceInfoDTO.InspectionInfo();
-            inspectionInfo.setSampleName(inspection.getSampleName());
-            inspectionInfo.setSampleQuantity(inspection.getSampleQuantity());
-            inspectionInfo.setSampleSpecification(inspection.getSampleSpecification());
-            inspectionInfo.setImageUrl(inspection.getImageUrl());
-            dto.setInspection(inspectionInfo);
+        if (inspections.isEmpty()) {
+            return null;
         }
+        Inspection inspection = inspections.get(0);
+        TraceInfoDTO.InspectionInfo inspectionInfo = new TraceInfoDTO.InspectionInfo();
+        inspectionInfo.setSampleName(inspection.getSampleName());
+        inspectionInfo.setSampleQuantity(inspection.getSampleQuantity());
+        inspectionInfo.setSampleSpecification(inspection.getSampleSpecification());
+        inspectionInfo.setImageUrl(inspection.getImageUrl());
+        return inspectionInfo;
+    }
 
-        if (batch.getStorageId() != null) {
-            storageRepository.findById(batch.getStorageId()).ifPresent(storage -> {
-                TraceInfoDTO.StorageInfo storageInfo = new TraceInfoDTO.StorageInfo();
-                storageInfo.setStorageTime(storage.getStorageTime());
-                storageInfo.setOutboundTime(storage.getOutboundTime());
-                storageInfo.setWarehouseLocation(storage.getWarehouseLocation());
-                dto.setStorage(storageInfo);
-            });
+    private TraceInfoDTO.StorageInfo findStorage(Long storageId) {
+        if (storageId == null) {
+            return null;
         }
+        return storageRepository.findById(storageId)
+                .map(storage -> {
+                    TraceInfoDTO.StorageInfo storageInfo = new TraceInfoDTO.StorageInfo();
+                    storageInfo.setStorageTime(storage.getStorageTime());
+                    storageInfo.setOutboundTime(storage.getOutboundTime());
+                    storageInfo.setWarehouseLocation(storage.getWarehouseLocation());
+                    return storageInfo;
+                })
+                .orElse(null);
+    }
 
-        if (batch.getTransportSaleId() != null) {
-            transportSaleRepository.findById(batch.getTransportSaleId()).ifPresent(ts -> {
-                TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
-                transportInfo.setTransportTime(ts.getTime());
-                if (forAdmin) {
-                    transportInfo.setTransportCompany(ts.getTransportCompany());
-                    transportInfo.setVehicleNumber(ts.getVehicleNumber());
-                    transportInfo.setReceiverName(ts.getReceiverName());
-                    transportInfo.setReceiverContact(ts.getReceiverContact());
-                } else {
-                    transportInfo.setTransportCompany(null);
-                    transportInfo.setVehicleNumber(null);
-                    transportInfo.setReceiverName(null);
-                    transportInfo.setReceiverContact(null);
-                }
-                transportInfo.setSalesRegion(ts.getSalesRegion());
-                dto.setTransportSale(transportInfo);
-            });
+    private TraceInfoDTO.TransportSaleInfo findTransportSale(Long transportSaleId, boolean forAdmin) {
+        if (transportSaleId == null) {
+            return null;
         }
+        return transportSaleRepository.findById(transportSaleId)
+                .map(ts -> {
+                    TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
+                    transportInfo.setTransportTime(ts.getTime());
+                    if (forAdmin) {
+                        transportInfo.setTransportCompany(ts.getTransportCompany());
+                        transportInfo.setVehicleNumber(ts.getVehicleNumber());
+                        transportInfo.setReceiverName(ts.getReceiverName());
+                        transportInfo.setReceiverContact(ts.getReceiverContact());
+                    }
+                    transportInfo.setSalesRegion(ts.getSalesRegion());
+                    return transportInfo;
+                })
+                .orElse(null);
+    }
 
-        if (securityCode != null) {
-            dto.setStatus(securityCode.getStatus());
-            dto.setFirstScanTime(securityCode.getFirstScanTime());
-            dto.setScanCount(securityCode.getScanCount());
-            
-            // scanCount > 1 表示已被查询过，标记为 isQueried=true
-            if (securityCode.getScanCount() != null && securityCode.getScanCount() > 1) {
-                dto.setIsQueried(true);
-                dto.setQueryTip("该产品已被查询过 " + (securityCode.getScanCount() - 1) + 
-                               " 次，首次查询时间：" + securityCode.getFirstScanTime() + 
-                               "。重复查询可能是伪品，请谨慎购买！");
-            } else {
-                dto.setIsQueried(false);
-                dto.setQueryTip(null);
-            }
-        } else {
-            dto.setStatus("未扫码");
-            dto.setIsQueried(false);
-            dto.setQueryTip(null);
+    private String buildQueryTip(SecurityCode securityCode) {
+        if (!securityCode.isRepeatedQuery()) {
+            return null;
         }
-
-        return dto;
+        return String.format("该产品已被查询过 %d 次，首次查询时间：%s。重复查询可能是伪品，请谨慎购买！",
+                securityCode.getQueryCount() - 1,
+                securityCode.getFirstScanTime());
     }
 }

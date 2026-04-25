@@ -39,4 +39,8 @@ public class Storage {
 
     @Column(name = "warehouse_location", length = 100)
     private String warehouseLocation;
+
+    public void associateBatch(ProductionBatch batch) {
+        this.batch = batch;
+    }
 }

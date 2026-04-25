@@ -42,4 +42,22 @@ public class Product {
 
     @Column(name = "qr_code_url", length = 500)
     private String qrCodeUrl;
+
+    public boolean isDeleted() {
+        return Boolean.TRUE.equals(this.isDeleted);
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
+    }
+
+    public void clearQrCode() {
+        this.antiFakeCode = null;
+        this.qrCodeUrl = null;
+    }
+
+    public void assignQrCode(String antiFakeCode, String qrCodeUrl) {
+        this.antiFakeCode = antiFakeCode;
+        this.qrCodeUrl = qrCodeUrl;
+    }
 }

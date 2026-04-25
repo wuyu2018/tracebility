@@ -21,28 +21,32 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ProductionBatchServiceImpl implements ProductionBatchService {
-    @Autowired
-    private ProductionBatchRepository batchRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private MaterialPurchaseRepository materialRepository;
-
-    @Autowired
-    private BatchMaterialRelationRepository relationRepository;
-
-    @Autowired
-    private InspectionRepository inspectionRepository;
-
-    @Autowired
-    private StorageRepository storageRepository;
-
-    @Autowired
-    private TransportSaleRepository transportSaleRepository;
+    private final ProductionBatchRepository batchRepository;
+    private final ProductRepository productRepository;
+    private final MaterialPurchaseRepository materialRepository;
+    private final BatchMaterialRelationRepository relationRepository;
+    private final InspectionRepository inspectionRepository;
+    private final StorageRepository storageRepository;
+    private final TransportSaleRepository transportSaleRepository;
 
     private static final AtomicLong batchCounter = new AtomicLong(0);
+
+    @Autowired
+    public ProductionBatchServiceImpl(ProductionBatchRepository batchRepository,
+                                     ProductRepository productRepository,
+                                     MaterialPurchaseRepository materialRepository,
+                                     BatchMaterialRelationRepository relationRepository,
+                                     InspectionRepository inspectionRepository,
+                                     StorageRepository storageRepository,
+                                     TransportSaleRepository transportSaleRepository) {
+        this.batchRepository = batchRepository;
+        this.productRepository = productRepository;
+        this.materialRepository = materialRepository;
+        this.relationRepository = relationRepository;
+        this.inspectionRepository = inspectionRepository;
+        this.storageRepository = storageRepository;
+        this.transportSaleRepository = transportSaleRepository;
+    }
 
     @PostConstruct
     public void initBatchCounter() {
@@ -61,48 +65,64 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
 
-        String batchNumber = generateBatchNumber();
+        ProductionBatch batch = createBatchEntity(dto, product);
+        batch = batchRepository.save(batch);
 
+        associateMaterials(batch, dto.getMaterialIds());
+        associateStorage(batch, dto.getStorage());
+        associateTransportSale(batch, dto.getTransportSale());
+
+        return batch;
+    }
+
+    private ProductionBatch createBatchEntity(ProductionBatchDTO dto, Product product) {
         ProductionBatch batch = new ProductionBatch();
-        batch.setBatchNumber(batchNumber);
+        batch.setBatchNumber(generateBatchNumber());
         batch.setProduct(product);
         batch.setProductionDate(dto.getProductionDate());
         batch.setShelfLife(dto.getShelfLife() != null ? dto.getShelfLife() : product.getShelfLife());
         batch.setQuantity(dto.getQuantity());
         batch.setUnit(dto.getUnit());
         batch.setIsDeleted(false);
-        batch = batchRepository.save(batch);
-
-        if (dto.getMaterialIds() != null && !dto.getMaterialIds().isEmpty()) {
-            for (Long materialId : dto.getMaterialIds()) {
-                MaterialPurchase material = materialRepository.findById(materialId)
-                        .orElseThrow(() -> new RuntimeException("原材料不存在: " + materialId));
-                BatchMaterialRelation relation = new BatchMaterialRelation();
-                relation.setBatch(batch);
-                relation.setMaterial(material);
-                relationRepository.save(relation);
-            }
-        }
-
-        if (dto.getStorage() != null) {
-            Storage storage = new Storage();
-            BeanUtils.copyProperties(dto.getStorage(), storage);
-            storage.setBatch(batch);
-            storage = storageRepository.save(storage);
-            batch.setStorageId(storage.getId());
-            batchRepository.save(batch);
-        }
-
-        if (dto.getTransportSale() != null) {
-            TransportSale transportSale = new TransportSale();
-            BeanUtils.copyProperties(dto.getTransportSale(), transportSale);
-            transportSale.setBatch(batch);
-            transportSale = transportSaleRepository.save(transportSale);
-            batch.setTransportSaleId(transportSale.getId());
-            batchRepository.save(batch);
-        }
-
         return batch;
+    }
+
+    private void associateMaterials(ProductionBatch batch, List<Long> materialIds) {
+        if (materialIds == null || materialIds.isEmpty()) {
+            return;
+        }
+        for (Long materialId : materialIds) {
+            MaterialPurchase material = materialRepository.findById(materialId)
+                    .orElseThrow(() -> new RuntimeException("原材料不存在: " + materialId));
+            BatchMaterialRelation relation = new BatchMaterialRelation();
+            relation.setBatch(batch);
+            relation.setMaterial(material);
+            relationRepository.save(relation);
+        }
+    }
+
+    private void associateStorage(ProductionBatch batch, StorageDTO storageDto) {
+        if (storageDto == null) {
+            return;
+        }
+        Storage storage = new Storage();
+        BeanUtils.copyProperties(storageDto, storage);
+        storage.associateBatch(batch);
+        storage = storageRepository.save(storage);
+        batch.associateStorage(storage);
+        batchRepository.save(batch);
+    }
+
+    private void associateTransportSale(ProductionBatch batch, TransportSaleDTO transportSaleDto) {
+        if (transportSaleDto == null) {
+            return;
+        }
+        TransportSale transportSale = new TransportSale();
+        BeanUtils.copyProperties(transportSaleDto, transportSale);
+        transportSale.associateBatch(batch);
+        transportSale = transportSaleRepository.save(transportSale);
+        batch.associateTransportSale(transportSale);
+        batchRepository.save(batch);
     }
 
     @Override
@@ -111,6 +131,14 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         ProductionBatch batch = batchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
 
+        updateBatchFields(batch, dto);
+        updateStorage(batch, dto.getStorage());
+        updateTransportSale(batch, dto.getTransportSale());
+
+        return batchRepository.save(batch);
+    }
+
+    private void updateBatchFields(ProductionBatch batch, ProductionBatchDTO dto) {
         if (dto.getProductId() != null) {
             Product product = productRepository.findById(dto.getProductId())
                     .orElseThrow(() -> new RuntimeException("产品不存在"));
@@ -128,40 +156,38 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         if (dto.getUnit() != null) {
             batch.setUnit(dto.getUnit());
         }
+    }
 
-        if (dto.getStorage() != null) {
-            Storage storage;
-            if (batch.getStorageId() != null) {
-                storage = storageRepository.findById(batch.getStorageId()).orElse(new Storage());
-            } else {
-                storage = new Storage();
-            }
-            BeanUtils.copyProperties(dto.getStorage(), storage);
-            storage.setBatch(batch);
-            storage = storageRepository.save(storage);
-            if (batch.getStorageId() == null) {
-                batch.setStorageId(storage.getId());
-                batchRepository.save(batch);
-            }
+    private void updateStorage(ProductionBatch batch, StorageDTO storageDto) {
+        if (storageDto == null) {
+            return;
         }
-
-        if (dto.getTransportSale() != null) {
-            TransportSale transportSale;
-            if (batch.getTransportSaleId() != null) {
-                transportSale = transportSaleRepository.findById(batch.getTransportSaleId()).orElse(new TransportSale());
-            } else {
-                transportSale = new TransportSale();
-            }
-            BeanUtils.copyProperties(dto.getTransportSale(), transportSale);
-            transportSale.setBatch(batch);
-            transportSale = transportSaleRepository.save(transportSale);
-            if (batch.getTransportSaleId() == null) {
-                batch.setTransportSaleId(transportSale.getId());
-                batchRepository.save(batch);
-            }
+        Storage storage = batch.getStorageId() != null
+                ? storageRepository.findById(batch.getStorageId()).orElse(new Storage())
+                : new Storage();
+        BeanUtils.copyProperties(storageDto, storage);
+        storage.associateBatch(batch);
+        storageRepository.save(storage);
+        if (batch.getStorageId() == null) {
+            batch.associateStorage(storage);
+            batchRepository.save(batch);
         }
+    }
 
-        return batchRepository.save(batch);
+    private void updateTransportSale(ProductionBatch batch, TransportSaleDTO transportSaleDto) {
+        if (transportSaleDto == null) {
+            return;
+        }
+        TransportSale transportSale = batch.getTransportSaleId() != null
+                ? transportSaleRepository.findById(batch.getTransportSaleId()).orElse(new TransportSale())
+                : new TransportSale();
+        BeanUtils.copyProperties(transportSaleDto, transportSale);
+        transportSale.associateBatch(batch);
+        transportSaleRepository.save(transportSale);
+        if (batch.getTransportSaleId() == null) {
+            batch.associateTransportSale(transportSale);
+            batchRepository.save(batch);
+        }
     }
 
     @Override
@@ -169,7 +195,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     public void deleteBatch(Long id) {
         ProductionBatch batch = batchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
-        batch.setIsDeleted(true);
+        batch.softDelete();
         batchRepository.save(batch);
     }
 
@@ -227,10 +253,10 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
         Storage storage = new Storage();
         BeanUtils.copyProperties(dto, storage);
-        storage.setBatch(batch);
+        storage.associateBatch(batch);
         storage = storageRepository.save(storage);
 
-        batch.setStorageId(storage.getId());
+        batch.associateStorage(storage);
         batchRepository.save(batch);
 
         StorageDTO result = new StorageDTO();
@@ -246,10 +272,10 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
         TransportSale transportSale = new TransportSale();
         BeanUtils.copyProperties(dto, transportSale);
-        transportSale.setBatch(batch);
+        transportSale.associateBatch(batch);
         transportSale = transportSaleRepository.save(transportSale);
 
-        batch.setTransportSaleId(transportSale.getId());
+        batch.associateTransportSale(transportSale);
         batchRepository.save(batch);
 
         TransportSaleDTO result = new TransportSaleDTO();
@@ -269,10 +295,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
 
-        String batchNumber = generateBatchNumber();
-
         ProductionBatch batch = new ProductionBatch();
-        batch.setBatchNumber(batchNumber);
+        batch.setBatchNumber(generateBatchNumber());
         batch.setProduct(product);
         batch.setProductionDate(LocalDate.now());
         batch.setShelfLife(product.getShelfLife());

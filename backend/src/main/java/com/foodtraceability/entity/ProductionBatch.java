@@ -59,4 +59,20 @@ public class ProductionBatch {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
+    public boolean isDeleted() {
+        return Boolean.TRUE.equals(this.isDeleted);
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
+    }
+
+    public void associateStorage(Storage storage) {
+        this.storageId = storage.getId();
+    }
+
+    public void associateTransportSale(TransportSale transportSale) {
+        this.transportSaleId = transportSale.getId();
+    }
 }

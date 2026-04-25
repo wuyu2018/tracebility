@@ -16,30 +16,34 @@ import java.util.List;
 @Service
 public class ProductServiceImpl implements ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
-    
-    @Autowired
-    private ProductRepository repository;
+
+    private final ProductRepository repository;
+    private final ProductionBatchRepository batchRepository;
+    private final InspectionRepository inspectionRepository;
+    private final StorageRepository storageRepository;
+    private final TransportSaleRepository transportSaleRepository;
+    private final BatchMaterialRelationRepository relationRepository;
+    private final SecurityCodeRepository securityCodeRepository;
+    private final MaterialPurchaseRepository materialPurchaseRepository;
 
     @Autowired
-    private ProductionBatchRepository batchRepository;
-
-    @Autowired
-    private InspectionRepository inspectionRepository;
-
-    @Autowired
-    private StorageRepository storageRepository;
-
-    @Autowired
-    private TransportSaleRepository transportSaleRepository;
-
-    @Autowired
-    private BatchMaterialRelationRepository relationRepository;
-
-    @Autowired
-    private SecurityCodeRepository securityCodeRepository;
-
-    @Autowired
-    private MaterialPurchaseRepository materialPurchaseRepository;
+    public ProductServiceImpl(ProductRepository repository,
+                             ProductionBatchRepository batchRepository,
+                             InspectionRepository inspectionRepository,
+                             StorageRepository storageRepository,
+                             TransportSaleRepository transportSaleRepository,
+                             BatchMaterialRelationRepository relationRepository,
+                             SecurityCodeRepository securityCodeRepository,
+                             MaterialPurchaseRepository materialPurchaseRepository) {
+        this.repository = repository;
+        this.batchRepository = batchRepository;
+        this.inspectionRepository = inspectionRepository;
+        this.storageRepository = storageRepository;
+        this.transportSaleRepository = transportSaleRepository;
+        this.relationRepository = relationRepository;
+        this.securityCodeRepository = securityCodeRepository;
+        this.materialPurchaseRepository = materialPurchaseRepository;
+    }
 
     @Override
     @Transactional
@@ -63,47 +67,70 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         log.info("[产品删除] 开始删除产品 ID: {}", id);
-        
-        // 1. 找出所有关联的批次
-        List<ProductionBatch> batches = batchRepository.findAll().stream()
-            .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(id)).toList();
-        
-        // 2. 删除所有关联的 material_purchase（可能被 batch_material_relation 引用）
-        List<MaterialPurchase> materials = materialPurchaseRepository.findAll().stream()
-            .filter(m -> m.getProduct() != null && m.getProduct().getId().equals(id)).toList();
-        List<Long> materialIds = materials.stream().map(MaterialPurchase::getId).toList();
-        
-        // 3. 先删 batch_material_relation（因为它引用 material_purchase）
-        for (ProductionBatch batch : batches) {
-            relationRepository.deleteAll(relationRepository.findByBatchId(batch.getId()));
-        }
-        
-        // 4. 再删 material_purchase
-        materialPurchaseRepository.deleteAll(materials);
-        
-        // 5. 按依赖关系删除其他关联数据
-        securityCodeRepository.deleteAll(securityCodeRepository.findAll().stream()
-            .filter(sc -> sc.getBatch() != null && sc.getBatch().getProduct() != null 
-                && sc.getBatch().getProduct().getId().equals(id)).toList());
-        
-        inspectionRepository.deleteAll(inspectionRepository.findAll().stream()
-            .filter(i -> i.getBatch() != null && i.getBatch().getProduct() != null 
-                && i.getBatch().getProduct().getId().equals(id)).toList());
-        
-        storageRepository.deleteAll(storageRepository.findAll().stream()
-            .filter(s -> s.getBatch() != null && s.getBatch().getProduct() != null 
-                && s.getBatch().getProduct().getId().equals(id)).toList());
-        
-        transportSaleRepository.deleteAll(transportSaleRepository.findAll().stream()
-            .filter(t -> t.getBatch() != null && t.getBatch().getProduct() != null 
-                && t.getBatch().getProduct().getId().equals(id)).toList());
-        
-        // 6. 删除批次
+
+        List<ProductionBatch> batches = findBatchesByProductId(id);
+        deleteRelatedMaterialPurchases(id);
+        deleteRelatedBatchMaterialRelations(batches);
+        deleteRelatedSecurityCodes(id);
+        deleteRelatedInspections(id);
+        deleteRelatedStorages(id);
+        deleteRelatedTransportSales(id);
         batchRepository.deleteAll(batches);
-        
-        // 7. 最后删除产品
         repository.deleteById(id);
+
         log.info("[产品删除] 删除完成");
+    }
+
+    private List<ProductionBatch> findBatchesByProductId(Long productId) {
+        return batchRepository.findAll().stream()
+                .filter(b -> b.getProduct() != null && b.getProduct().getId().equals(productId))
+                .toList();
+    }
+
+    private void deleteRelatedMaterialPurchases(Long productId) {
+        List<MaterialPurchase> materials = materialPurchaseRepository.findAll().stream()
+                .filter(m -> m.getProduct() != null && m.getProduct().getId().equals(productId))
+                .toList();
+        materialPurchaseRepository.deleteAll(materials);
+    }
+
+    private void deleteRelatedBatchMaterialRelations(List<ProductionBatch> batches) {
+        for (ProductionBatch batch : batches) {
+            List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batch.getId());
+            relationRepository.deleteAll(relations);
+        }
+    }
+
+    private void deleteRelatedSecurityCodes(Long productId) {
+        List<SecurityCode> codes = securityCodeRepository.findAll().stream()
+                .filter(sc -> sc.getBatch() != null && sc.getBatch().getProduct() != null
+                        && sc.getBatch().getProduct().getId().equals(productId))
+                .toList();
+        securityCodeRepository.deleteAll(codes);
+    }
+
+    private void deleteRelatedInspections(Long productId) {
+        List<Inspection> inspections = inspectionRepository.findAll().stream()
+                .filter(i -> i.getBatch() != null && i.getBatch().getProduct() != null
+                        && i.getBatch().getProduct().getId().equals(productId))
+                .toList();
+        inspectionRepository.deleteAll(inspections);
+    }
+
+    private void deleteRelatedStorages(Long productId) {
+        List<Storage> storages = storageRepository.findAll().stream()
+                .filter(s -> s.getBatch() != null && s.getBatch().getProduct() != null
+                        && s.getBatch().getProduct().getId().equals(productId))
+                .toList();
+        storageRepository.deleteAll(storages);
+    }
+
+    private void deleteRelatedTransportSales(Long productId) {
+        List<TransportSale> transportSales = transportSaleRepository.findAll().stream()
+                .filter(t -> t.getBatch() != null && t.getBatch().getProduct() != null
+                        && t.getBatch().getProduct().getId().equals(productId))
+                .toList();
+        transportSaleRepository.deleteAll(transportSales);
     }
 
     @Override
@@ -111,8 +138,7 @@ public class ProductServiceImpl implements ProductService {
     public void clearQrCode(Long id) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
-        entity.setAntiFakeCode(null);
-        entity.setQrCodeUrl(null);
+        entity.clearQrCode();
         repository.save(entity);
     }
 

@@ -48,4 +48,8 @@ public class TransportSale {
 
     @Column(name = "receiver_contact", length = 50)
     private String receiverContact;
+
+    public void associateBatch(ProductionBatch batch) {
+        this.batch = batch;
+    }
 }

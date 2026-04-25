@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class SecurityCode {
 
+    public static final String STATUS_INACTIVE = "未激活";
+    public static final String STATUS_ACTIVE = "已激活";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,7 +34,7 @@ public class SecurityCode {
     private ProductionBatch batch;
 
     @Column(name = "status", nullable = false, length = 20)
-    private String status = "未激活";
+    private String status = STATUS_INACTIVE;
 
     @Column(name = "first_scan_time")
     private LocalDateTime firstScanTime;
@@ -49,7 +52,44 @@ public class SecurityCode {
             scanCount = 0;
         }
         if (status == null) {
-            status = "未激活";
+            status = STATUS_INACTIVE;
+        }
+    }
+
+    public boolean isActivated() {
+        return STATUS_ACTIVE.equals(this.status);
+    }
+
+    public boolean isFirstQuery() {
+        return scanCount == null || scanCount == 0;
+    }
+
+    public boolean isRepeatedQuery() {
+        return scanCount != null && scanCount > 1;
+    }
+
+    public int getQueryCount() {
+        return scanCount != null ? scanCount : 0;
+    }
+
+    public void activate() {
+        this.status = STATUS_ACTIVE;
+        this.firstScanTime = LocalDateTime.now();
+        this.scanCount = 1;
+    }
+
+    public void recordQuery() {
+        if (this.scanCount == null) {
+            this.scanCount = 0;
+        }
+        this.scanCount++;
+    }
+
+    public void recordQueryAndActivateIfNeeded() {
+        if (isFirstQuery()) {
+            activate();
+        } else {
+            recordQuery();
         }
     }
 }
