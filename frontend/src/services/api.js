@@ -1,17 +1,7 @@
-import axios from '../utils/axios'
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+import api from '../utils/axios'
 
 // ==================== 认证相关 ====================
 
-/**
- * 存储验证码
- */
 export async function storeCaptcha(username, captcha) {
   const { data } = await api.post('/captcha', { username, captcha })
   return data
