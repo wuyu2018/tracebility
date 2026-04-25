@@ -157,15 +157,20 @@ const handleLogin = async () => {
       throw new Error('登录响应中没有 token')
     }
     setUsername(response.username)
-    
+
     loginSuccess.value = true
     adminUsername.value = response.username
-    localStorage.setItem('adminUsername', response.username)
+    localStorage.setItem('admin_username', response.username)
     errorMsg.value = ''
-    
-    // 使用完整 URL，避免在网关/非根路径部署时跳转失败
-    window.location.assign(`${window.location.origin}/ToolsStandalone`)
-    return 
+
+    console.log('[Login] All data saved, navigating to ToolsStandalone...')
+
+    // 使用 router.push 确保导航在 setToken 完成后再执行
+    await router.push('/ToolsStandalone')
+
+    // 强制刷新页面以确保所有状态都被正确加载
+    window.location.reload()
+    return
   } catch (error) {
     console.error('登录失败:', error)
     if (error.response) {
