@@ -7,7 +7,6 @@
       </router-link>
       <nav class="nav">
         <button class="complaint-btn" @click="goToComplaint">📝 投诉该产品</button>
-        <router-link to="/purchase" class="btn-purchase">采购联系</router-link>
         <div class="dropdown" ref="dropdownRef">
           <button class="dropdown-trigger" @click="toggleDropdown" :class="{ active: isOpen }">
             更多服务
@@ -56,11 +55,6 @@ const handleLogout = () => {
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
-}
-
-const goToPurchase = () => {
-  isOpen.value = false
-  router.push('/purchase')
 }
 
 const goToIntro = () => {
