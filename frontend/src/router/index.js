@@ -68,14 +68,12 @@ router.beforeEach((to, from, next) => {
     }
   }
   
-  // 如果已登录且访问登录页，重定向到管理后台
+  // 如果已登录且访问登录页，留在当前页面
   if (to.path === '/ToolsStandalone' || to.path === '/Admin') {
     const auth = isAuthenticated()
     if (auth) {
-      // 已登录，跳转到管理主页
-      next({
-        path: '/getAllComplaintInfo'
-      })
+      // 已登录，留在登录页
+      next()
       return
     }
   }
