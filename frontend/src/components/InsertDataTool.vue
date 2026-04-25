@@ -51,7 +51,7 @@
             <el-table-column label="操作" width="150">
               <template #default="scope">
                 <el-button type="primary" size="small" @click="editProduct(scope.row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="deleteProduct(scope.row.id)">删除</el-button>
+                <el-button type="danger" size="small" @click="deleteProductById(scope.row.id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -106,7 +106,7 @@
             <el-table-column prop="supplierName" label="供应商" />
             <el-table-column label="操作" width="150">
               <template #default="scope">
-                <el-button type="danger" size="small" @click="deleteMaterial(scope.row.id)">删除</el-button>
+                <el-button type="danger" size="small" @click="deleteMaterialById(scope.row.id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -257,9 +257,21 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
-
-const API_BASE = '/api'
+import {
+  getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getMaterials,
+  createMaterialPurchase,
+  updateMaterialPurchase,
+  deleteMaterialPurchase,
+  getBatches,
+  createBatch,
+  getSecurityCodes,
+  generateSecurityCodes,
+  addInspection
+} from '../services/api'
 
 const currentStep = ref(0)
 const loading = ref(false)
@@ -325,8 +337,8 @@ const inspectionForm = reactive({
 
 async function loadProducts() {
   try {
-    const res = await axios.get(`${API_BASE}/products`)
-    products.value = res.data
+    const data = await getProducts()
+    products.value = data
   } catch (e) {
     console.error(e)
   }
@@ -334,8 +346,8 @@ async function loadProducts() {
 
 async function loadMaterials() {
   try {
-    const res = await axios.get(`${API_BASE}/materials`)
-    materials.value = res.data
+    const data = await getMaterials()
+    materials.value = data
   } catch (e) {
     console.error(e)
   }
@@ -343,8 +355,8 @@ async function loadMaterials() {
 
 async function loadBatches() {
   try {
-    const res = await axios.get(`${API_BASE}/batches`)
-    batches.value = res.data
+    const data = await getBatches()
+    batches.value = data
   } catch (e) {
     console.error(e)
   }
@@ -357,8 +369,8 @@ function onProductSelect() {
 async function loadMaterialsForProduct() {
   if (batchForm.productId) {
     try {
-      const res = await axios.get(`${API_BASE}/materials?productId=${batchForm.productId}`)
-      availableMaterials.value = res.data
+      const data = await getMaterials(batchForm.productId)
+      availableMaterials.value = data
     } catch (e) {
       console.error(e)
     }
@@ -373,10 +385,10 @@ async function submitProduct() {
   loading.value = true
   try {
     if (productForm.id) {
-      await axios.put(`${API_BASE}/products/${productForm.id}`, productForm)
+      await updateProduct(productForm.id, productForm)
       ElMessage.success('产品更新成功')
     } else {
-      await axios.post(`${API_BASE}/products`, productForm)
+      await createProduct(productForm)
       ElMessage.success('产品保存成功')
     }
     resetProductForm()
@@ -392,10 +404,10 @@ function editProduct(row) {
   Object.assign(productForm, row)
 }
 
-async function deleteProduct(id) {
+async function deleteProductById(id) {
   try {
     await ElMessageBox.confirm('确定要删除该产品吗？', '提示', { type: 'warning' })
-    await axios.delete(`${API_BASE}/products/${id}`)
+    await deleteProduct(id)
     ElMessage.success('删除成功')
     loadProducts()
   } catch (e) {
@@ -421,10 +433,10 @@ async function submitMaterial() {
   loading.value = true
   try {
     if (materialForm.id) {
-      await axios.put(`${API_BASE}/materials/${materialForm.id}`, materialForm)
+      await updateMaterialPurchase(materialForm.id, materialForm)
       ElMessage.success('原材料更新成功')
     } else {
-      await axios.post(`${API_BASE}/materials`, materialForm)
+      await createMaterialPurchase(materialForm)
       ElMessage.success('原材料保存成功')
     }
     resetMaterialForm()
@@ -444,10 +456,10 @@ function resetMaterialForm() {
   })
 }
 
-async function deleteMaterial(id) {
+async function deleteMaterialById(id) {
   try {
     await ElMessageBox.confirm('确定要删除该原材料吗？', '提示', { type: 'warning' })
-    await axios.delete(`${API_BASE}/materials/${id}`)
+    await deleteMaterialPurchase(id)
     ElMessage.success('删除成功')
     loadMaterials()
   } catch (e) {
@@ -493,8 +505,8 @@ async function submitBatch() {
     delete payload.receiverName
     delete payload.receiverContact
 
-    const res = await axios.post(`${API_BASE}/batches`, payload)
-    ElMessage.success(`批次生成成功！批次号：${res.data.batchNumber}`)
+    const res = await createBatch(payload)
+    ElMessage.success(`批次生成成功！批次号：${res.batchNumber}`)
     resetBatchForm()
     loadBatches()
   } catch (e) {
@@ -525,8 +537,8 @@ function goToSecurityCode(batch) {
 
 async function loadSecurityCodes(batchId) {
   try {
-    const res = await axios.get(`${API_BASE}/batches/${batchId}/security-codes`)
-    securityCodes.value = res.data
+    const data = await getSecurityCodes(batchId)
+    securityCodes.value = data
   } catch (e) {
     console.error('加载防伪码失败:', e)
     ElMessage.error('加载防伪码失败')
@@ -550,10 +562,8 @@ async function generateCodes() {
   }
   generatingCodes.value = true
   try {
-    const res = await axios.post(`${API_BASE}/batches/${currentBatch.value.id}/security-codes`, {
-      quantity: codeQuantity.value
-    })
-    ElMessage.success(`成功生成 ${res.data.count} 个防伪码`)
+    const res = await generateSecurityCodes(currentBatch.value.id, codeQuantity.value)
+    ElMessage.success(`成功生成 ${res.count} 个防伪码`)
     loadSecurityCodes(currentBatch.value.id)
   } catch (e) {
     ElMessage.error('生成失败')
@@ -581,7 +591,7 @@ async function viewBatchDetail(batch) {
 async function submitInspection() {
   if (!batchDetail.value) return
   try {
-    await axios.post(`${API_BASE}/batches/${batchDetail.value.id}/inspection`, inspectionForm)
+    await addInspection(batchDetail.value.id, inspectionForm)
     ElMessage.success('检测报告保存成功')
   } catch (e) {
     ElMessage.error('保存失败')

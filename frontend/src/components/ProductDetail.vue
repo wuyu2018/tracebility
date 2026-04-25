@@ -272,9 +272,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import axios from 'axios'
-
-const API_BASE = '/api'
+import {
+  getProducts,
+  getMaterials,
+  getBatches,
+  getAllInspections,
+  getAllStorages,
+  getAllTransportSales,
+  getProductDetail,
+  getAdminProductDetail
+} from '../services/api'
 
 const activeTab = ref('products')
 const loading = ref(false)
@@ -312,21 +319,21 @@ function formatDateTime(row, column, cellValue) {
 async function loadAllData() {
   loading.value = true
   try {
-    const [productsRes, materialsRes, batchesRes, inspectionsRes, storagesRes, transportsRes] = await Promise.all([
-      axios.get(`${API_BASE}/products`),
-      axios.get(`${API_BASE}/materials`),
-      axios.get(`${API_BASE}/batches`),
-      axios.get(`${API_BASE}/insert/inspections`),
-      axios.get(`${API_BASE}/insert/storages`),
-      axios.get(`${API_BASE}/insert/transport-sales`)
+    const [productsData, materialsData, batchesData, inspectionsData, storagesData, transportsData] = await Promise.all([
+      getProducts(),
+      getMaterials(),
+      getBatches(),
+      getAllInspections(),
+      getAllStorages(),
+      getAllTransportSales()
     ])
-    
-    productList.value = productsRes.data
-    materialList.value = materialsRes.data
-    batchList.value = batchesRes.data
-    inspectionList.value = inspectionsRes.data
-    storageList.value = storagesRes.data
-    transportList.value = transportsRes.data
+
+    productList.value = productsData
+    materialList.value = materialsData
+    batchList.value = batchesData
+    inspectionList.value = inspectionsData
+    storageList.value = storagesData
+    transportList.value = transportsData
   } catch (error) {
     console.error('加载数据失败:', error)
   } finally {
@@ -336,14 +343,14 @@ async function loadAllData() {
 
 async function handleSearch() {
   if (!searchKeyword.value.trim()) return
-  
+
   searchResult.value = null
   loading.value = true
-  
+
   try {
-    const res = await axios.get(`${API_BASE}/product-detail?antiFakeCode=${encodeURIComponent(searchKeyword.value.trim())}`)
-    if (res.data && !res.data.error) {
-      searchResult.value = res.data
+    const data = await getProductDetail(searchKeyword.value.trim())
+    if (data && !data.error) {
+      searchResult.value = data
     }
   } catch (error) {
     console.error('搜索失败:', error)
@@ -362,14 +369,14 @@ async function viewProductTrace(product) {
     alert('该产品暂无防伪码，无法查看溯源')
     return
   }
-  
+
   loading.value = true
   traceDialogVisible.value = true
-  
+
   try {
-    const res = await axios.get(`${API_BASE}/admin/product-detail?antiFakeCode=${encodeURIComponent(product.antiFakeCode)}`)
-    if (res.data && !res.data.error) {
-      currentTrace.value = res.data
+    const data = await getAdminProductDetail(product.antiFakeCode)
+    if (data && !data.error) {
+      currentTrace.value = data
     } else {
       alert('未找到该产品的溯源信息')
       traceDialogVisible.value = false

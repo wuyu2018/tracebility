@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { selectProducts } from '../services/api'
 
 const props = defineProps({
   modelValue: {
@@ -43,8 +43,6 @@ const selectedValue = ref(props.modelValue)
 const productOptions = ref([])
 const loading = ref(false)
 
-const API_BASE_URL = '/api'
-
 const placeholderText = computed(() => {
   return '请选择或搜索产品'
 })
@@ -60,14 +58,8 @@ const formatLabel = (product) => {
 const searchProducts = async (keyword) => {
   loading.value = true
   try {
-    const params = new URLSearchParams()
-    if (keyword && keyword.trim()) {
-      params.append('keyword', keyword.trim())
-    }
-    params.append('role', props.role)
-    
-    const response = await axios.get(`${API_BASE_URL}/products/select?${params.toString()}`)
-    productOptions.value = response.data || []
+    const data = await selectProducts(keyword, props.role)
+    productOptions.value = data || []
   } catch (error) {
     console.error('搜索产品失败:', error)
     productOptions.value = []

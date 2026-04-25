@@ -96,10 +96,8 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
-
-const API_BASE_URL = '/api'
+import { registerAdmin } from '../services/api'
 
 const adminForm = reactive({
   username: '',
@@ -206,14 +204,14 @@ const handleAddAdmin = async () => {
   loading.value = true
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/admin/register`, {
-      username: adminForm.username,
-      password: adminForm.password,
-      currentPassword: adminForm.currentPassword,
-      currentAdminUsername: currentAdminUsername
-    })
+    const response = await registerAdmin(
+      adminForm.username,
+      adminForm.password,
+      adminForm.currentPassword,
+      currentAdminUsername
+    )
 
-    successMsg.value = response.data.message || '管理员创建成功'
+    successMsg.value = response.message || '管理员创建成功'
     ElMessage.success(successMsg.value)
     
     adminForm.username = ''

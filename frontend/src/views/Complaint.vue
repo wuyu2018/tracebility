@@ -66,8 +66,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
 import ProductSelector from '@/components/ProductSelector.vue'
+import { createComplaint } from '../services/api'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
@@ -85,8 +85,6 @@ const complaintRules = {
 }
 const submitting = ref(false)
 const errorMessage = ref('')
-const API_BASE_URL = '/api'
-const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
 const handleProductChange = (product) => {
   if (product) {
@@ -113,20 +111,16 @@ const submitComplaint = async () => {
       requestData.complaintTime = complaintForm.complaintTime
     }
 
-    const response = await axios.post(COMPLAINT_API, requestData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+    const response = await createComplaint(requestData)
 
-    if (response.status === 200 || response.status === 201) {
+    if (response) {
       ElMessage.success({
         message: '投诉提交成功！',
         duration: 3000
       })
 
       await ElMessageBox.alert(
-        `投诉已成功提交！\n投诉ID: ${response.data.id || 'N/A'}\n处理时间: ${new Date().toLocaleString()}`,
+        `投诉已成功提交！\n投诉ID: ${response.id || 'N/A'}\n处理时间: ${new Date().toLocaleString()}`,
         '提交成功',
         {
           confirmButtonText: '确定',
