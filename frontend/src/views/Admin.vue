@@ -147,9 +147,13 @@ const handleLogin = async () => {
     console.log('response.tokenType:', response?.tokenType)
 
     // 保存 Token 和用户信息
+    console.log('[Login] response:', JSON.stringify(response))
     if (response?.token) {
+      console.log('[Login] Calling setToken with token:', response.token.substring(0, 20) + '...')
       setToken(response.token, response.tokenType)
+      console.log('[Login] setToken completed')
     } else {
+      console.error('[Login] ERROR: response.token is missing!')
       throw new Error('登录响应中没有 token')
     }
     setUsername(response.username)
