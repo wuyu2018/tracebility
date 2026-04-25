@@ -43,6 +43,7 @@ export async function registerAdmin(username, password, currentPassword, current
 }
 
 // ==================== 防伪验证 ====================
+export async function verifyAntiFakeCodeGet(code) {
   const { data } = await api.get('/verify', { params: { code } })
   return data
 }

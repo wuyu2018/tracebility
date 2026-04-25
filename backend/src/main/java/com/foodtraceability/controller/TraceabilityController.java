@@ -24,7 +24,7 @@ public class TraceabilityController {
 
     @GetMapping("/verify")
     public ResponseEntity<?> verify(@RequestParam String code) {
-        log.info("[防伪验证] GET 请求 - 防伪码: {}", maskCode(code));
+        log.info("[防伪验证] GET 请求 - 防伪码：{}", maskCode(code));
         long startTime = System.currentTimeMillis();
 
         try {
@@ -33,13 +33,34 @@ public class TraceabilityController {
 
             if (result.isPresent()) {
                 TraceInfoDTO traceInfo = result.get();
-                log.info("[防伪验证] 查询成功 - 防伪码: {}, 产品: {}, 耗时: {}ms",
-                        maskCode(code), traceInfo.getProduct().getName(), duration);
+                log.info("[防伪验证] 查询成功 - 防伪码：{}, 产品：{}, 查询次数：{}, 耗时：{}ms",
+                        maskCode(code), traceInfo.getProduct().getName(), 
+                        traceInfo.getScanCount() != null ? traceInfo.getScanCount() : 0, duration);
+                
+                // 如果是重复查询（已被查询过），返回 valid=false，提示伪品警示
+                if (traceInfo.getIsQueried() != null && traceInfo.getIsQueried()) {
+                    log.warn("[防伪验证] 重复查询 - 防伪码：{}, 已被查询 {} 次", 
+                            maskCode(code), traceInfo.getScanCount());
+                    return ResponseEntity.ok(Map.of(
+                        "valid", false,
+                        "message", "该产品已被查询过 " + (traceInfo.getScanCount() - 1) + " 次，首次查询时间：" + 
+                                   traceInfo.getFirstScanTime() + "，该产品可能是伪品，请谨慎购买！"
+                    ));
+                }
+                
+                log.info("[防伪验证] 首次验证成功 - 防伪码：{}", maskCode(code));
                 return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
             } else {
-                log.warn("[防伪验证] 验证失败 - 防伪码: {}, 耗时: {}ms", maskCode(code), duration);
+                log.warn("[防伪验证] 验证失败 - 防伪码：{}, 耗时：{}ms", maskCode(code), duration);
                 return ResponseEntity.ok(Map.of("valid", false, "message", "未找到该防伪码对应的产品信息，该产品可能是伪品，请谨慎购买！"));
             }
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("[防伪验证] 系统错误 - 防伪码：{}, 耗时：{}ms, 错误：{}",
+                    maskCode(code), duration, e.getMessage());
+            return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
+        }
+    }
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[防伪验证] 系统错误 - 防伪码: {}, 耗时: {}ms, 错误: {}",

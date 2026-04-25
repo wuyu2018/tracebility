@@ -47,6 +47,9 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         ProductionBatch batch = securityCode.getBatch();
         Product product = batch.getProduct();
 
+        // 判断是否为首次查询
+        boolean isFirstQuery = securityCode.getScanCount() == null || securityCode.getScanCount() == 0;
+        
         if ("未激活".equals(securityCode.getStatus())) {
             securityCode.setStatus("已激活");
             securityCode.setFirstScanTime(LocalDateTime.now());
@@ -57,6 +60,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             securityCodeRepository.save(securityCode);
         }
 
+        // 如果是重复查询（scanCount > 1），返回 valid=false，提示已被查询过
+        // buildTraceInfoDTO 中会设置 isFirstQuery 和 queryTip
         return Optional.of(buildTraceInfoDTO(product, batch, securityCode, false));
     }
 
@@ -175,9 +180,12 @@ public class TraceabilityServiceImpl implements TraceabilityService {
             dto.setFirstScanTime(securityCode.getFirstScanTime());
             dto.setScanCount(securityCode.getScanCount());
             
+            // scanCount > 1 表示已被查询过，标记为 isQueried=true
             if (securityCode.getScanCount() != null && securityCode.getScanCount() > 1) {
                 dto.setIsQueried(true);
-                dto.setQueryTip("该产品已被查询过 " + (securityCode.getScanCount() - 1) + " 次，首次查询时间：" + securityCode.getFirstScanTime());
+                dto.setQueryTip("该产品已被查询过 " + (securityCode.getScanCount() - 1) + 
+                               " 次，首次查询时间：" + securityCode.getFirstScanTime() + 
+                               "。重复查询可能是伪品，请谨慎购买！");
             } else {
                 dto.setIsQueried(false);
                 dto.setQueryTip(null);

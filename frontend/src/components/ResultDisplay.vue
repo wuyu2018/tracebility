@@ -1,8 +1,18 @@
 <template>
   <div v-if="traceData" class="result-display">
+    <!-- 重复查询警告 -->
+    <div v-if="traceData.isQueried" class="warning-banner">
+      <span class="warning-icon">⚠️</span>
+      <div class="warning-content">
+        <h3>该产品可能已被查询过</h3>
+        <p>{{ traceData.queryTip }}</p>
+        <p class="warning-tip">请谨慎购买，如有疑问请联系正规渠道核实</p>
+      </div>
+    </div>
+
     <div class="result-header">
-      <span class="success-badge" v-if="traceData.status === '已激活'">✓ 正品验证通过</span>
-      <span class="info-badge" v-else-if="traceData.status === '未激活'">○ 待激活</span>
+      <span class="success-badge" v-if="traceData.status === '已激活' && !traceData.isQueried">✓ 正品验证通过</span>
+      <span class="warning-badge" v-else-if="traceData.isQueried">⚠️ 重复查询</span>
       <span class="info-badge" v-else>{{ traceData.status }}</span>
       <h2>{{ traceData.product?.name }}</h2>
       <p class="specification">{{ traceData.product?.specification }}</p>
@@ -96,6 +106,47 @@ function formatDateTime(val) {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.warning-banner {
+  background: linear-gradient(145deg, #fff3cd 0%, #ffe69c 100%);
+  border: 2px solid #f0c040;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.warning-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content h3 {
+  color: #b7791f;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.warning-content p {
+  color: #744210;
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.warning-tip {
+  font-size: 0.85rem !important;
+  color: #975a16 !important;
+  margin-top: 0.75rem !important;
+  font-style: italic;
+}
+
 .result-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -104,6 +155,17 @@ function formatDateTime(val) {
 .success-badge {
   display: inline-block;
   background: linear-gradient(135deg, var(--color-success) 0%, #5a9c6a 100%);
+  color: white;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.warning-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
   color: white;
   padding: 0.35rem 1rem;
   border-radius: 999px;

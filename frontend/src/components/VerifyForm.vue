@@ -130,8 +130,17 @@ async function queryByCode(code) {
     if (result.valid && result.data) {
       emit('verified', result.data)
     } else {
-      emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
+      // result.valid === false 表示可能是重复查询或无效码
+      const message = result.message || '该产品可能是伪品，请谨慎购买！'
+      emit('invalid', message)
     }
+  } catch (err) {
+    error.value = '网络错误，请稍后重试'
+    emit('invalid', '验证失败，请检查网络连接')
+  } finally {
+    loading.value = false
+  }
+}
   } catch (err) {
     emit('invalid', '验证失败，请检查网络连接')
   } finally {
