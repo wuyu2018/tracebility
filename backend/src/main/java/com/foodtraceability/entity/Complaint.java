@@ -2,9 +2,10 @@ package com.foodtraceability.entity;
 
 import com.foodtraceability.exception.BusinessException;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,6 +34,9 @@ public class Complaint {
     @Column(name = "batch_number", length = 50)
     private String batchNumber;
 
+    @Column(name = "is_processed")
+    private Boolean isProcessed = false;
+
     public static Complaint create(String productName, String complaintReason) {
         validateProductName(productName);
         validateComplaintReason(complaintReason);
@@ -41,12 +45,31 @@ public class Complaint {
         complaint.setProductName(productName);
         complaint.setComplaintReason(complaintReason);
         complaint.setComplaintTime(LocalDateTime.now());
+        complaint.setIsProcessed(false);
         return complaint;
     }
 
     public void updateReason(String newReason) {
         validateComplaintReason(newReason);
         this.complaintReason = newReason;
+    }
+
+    public void linkToProduct(String antiFakeCodeOrBatchNumber) {
+        if (antiFakeCodeOrBatchNumber != null && !antiFakeCodeOrBatchNumber.isEmpty()) {
+            if (antiFakeCodeOrBatchNumber.startsWith("SC")) {
+                this.antiFakeCode = antiFakeCodeOrBatchNumber;
+            } else {
+                this.batchNumber = antiFakeCodeOrBatchNumber;
+            }
+        }
+    }
+
+    public void markAsProcessed() {
+        this.isProcessed = true;
+    }
+
+    public boolean isProcessed() {
+        return Boolean.TRUE.equals(this.isProcessed);
     }
 
     private static void validateProductName(String productName) {

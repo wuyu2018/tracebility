@@ -1,12 +1,16 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import com.foodtraceability.domain.DomainEvent;
+import com.foodtraceability.domain.valueobject.MaterialInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "material_purchase", uniqueConstraints = {
@@ -54,6 +58,9 @@ public class MaterialPurchase {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
     public static MaterialPurchase create(Product product, String materialName, String batchNumber) {
         MaterialPurchase material = new MaterialPurchase();
         material.product = product;
@@ -69,5 +76,36 @@ public class MaterialPurchase {
 
     public boolean isDeleted() {
         return Boolean.TRUE.equals(this.isDeleted);
+    }
+
+    public boolean canBeDeleted() {
+        return !this.isDeleted;
+    }
+
+    public MaterialInfo toMaterialInfo() {
+        return MaterialInfo.from(this);
+    }
+
+    public void updateSupplier(String supplierName, String producerName, String producerAddress) {
+        this.supplierName = supplierName;
+        this.producerName = producerName;
+        this.producerAddress = producerAddress;
+    }
+
+    public void updateQuantity(Double quantity, String unit) {
+        this.quantity = quantity;
+        this.unit = unit;
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    protected void addDomainEvent(DomainEvent event) {
+        this.domainEvents.add(event);
     }
 }

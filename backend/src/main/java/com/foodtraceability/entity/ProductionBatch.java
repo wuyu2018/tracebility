@@ -1,13 +1,18 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.foodtraceability.domain.DomainEvent;
+import com.foodtraceability.domain.valueobject.*;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "production_batch", uniqueConstraints = {
@@ -55,6 +60,9 @@ public class ProductionBatch {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -74,5 +82,57 @@ public class ProductionBatch {
 
     public void associateTransportSale(TransportSale transportSale) {
         this.transportSaleId = transportSale.getId();
+    }
+
+    public boolean hasSecurityCodes() {
+        return false;
+    }
+
+    public boolean canBeDeleted() {
+        return !this.isDeleted;
+    }
+
+    public TraceInfo buildTraceInfo(
+            SecurityCode securityCode,
+            List<MaterialPurchase> materials,
+            Inspection inspection,
+            Storage storage,
+            TransportSale transportSale,
+            boolean forAdmin) {
+        return TraceInfo.create(
+            this.product,
+            this,
+            materials,
+            inspection,
+            storage,
+            transportSale,
+            forAdmin
+        );
+    }
+
+    public static ProductionBatch create(
+            Product product,
+            String batchNumber,
+            LocalDate productionDate,
+            String shelfLife) {
+        ProductionBatch batch = new ProductionBatch();
+        batch.product = product;
+        batch.batchNumber = batchNumber;
+        batch.productionDate = productionDate;
+        batch.shelfLife = shelfLife;
+        batch.isDeleted = false;
+        return batch;
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    protected void addDomainEvent(DomainEvent event) {
+        this.domainEvents.add(event);
     }
 }

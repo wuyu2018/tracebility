@@ -1,12 +1,18 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.foodtraceability.domain.DomainEvent;
+import com.foodtraceability.domain.event.RepeatQueryDetectedEvent;
+import com.foodtraceability.domain.event.SecurityCodeActivatedEvent;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -45,6 +51,9 @@ public class SecurityCode {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -96,9 +105,12 @@ public class SecurityCode {
     }
 
     public void activate() {
-        this.status = STATUS_ACTIVE;
-        this.firstScanTime = LocalDateTime.now();
-        this.scanCount = 1;
+        if (!isActivated()) {
+            this.status = STATUS_ACTIVE;
+            this.firstScanTime = LocalDateTime.now();
+            this.scanCount = 1;
+            addDomainEvent(new SecurityCodeActivatedEvent(this.id, this.code));
+        }
     }
 
     public void recordQuery() {
@@ -113,6 +125,25 @@ public class SecurityCode {
             activate();
         } else {
             recordQuery();
+            if (isRepeatedQuery()) {
+                addDomainEvent(new RepeatQueryDetectedEvent(this.id, this.code, this.scanCount));
+            }
         }
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    protected void addDomainEvent(DomainEvent event) {
+        this.domainEvents.add(event);
+    }
+
+    public boolean isDeleted() {
+        return false;
     }
 }

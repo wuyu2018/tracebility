@@ -1,11 +1,15 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import com.foodtraceability.domain.DomainEvent;
+import com.foodtraceability.domain.valueobject.InspectionInfo;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "inspection")
@@ -36,12 +40,36 @@ public class Inspection {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    public static Inspection create(ProductionBatch batch, String sampleName, Integer sampleQuantity, String sampleSpecification) {
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
+    public static Inspection create(ProductionBatch batch, String sampleName, Integer sampleQuantity, String sampleSpecification, String imageUrl) {
         Inspection inspection = new Inspection();
         inspection.batch = batch;
         inspection.sampleName = sampleName;
         inspection.sampleQuantity = sampleQuantity;
         inspection.sampleSpecification = sampleSpecification;
+        inspection.imageUrl = imageUrl;
         return inspection;
+    }
+
+    public InspectionInfo toInspectionInfo() {
+        return InspectionInfo.from(this);
+    }
+
+    public boolean isValid() {
+        return this.batch != null && this.sampleName != null && !this.sampleName.isBlank();
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    protected void addDomainEvent(DomainEvent event) {
+        this.domainEvents.add(event);
     }
 }

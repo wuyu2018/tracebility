@@ -1,9 +1,14 @@
 package com.foodtraceability.entity;
 
+import com.foodtraceability.domain.DomainEvent;
+import com.foodtraceability.domain.DomainException;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "product")
@@ -43,6 +48,9 @@ public class Product {
     @Column(name = "qr_code_url", length = 500)
     private String qrCodeUrl;
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
     public boolean isDeleted() {
         return Boolean.TRUE.equals(this.isDeleted);
     }
@@ -59,5 +67,47 @@ public class Product {
     public void assignQrCode(String antiFakeCode, String qrCodeUrl) {
         this.antiFakeCode = antiFakeCode;
         this.qrCodeUrl = qrCodeUrl;
+    }
+
+    public boolean hasBatches() {
+        return false;
+    }
+
+    public boolean hasAntiFakeCode() {
+        return this.antiFakeCode != null && !this.antiFakeCode.isEmpty();
+    }
+
+    public boolean canBeDeleted() {
+        return !this.isDeleted;
+    }
+
+    public List<DomainEvent> getDomainEvents() {
+        return new ArrayList<>(domainEvents);
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+
+    protected void addDomainEvent(DomainEvent event) {
+        this.domainEvents.add(event);
+    }
+
+    public static Product createWithAntiFakeCode(
+            String name,
+            String specification,
+            String shelfLife,
+            String imageUrl,
+            String contactPhone,
+            String contactEmail) {
+        Product product = new Product();
+        product.name = name;
+        product.specification = specification;
+        product.shelfLife = shelfLife;
+        product.imageUrl = imageUrl;
+        product.contactPhone = contactPhone;
+        product.contactEmail = contactEmail;
+        product.isDeleted = false;
+        return product;
     }
 }
