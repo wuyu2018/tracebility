@@ -55,22 +55,17 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
             entity.setProduct(product);
         }
 
-        if (dto.getSupplierName() != null || dto.getProducerName() != null || dto.getProducerAddress() != null) {
-            entity.updateSupplier(
-                    dto.getSupplierName() != null ? dto.getSupplierName() : entity.getSupplierName(),
-                    dto.getProducerName() != null ? dto.getProducerName() : entity.getProducerName(),
-                    dto.getProducerAddress() != null ? dto.getProducerAddress() : entity.getProducerAddress()
-            );
-        }
+        entity.updateBasicInfo(
+                dto.getMaterialName(),
+                dto.getBatchNumber(),
+                dto.getSupplierName(),
+                dto.getProducerName(),
+                dto.getProducerAddress(),
+                dto.getPurchaseDate(),
+                dto.getQuantity(),
+                dto.getUnit()
+        );
 
-        if (dto.getQuantity() != null || dto.getUnit() != null) {
-            entity.updateQuantity(
-                    dto.getQuantity() != null ? dto.getQuantity() : entity.getQuantity(),
-                    dto.getUnit() != null ? dto.getUnit() : entity.getUnit()
-            );
-        }
-
-        BeanUtils.copyProperties(dto, entity);
         return repository.save(entity);
     }
 

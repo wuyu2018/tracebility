@@ -97,6 +97,19 @@ public class MaterialPurchase {
         this.unit = unit;
     }
 
+    public void updateBasicInfo(String materialName, String batchNumber,
+                                String supplierName, String producerName, String producerAddress,
+                                LocalDateTime purchaseDate, Double quantity, String unit) {
+        if (materialName != null) this.materialName = materialName;
+        if (batchNumber != null) this.batchNumber = batchNumber;
+        if (supplierName != null) this.supplierName = supplierName;
+        if (producerName != null) this.producerName = producerName;
+        if (producerAddress != null) this.producerAddress = producerAddress;
+        if (purchaseDate != null) this.purchaseDate = purchaseDate;
+        if (quantity != null) this.quantity = quantity;
+        if (unit != null) this.unit = unit;
+    }
+
     public List<DomainEvent> getDomainEvents() {
         return new ArrayList<>(domainEvents);
     }
