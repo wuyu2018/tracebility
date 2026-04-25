@@ -142,12 +142,12 @@ const handleLogin = async () => {
     )
 
     // 保存 Token 和用户信息
-    setToken(response.data.token, response.data.tokenType)
-    setUsername(response.data.username)
+    setToken(response.token, response.tokenType)
+    setUsername(response.username)
     
     loginSuccess.value = true
-    adminUsername.value = response.data.username
-    localStorage.setItem('adminUsername', response.data.username)
+    adminUsername.value = response.username
+    localStorage.setItem('adminUsername', response.username)
     errorMsg.value = ''
     
     // 使用完整 URL，避免在网关/非根路径部署时跳转失败
