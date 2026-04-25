@@ -61,7 +61,15 @@
 
 ### 1.1 存储验证码
 
-存储图形验证码，用于登录验证。
+将前端获取的图形验证码存储到后端，用于后续登录验证比对。
+
+**验证码使用流程**
+```
+1. 前端展示图形验证码
+2. 用户输入验证码
+3. 前端调用本接口存储: POST /api/captcha
+4. 用户提交登录: POST /api/login (后端自动比对验证码)
+```
 
 **请求**
 ```http
@@ -97,7 +105,7 @@ Content-Type: application/json
 {
   "username": "admin",
   "password": "Admin@123",
-  "captcha": "ABCDE"
+  "captcha": "abcde"
 }
 ```
 
@@ -106,7 +114,7 @@ Content-Type: application/json
 |--------|------|------|------|----------|
 | username | string | 是 | 用户名 | 3-50字符 |
 | password | string | 是 | 密码 | 6-20字符 |
-| captcha | string | 是 | 验证码 | 5位 |
+| captcha | string | 是 | 验证码 | 5位，区分大小写但比对时不区分 |
 
 **成功响应**
 ```json
@@ -127,7 +135,7 @@ Content-Type: application/json
 | 错误信息 | 说明 |
 |----------|------|
 | 验证码不能为空 | 未填写验证码 |
-| 验证码错误 | 验证码不正确 |
+| 验证码错误 | 验证码不正确或已过期 |
 | 账号已被锁定，请 X 分钟后再试 | 连续登录失败5次后锁定 |
 | 账号或密码错误 | 用户名或密码错误 |
 
