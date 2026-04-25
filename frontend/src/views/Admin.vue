@@ -52,7 +52,7 @@
           </div>
         </div>
 
-        <div v-if="errorMsg" class="error-message">
+        <div v-if="errorMsg" class="error-message" :class="{'lock-alert': isLockAlert}">
           <span>⚠️</span> {{ errorMsg }}
         </div>
 
@@ -88,6 +88,7 @@ const credentials = reactive({
 
 const currentCaptcha = ref('')
 const errorMsg = ref('')
+const isLockAlert = ref(false)
 const loading = ref(false)
 const loginSuccess = ref(false)
 const adminUsername = ref('')
@@ -156,11 +157,14 @@ const handleLogin = async () => {
     console.error('登录失败:', error)
     if (error.response) {
       errorMsg.value = error.response.data?.message || error.response.data || '登录失败'
+      isLockAlert.value = errorMsg.value.includes('账号已被锁定')
       console.error('错误详情:', error.response.data);
     } else if (error.request) {
       errorMsg.value = '网络错误，请稍后重试'
+      isLockAlert.value = false
     } else {
       errorMsg.value = error.message || '登录失败，请稍后重试'
+      isLockAlert.value = false
     }
     generateCaptcha()
   } finally {
@@ -355,6 +359,13 @@ onMounted(() => {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
   width: fit-content;
+}
+
+.error-message.lock-alert {
+  background: linear-gradient(145deg, #fff3cd 0%, #ffe69c 100%);
+  border: 2px solid #f0c040;
+  color: #b7791f;
+  font-weight: 600;
 }
 
 .success-message {

@@ -6,6 +6,7 @@ import com.foodtraceability.entity.Admin;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.AdminRepository;
 import com.foodtraceability.service.AdminService;
+import com.foodtraceability.service.LoginAttemptService;
 import com.foodtraceability.util.CaptchaStorage;
 import com.foodtraceability.util.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +30,23 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     private CaptchaStorage captchaStorage;
 
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     @Override
     public LoginResponseDTO login(AdminLoginDTO loginDTO) {
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
         String captcha = loginDTO.getCaptcha();
+
+        // 检查账号是否被锁定
+        if (loginAttemptService.isLocked(username)) {
+            long remainingSeconds = loginAttemptService.getRemainingLockTime(username);
+            throw new BusinessException(String.format(
+                "账号已被锁定，请 %d 分钟后再试", 
+                remainingSeconds / 60 + 1
+            ));
+        }
 
         if (captcha == null || captcha.isEmpty()) {
             throw new BusinessException("验证码不能为空");
@@ -41,20 +54,27 @@ public class AdminServiceImpl implements AdminService {
 
         String expectedCaptcha = captchaStorage.getCaptcha(username);
         if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
+            // 验证码错误也算失败
+            loginAttemptService.loginFailed(username);
             throw new BusinessException("验证码错误");
         }
 
         Optional<Admin> adminOptional = adminRepository.findByUsername(username);
         if (!adminOptional.isPresent()) {
+            loginAttemptService.loginFailed(username);
             throw new BusinessException("账号或密码错误");
         }
 
         Admin admin = adminOptional.get();
 
         if (!passwordEncoder.matches(password, admin.getPassword())) {
+            loginAttemptService.loginFailed(username);
             throw new BusinessException("账号或密码错误");
         }
 
+        // 登录成功，清除失败记录
+        loginAttemptService.loginSucceeded(username);
+        
         String token = jwtTokenProvider.generateTokenByUsername(username);
 
         LoginResponseDTO response = new LoginResponseDTO();
