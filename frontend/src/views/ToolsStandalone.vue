@@ -131,7 +131,7 @@ import AddAdmin from '/src/views/AddAdmin.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
-import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
+import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi, getProductsForInsert } from '../services/api'
 import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
 import { useRouter } from 'vue-router'
 
@@ -221,15 +221,9 @@ function downloadQrCode(row) {
 
 async function loadProductList() {
   try {
-    const response = await fetch('/api/insert/products/list', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    const data = await response.json()
+    const data = await getProductsForInsert()
     console.log('产品列表原始数据:', data)
-    
+
     if (Array.isArray(data)) {
       productList.value = data
     } else if (data && Array.isArray(data.data)) {
@@ -237,7 +231,7 @@ async function loadProductList() {
     } else {
       productList.value = []
     }
-    
+
     console.log('处理后产品列表:', productList.value)
     console.log('有二维码的产品:', productsWithQrCode.value.length)
     console.log('无二维码的产品:', productsWithoutQrCode.value.length)
