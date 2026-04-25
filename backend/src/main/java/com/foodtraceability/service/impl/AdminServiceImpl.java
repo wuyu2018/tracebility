@@ -21,6 +21,9 @@ public class AdminServiceImpl implements AdminService {
     private AdminRepository adminRepository;
 
     @Autowired
+    private CaptchaStorage captchaStorage;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -33,7 +36,7 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("验证码不能为空");
         }
 
-        String expectedCaptcha = CaptchaStorage.getCaptcha(username);
+        String expectedCaptcha = captchaStorage.getCaptcha(username);
         if (expectedCaptcha == null || !expectedCaptcha.equalsIgnoreCase(captcha)) {
             throw new BusinessException("验证码错误");
         }

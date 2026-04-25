@@ -1,25 +1,31 @@
 package com.foodtraceability.util;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
 public class CaptchaStorage {
-
-    private static final Map<String, String> captchaStore = new ConcurrentHashMap<>();
-
-    public static void setCaptcha(String key, String captcha) {
-        captchaStore.put(key.toLowerCase(), captcha.toLowerCase());
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    
+    private static final long EXPIRE_MINUTES = 5;
+    
+    public void setCaptcha(String key, String captcha) {
+        String redisKey = "captcha:" + key.toLowerCase();
+        redisTemplate.opsForValue().set(redisKey, captcha.toLowerCase(), 
+                                        EXPIRE_MINUTES, TimeUnit.MINUTES);
     }
-
-    public static String getCaptcha(String key) {
-        return captchaStore.get(key.toLowerCase());
+    
+    public String getCaptcha(String key) {
+        String redisKey = "captcha:" + key.toLowerCase();
+        return redisTemplate.opsForValue().get(redisKey);
     }
-
-    public static void removeCaptcha(String key) {
-        captchaStore.remove(key.toLowerCase());
-    }
-
-    public static void clear() {
-        captchaStore.clear();
+    
+    public void removeCaptcha(String key) {
+        String redisKey = "captcha:" + key.toLowerCase();
+        redisTemplate.delete(redisKey);
     }
 }

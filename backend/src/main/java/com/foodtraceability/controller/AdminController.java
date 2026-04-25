@@ -8,6 +8,7 @@ import com.foodtraceability.service.AdminService;
 import com.foodtraceability.util.CaptchaStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,9 @@ public class AdminController {
 
     private final AdminService adminService;
 
+    @Autowired
+    private CaptchaStorage captchaStorage;
+
     public AdminController(AdminService adminService) {
         this.adminService = adminService;
     }
@@ -34,7 +38,7 @@ public class AdminController {
         if (username == null || captcha == null) {
             return ResponseEntity.badRequest().body("username和captcha不能为空");
         }
-        CaptchaStorage.setCaptcha(username, captcha);
+        captchaStorage.setCaptcha(username, captcha);
         return ResponseEntity.ok().build();
     }
 
@@ -45,7 +49,7 @@ public class AdminController {
         
         try {
             LoginResponseDTO response = adminService.login(loginDTO);
-            CaptchaStorage.removeCaptcha(loginDTO.getUsername());
+            captchaStorage.removeCaptcha(loginDTO.getUsername());
             long duration = System.currentTimeMillis() - startTime;
             log.info("[管理员登录] 登录成功 - 用户名: {}, 耗时: {}ms", loginDTO.getUsername(), duration);
             return ResponseEntity.ok(response);
