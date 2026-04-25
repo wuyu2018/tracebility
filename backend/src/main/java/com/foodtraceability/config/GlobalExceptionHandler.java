@@ -1,5 +1,6 @@
 package com.foodtraceability.config;
 
+import com.foodtraceability.domain.DomainException;
 import com.foodtraceability.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,21 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<Map<String, Object>> handleDomainException(DomainException e) {
+        log.warn("[领域异常] {}", e.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.BAD_REQUEST.value());
+        response.put("code", "DOMAIN_ERROR");
+        response.put("message", e.getMessage());
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(response);
+    }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException e) {
