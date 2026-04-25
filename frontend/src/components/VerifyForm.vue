@@ -141,12 +141,6 @@ async function queryByCode(code) {
     loading.value = false
   }
 }
-  } catch (err) {
-    emit('invalid', '验证失败，请检查网络连接')
-  } finally {
-    loading.value = false
-  }
-}
 
 function stopCamera() {
   showCamera.value = false
