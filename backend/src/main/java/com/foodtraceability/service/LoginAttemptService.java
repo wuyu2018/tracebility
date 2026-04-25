@@ -34,7 +34,8 @@ public class LoginAttemptService {
      */
     public void loginFailed(String username) {
         String key = FAILED_ATTEMPTS_PREFIX + username;
-        int attempts = failedAttemptsTemplate.opsForValue().increment(key);
+        Long attemptsLong = failedAttemptsTemplate.opsForValue().increment(key);
+        int attempts = attemptsLong != null ? attemptsLong.intValue() : 1;
         // 设置 1 小时过期
         failedAttemptsTemplate.expire(key, 1, TimeUnit.HOURS);
         
