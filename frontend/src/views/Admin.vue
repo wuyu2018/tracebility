@@ -133,7 +133,7 @@ const handleLogin = async () => {
   try {
     // 先存储验证码
     await storeCaptcha(credentials.username, currentCaptcha.value)
-    
+
     // 登录获取 JWT Token
     const response = await adminLogin(
       credentials.username,
@@ -141,8 +141,17 @@ const handleLogin = async () => {
       credentials.captchaInput
     )
 
+    // 调试：检查登录响应
+    console.log('登录响应:', response)
+    console.log('response.token:', response?.token)
+    console.log('response.tokenType:', response?.tokenType)
+
     // 保存 Token 和用户信息
-    setToken(response.token, response.tokenType)
+    if (response?.token) {
+      setToken(response.token, response.tokenType)
+    } else {
+      throw new Error('登录响应中没有 token')
+    }
     setUsername(response.username)
     
     loginSuccess.value = true

@@ -9,9 +9,18 @@ const LOGIN_TIME_KEY = 'login_time'
  * 保存 Token 到本地存储
  */
 export function setToken(token, tokenType = 'Bearer') {
+  console.log('[Auth] setToken called:', { token, tokenType })
+  if (!token) {
+    console.error('[Auth] ERROR: token is null or undefined!')
+    return
+  }
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(TOKEN_TYPE_KEY, tokenType)
   localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
+  console.log('[Auth] Token saved, current localStorage:', {
+    jwt_token: localStorage.getItem(TOKEN_KEY),
+    token_type: localStorage.getItem(TOKEN_TYPE_KEY)
+  })
 }
 
 /**
