@@ -46,6 +46,9 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/api/captcha", "/api/login", "/api/admin/register").permitAll()
+                .requestMatchers("/api/products/**", "/api/product-detail").permitAll()
+                .requestMatchers("/api/verify", "/api/trace/**").permitAll()
+                .requestMatchers("/api/complaint").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )
