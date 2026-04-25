@@ -53,11 +53,6 @@ export async function traceByBatchNumber(batchNumber) {
   return data
 }
 
-export async function getPurchaseInfo(antiFakeCode) {
-  const { data } = await api.post('/purchase-info', { antiFakeCode })
-  return data
-}
-
 export async function selectProducts(keyword, role = 'consumer') {
   const params = new URLSearchParams()
   if (keyword) params.append('keyword', keyword)
