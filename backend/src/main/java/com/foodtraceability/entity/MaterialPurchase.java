@@ -53,4 +53,21 @@ public class MaterialPurchase {
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
+
+    public static MaterialPurchase create(Product product, String materialName, String batchNumber) {
+        MaterialPurchase material = new MaterialPurchase();
+        material.product = product;
+        material.materialName = materialName;
+        material.batchNumber = batchNumber;
+        material.isDeleted = false;
+        return material;
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
+    }
+
+    public boolean isDeleted() {
+        return Boolean.TRUE.equals(this.isDeleted);
+    }
 }

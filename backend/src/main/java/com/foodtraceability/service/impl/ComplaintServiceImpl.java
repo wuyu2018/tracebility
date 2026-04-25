@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -18,8 +17,12 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private static final Logger log = LoggerFactory.getLogger(ComplaintServiceImpl.class);
 
+    private final ComplaintRepository complaintRepository;
+
     @Autowired
-    private ComplaintRepository complaintRepository;
+    public ComplaintServiceImpl(ComplaintRepository complaintRepository) {
+        this.complaintRepository = complaintRepository;
+    }
 
     @Override
     public ComplaintDTO createComplaint(ComplaintDTO complaintDTO) {
@@ -27,38 +30,16 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new BusinessException("投诉信息不能为空");
         }
 
-        if (complaintDTO.getProductName() == null || complaintDTO.getProductName().isBlank()) {
-            throw new BusinessException("请选择要投诉的产品");
-        }
+        Complaint complaint = Complaint.create(
+                complaintDTO.getProductName(),
+                complaintDTO.getComplaintReason()
+        );
 
-        if (complaintDTO.getComplaintReason() == null || complaintDTO.getComplaintReason().isBlank()) {
-            throw new BusinessException("投诉原因不能为空");
-        }
-
-        try {
-            Complaint complaint = new Complaint();
-            complaint.setProductName(complaintDTO.getProductName());
-            complaint.setComplaintReason(complaintDTO.getComplaintReason());
-            complaint.setComplaintTime(LocalDateTime.now());
-
-            Complaint savedComplaint = complaintRepository.save(complaint);
-            log.info("[投诉创建] 投诉已保存 - ID: {}, 产品: {}",
+        Complaint savedComplaint = complaintRepository.save(complaint);
+        log.info("[投诉创建] 投诉已保存 - ID: {}, 产品: {}",
                 savedComplaint.getId(), savedComplaint.getProductName());
 
-            ComplaintDTO resultDTO = new ComplaintDTO();
-            resultDTO.setId(savedComplaint.getId());
-            resultDTO.setProductName(savedComplaint.getProductName());
-            resultDTO.setComplaintReason(savedComplaint.getComplaintReason());
-            resultDTO.setComplaintTime(savedComplaint.getComplaintTime());
-
-            return resultDTO;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("[投诉创建] 保存投诉失败 - 产品: {}, 错误: {}",
-                complaintDTO.getProductName(), e.getMessage(), e);
-            throw new BusinessException("投诉保存失败，请稍后重试");
-        }
+        return toDTO(savedComplaint);
     }
 
     @Override
@@ -67,35 +48,24 @@ public class ComplaintServiceImpl implements ComplaintService {
             throw new BusinessException("投诉ID不能为空或无效");
         }
 
-        if (complaintReason == null || complaintReason.isBlank()) {
-            throw new BusinessException("投诉原因不能为空");
-        }
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("投诉记录不存在"));
 
-        try {
-            Optional<Complaint> complaintOptional = complaintRepository.findById(id);
-            if (!complaintOptional.isPresent()) {
-                throw new BusinessException("投诉记录不存在");
-            }
+        complaint.updateReason(complaintReason);
+        Complaint updatedComplaint = complaintRepository.save(complaint);
 
-            Complaint complaint = complaintOptional.get();
-            complaint.setComplaintReason(complaintReason);
-
-            Complaint updatedComplaint = complaintRepository.save(complaint);
-            log.info("[投诉更新] 投诉原因已更新 - ID: {}, 产品: {}",
+        log.info("[投诉更新] 投诉原因已更新 - ID: {}, 产品: {}",
                 updatedComplaint.getId(), updatedComplaint.getProductName());
 
-            ComplaintDTO resultDTO = new ComplaintDTO();
-            resultDTO.setId(updatedComplaint.getId());
-            resultDTO.setProductName(updatedComplaint.getProductName());
-            resultDTO.setComplaintReason(updatedComplaint.getComplaintReason());
-            resultDTO.setComplaintTime(updatedComplaint.getComplaintTime());
+        return toDTO(updatedComplaint);
+    }
 
-            return resultDTO;
-        } catch (BusinessException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("[投诉更新] 更新投诉失败 - ID: {}, 错误: {}", id, e.getMessage(), e);
-            throw new BusinessException("投诉更新失败，请稍后重试");
-        }
+    private ComplaintDTO toDTO(Complaint complaint) {
+        ComplaintDTO dto = new ComplaintDTO();
+        dto.setId(complaint.getId());
+        dto.setProductName(complaint.getProductName());
+        dto.setComplaintReason(complaint.getComplaintReason());
+        dto.setComplaintTime(complaint.getComplaintTime());
+        return dto;
     }
 }

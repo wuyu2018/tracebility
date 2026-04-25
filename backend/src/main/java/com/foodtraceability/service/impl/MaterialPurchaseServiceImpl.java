@@ -15,11 +15,15 @@ import java.util.List;
 
 @Service
 public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
-    @Autowired
-    private MaterialPurchaseRepository repository;
+    private final MaterialPurchaseRepository repository;
+    private final ProductRepository productRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    public MaterialPurchaseServiceImpl(MaterialPurchaseRepository repository,
+                                     ProductRepository productRepository) {
+        this.repository = repository;
+        this.productRepository = productRepository;
+    }
 
     @Override
     @Transactional
@@ -27,10 +31,12 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
 
-        MaterialPurchase entity = new MaterialPurchase();
+        MaterialPurchase entity = MaterialPurchase.create(
+                product,
+                dto.getMaterialName(),
+                dto.getBatchNumber()
+        );
         BeanUtils.copyProperties(dto, entity);
-        entity.setProduct(product);
-        entity.setIsDeleted(false);
         return repository.save(entity);
     }
 
@@ -54,7 +60,7 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
     public void deleteMaterialPurchase(Long id) {
         MaterialPurchase entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("原材料采购记录不存在"));
-        entity.setIsDeleted(true);
+        entity.softDelete();
         repository.save(entity);
     }
 

@@ -35,4 +35,13 @@ public class Inspection {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    public static Inspection create(ProductionBatch batch, String sampleName, Integer sampleQuantity, String sampleSpecification) {
+        Inspection inspection = new Inspection();
+        inspection.batch = batch;
+        inspection.sampleName = sampleName;
+        inspection.sampleQuantity = sampleQuantity;
+        inspection.sampleSpecification = sampleSpecification;
+        return inspection;
+    }
 }

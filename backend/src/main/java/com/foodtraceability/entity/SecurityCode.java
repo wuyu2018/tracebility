@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "security_code", indexes = {
@@ -54,6 +55,28 @@ public class SecurityCode {
         if (status == null) {
             status = STATUS_INACTIVE;
         }
+    }
+
+    public static String generateUniqueCode() {
+        String snowflake = String.valueOf(System.currentTimeMillis());
+        String random = String.format("%04d", (int) (Math.random() * 10000));
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        return "SC" + snowflake + random + uuid;
+    }
+
+    public static SecurityCode create(ProductionBatch batch) {
+        SecurityCode securityCode = new SecurityCode();
+        securityCode.code = generateUniqueCode();
+        securityCode.batch = batch;
+        securityCode.status = STATUS_INACTIVE;
+        securityCode.scanCount = 0;
+        return securityCode;
+    }
+
+    public static SecurityCode createForProduct(ProductionBatch batch, Product product) {
+        SecurityCode securityCode = create(batch);
+        product.setAntiFakeCode(securityCode.code);
+        return securityCode;
     }
 
     public boolean isActivated() {

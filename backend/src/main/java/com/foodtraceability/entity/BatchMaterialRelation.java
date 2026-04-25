@@ -28,4 +28,11 @@ public class BatchMaterialRelation {
     @JoinColumn(name = "material_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private MaterialPurchase material;
+
+    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase material) {
+        BatchMaterialRelation relation = new BatchMaterialRelation();
+        relation.batch = batch;
+        relation.material = material;
+        return relation;
+    }
 }

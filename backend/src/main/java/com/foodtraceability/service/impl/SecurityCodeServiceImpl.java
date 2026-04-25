@@ -15,18 +15,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class SecurityCodeServiceImpl implements SecurityCodeService {
-    @Autowired
-    private SecurityCodeRepository codeRepository;
+    private final SecurityCodeRepository codeRepository;
+    private final ProductionBatchRepository batchRepository;
+    private final ProductRepository productRepository;
 
     @Autowired
-    private ProductionBatchRepository batchRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
+    public SecurityCodeServiceImpl(SecurityCodeRepository codeRepository,
+                                 ProductionBatchRepository batchRepository,
+                                 ProductRepository productRepository) {
+        this.codeRepository = codeRepository;
+        this.batchRepository = batchRepository;
+        this.productRepository = productRepository;
+    }
 
     @Override
     @Transactional
@@ -34,32 +37,34 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
 
-        List<String> codes = new ArrayList<>();
-
-        for (int i = 0; i < quantity; i++) {
-            String code = generateUniqueCode();
-            SecurityCode securityCode = new SecurityCode();
-            securityCode.setCode(code);
-            securityCode.setBatch(batch);
-            securityCode.setStatus("未激活");
-            securityCode.setScanCount(0);
-            codeRepository.save(securityCode);
-            codes.add(code);
-        }
-
-        // 将第一个防伪码设置到产品的 antiFakeCode
-        if (!codes.isEmpty()) {
-            Product product = batch.getProduct();
-            if (product != null) {
-                product.setAntiFakeCode(codes.get(0));
-                productRepository.save(product);
-            }
-        }
+        List<String> codes = generateCodesForBatch(batch, quantity);
+        assignFirstCodeToProduct(batch, codes);
 
         SecurityCodeGenerateResponse response = new SecurityCodeGenerateResponse();
         response.setCodes(codes);
         response.setCount(codes.size());
         return response;
+    }
+
+    private List<String> generateCodesForBatch(ProductionBatch batch, Integer quantity) {
+        List<String> codes = new ArrayList<>();
+        for (int i = 0; i < quantity; i++) {
+            SecurityCode securityCode = SecurityCode.create(batch);
+            codeRepository.save(securityCode);
+            codes.add(securityCode.getCode());
+        }
+        return codes;
+    }
+
+    private void assignFirstCodeToProduct(ProductionBatch batch, List<String> codes) {
+        if (codes.isEmpty()) {
+            return;
+        }
+        Product product = batch.getProduct();
+        if (product != null) {
+            product.assignQrCode(codes.get(0), "/qrcode/" + product.getId());
+            productRepository.save(product);
+        }
     }
 
     @Override
@@ -82,13 +87,6 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     @Transactional(readOnly = true)
     public List<SecurityCodeDTO> exportCodes(Long batchId) {
         return getCodesByBatchId(batchId);
-    }
-
-    private String generateUniqueCode() {
-        String snowflake = String.valueOf(System.currentTimeMillis());
-        String random = String.format("%04d", (int) (Math.random() * 10000));
-        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-        return "SC" + snowflake + random + uuid;
     }
 
     private SecurityCodeDTO toDTO(SecurityCode entity) {
