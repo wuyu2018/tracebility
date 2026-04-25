@@ -61,13 +61,6 @@ public class TraceabilityController {
             return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
         }
     }
-        } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            log.error("[防伪验证] 系统错误 - 防伪码: {}, 耗时: {}ms, 错误: {}",
-                    maskCode(code), duration, e.getMessage());
-            return ResponseEntity.ok(Map.of("valid", false, "message", "系统错误，请稍后重试"));
-        }
-    }
 
     @GetMapping("/trace/batch/{batchNumber}")
     public ResponseEntity<?> traceByBatchNumber(@PathVariable String batchNumber) {
