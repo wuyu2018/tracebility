@@ -1,5 +1,6 @@
-package com.foodtraceability.domain;
+package com.foodtraceability.domain.valueobject;
 
+import com.foodtraceability.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

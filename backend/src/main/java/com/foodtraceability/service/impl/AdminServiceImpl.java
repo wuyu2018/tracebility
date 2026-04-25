@@ -80,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
             throw new BusinessException("账号或密码错误");
         }
         Admin admin = adminOptional.get();
-        if (!admin.validatePassword(password, passwordEncoder)) {
+        if (!admin.matchPassword(password, passwordEncoder)) {
             loginAttemptService.loginFailed(username);
             throw new BusinessException("账号或密码错误");
         }
@@ -111,7 +111,7 @@ public class AdminServiceImpl implements AdminService {
                 throw new BusinessException("管理员已存在");
             });
 
-        Admin admin = Admin.create(username, passwordEncoder.encode(password));
+        Admin admin = Admin.create(username, passwordEncoder.encode(password), null);
         return adminRepository.save(admin);
     }
 
@@ -122,7 +122,7 @@ public class AdminServiceImpl implements AdminService {
         Admin admin = adminRepository.findByUsername(username)
             .orElseThrow(() -> new BusinessException("管理员不存在"));
 
-        if (!admin.validatePassword(currentPassword, passwordEncoder)) {
+        if (!admin.matchPassword(currentPassword, passwordEncoder)) {
             throw new BusinessException("当前密码验证失败");
         }
     }
