@@ -1,0 +1,36 @@
+# Frontend .dockerignore
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.*
+*.env
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+
+# Config
+vite.config.js
+
+# Test
+coverage/
+*.test.js
+*.spec.js
