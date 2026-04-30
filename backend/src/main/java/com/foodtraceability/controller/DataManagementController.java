@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -333,6 +334,7 @@ public class DataManagementController {
     }
 
     @GetMapping("/materials")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> listMaterialPurchases(@RequestParam(required = false) Long materialId) {
         if (materialId != null) {
             return ResponseEntity.ok(materialPurchaseService.getMaterialPurchasesByMaterialId(materialId));
