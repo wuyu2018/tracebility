@@ -70,29 +70,16 @@ public class AdminController {
         String currentPassword = request.get("currentPassword");
         String currentAdminUsername = request.get("currentAdminUsername");
 
-        if (username == null || username.isBlank()) {
-            return ResponseEntity.badRequest().body("用户名不能为空");
-        }
-        if (password == null || password.isBlank()) {
-            return ResponseEntity.badRequest().body("密码不能为空");
-        }
-        if (password.length() < 8) {
-            return ResponseEntity.badRequest().body("密码长度不能少于8位");
-        }
-        if (!password.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$")) {
-            return ResponseEntity.badRequest().body("密码必须包含字母、数字和特殊字符");
-        }
-        if (!username.matches("^[a-zA-Z0-9]{4,20}$")) {
-            return ResponseEntity.badRequest().body("用户名必须为4-20位字母或数字组合");
-        }
-        if (currentPassword == null || currentPassword.isBlank()) {
-            return ResponseEntity.badRequest().body("请输入当前管理员密码进行身份验证");
-        }
-        if (currentAdminUsername == null || currentAdminUsername.isBlank()) {
-            return ResponseEntity.badRequest().body("无法确定当前管理员身份");
-        }
-
         try {
+            Admin.validateUsername(username);
+            Admin.validatePassword(password);
+            if (currentPassword == null || currentPassword.isBlank()) {
+                return ResponseEntity.badRequest().body("请输入当前管理员密码进行身份验证");
+            }
+            if (currentAdminUsername == null || currentAdminUsername.isBlank()) {
+                return ResponseEntity.badRequest().body("无法确定当前管理员身份");
+            }
+
             adminService.verifyCurrentPassword(currentAdminUsername, currentPassword);
             
             Admin admin = adminService.createAdmin(username, password);
