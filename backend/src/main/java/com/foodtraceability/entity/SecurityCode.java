@@ -21,6 +21,7 @@ public class SecurityCode {
 
     public static final String STATUS_INACTIVE = "未激活";
     public static final String STATUS_ACTIVE = "已激活";
+    public static final String STATUS_FROZEN = "已冻结";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

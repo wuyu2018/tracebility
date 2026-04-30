@@ -153,9 +153,9 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
 
         // ===== 8. 出厂检验 (Inspection) =====
         inspectionRepository.saveAll(List.of(
-            Inspection.create(batch1, "有机纯牛奶", 50, "250ml/盒"),
-            Inspection.create(batch2, "有机橄榄油", 30, "500ml/瓶"),
-            Inspection.create(batch3, "有机蜂蜜", 20, "350g/瓶")
+            Inspection.create(batch1.getId(), "有机纯牛奶", 50, "250ml/盒"),
+            Inspection.create(batch2.getId(), "有机橄榄油", 30, "500ml/瓶"),
+            Inspection.create(batch3.getId(), "有机蜂蜜", 20, "350g/瓶")
         ));
         log.info("[数据库初始化] 出厂检验数据初始化完成");
 

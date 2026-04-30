@@ -175,7 +175,7 @@ class TraceabilityQueryApplicationServiceTest {
     void queryByCode_withInspection_includesIt() {
         ProductionBatch batch = createBatch(10L, 1L);
         SecurityCode sc = createSecurityCode(100L, batch);
-        Inspection inspection = Inspection.create(batch, "样本A", 5, "规格A");
+        Inspection inspection = Inspection.create(batch.getId(), "样本A", 5, "规格A");
 
         when(securityCodeRepo.findByCode("SC111")).thenReturn(Optional.of(sc));
         when(batchRepo.findById(10L)).thenReturn(Optional.of(batch));

@@ -240,7 +240,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
         Inspection inspection = new Inspection();
         BeanUtils.copyProperties(dto, inspection);
-        inspection.setBatch(batch);
+        inspection.setBatchId(batch.getId());
         inspection = inspectionRepository.save(inspection);
 
         InspectionDTO result = new InspectionDTO();
