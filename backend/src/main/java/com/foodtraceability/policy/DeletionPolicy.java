@@ -2,16 +2,12 @@ package com.foodtraceability.policy;
 
 import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.Product;
-import com.foodtraceability.entity.ProductionBatch;
-import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Component
 public class DeletionPolicy {
@@ -38,7 +34,7 @@ public class DeletionPolicy {
         log.info("[DeletionPolicy] 删除产品 - ID: {}, 名称: {}", productId, product.getName());
 
         boolean hasBatches = batchRepository.existsByProductId(productId);
-        boolean hasCodes = securityCodeRepository.existsByBatchProductId(productId);
+        boolean hasCodes = !securityCodeRepository.findByProductId(productId).isEmpty();
 
         if (!hasBatches && !hasCodes) {
             physicallyDeleteProduct(product);
@@ -51,7 +47,7 @@ public class DeletionPolicy {
     public void hardDeleteProduct(Product product) {
         Long productId = product.getId();
         boolean hasBatches = batchRepository.existsByProductId(productId);
-        boolean hasCodes = securityCodeRepository.existsByBatchProductId(productId);
+        boolean hasCodes = !securityCodeRepository.findByProductId(productId).isEmpty();
 
         if (hasBatches || hasCodes) {
             throw new BusinessException(

@@ -50,6 +50,16 @@ public class ProductApplicationService implements ProductService {
 
     @Override
     @Transactional
+    public void updateQrCode(Long id, String qrCodeUrl, String antiFakeCode) {
+        Product entity = repository.findById(id)
+                .orElseThrow(() -> new DomainException("产品不存在"));
+        entity.setQrCodeUrl(qrCodeUrl);
+        entity.setAntiFakeCode(antiFakeCode);
+        repository.save(entity);
+    }
+
+    @Override
+    @Transactional
     public void deleteProduct(Long id) {
         Product product = repository.findById(id)
                 .orElseThrow(() -> new DomainException("产品不存在"));

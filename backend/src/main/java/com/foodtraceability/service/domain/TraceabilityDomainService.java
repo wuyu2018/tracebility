@@ -71,7 +71,7 @@ public class TraceabilityDomainService {
     private List<MaterialPurchase> findMaterialsByBatchId(Long batchId) {
         List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batchId);
         return relations.stream()
-                .map(BatchMaterialRelation::getMaterial)
+                .map(BatchMaterialRelation::getMaterialPurchase)
                 .toList();
     }
 

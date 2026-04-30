@@ -17,4 +17,7 @@ public interface SecurityCodeRepository extends JpaRepository<SecurityCode, Long
 
     @Query("SELECT sc FROM SecurityCode sc WHERE sc.batch.product.id = :productId")
     List<SecurityCode> findByProductId(@Param("productId") Long productId);
+
+    @Query("SELECT COUNT(sc) > 0 FROM SecurityCode sc WHERE sc.batch.product.id = :productId")
+    boolean existsByBatchProductId(@Param("productId") Long productId);
 }
