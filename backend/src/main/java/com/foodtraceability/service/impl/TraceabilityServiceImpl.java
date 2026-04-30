@@ -18,6 +18,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     private final SecurityCodeRepository securityCodeRepository;
     private final ProductionBatchRepository batchRepository;
     private final BatchMaterialRelationRepository relationRepository;
+    private final MaterialPurchaseRepository materialPurchaseRepository;
     private final InspectionRepository inspectionRepository;
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
@@ -26,12 +27,14 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     public TraceabilityServiceImpl(SecurityCodeRepository securityCodeRepository,
                                    ProductionBatchRepository batchRepository,
                                    BatchMaterialRelationRepository relationRepository,
+                                   MaterialPurchaseRepository materialPurchaseRepository,
                                    InspectionRepository inspectionRepository,
                                    StorageRepository storageRepository,
                                    TransportSaleRepository transportSaleRepository) {
         this.securityCodeRepository = securityCodeRepository;
         this.batchRepository = batchRepository;
         this.relationRepository = relationRepository;
+        this.materialPurchaseRepository = materialPurchaseRepository;
         this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
@@ -139,7 +142,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batchId);
         return relations.stream()
                 .map(r -> {
-                    MaterialPurchase m = r.getMaterialPurchase();
+                    MaterialPurchase m = materialPurchaseRepository
+                            .findById(r.getId().getMaterialPurchaseId()).orElse(null);
                     TraceInfoDTO.MaterialInfo mi = new TraceInfoDTO.MaterialInfo();
                     mi.setMaterialName(m.getMaterial() != null ? m.getMaterial().getName() : null);
                     mi.setBatchNumber(m.getBatchNumber());

@@ -1,22 +1,27 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.foodtraceability.traceability.domain.event.DomainEvent;
+import com.foodtraceability.traceability.domain.vo.BatchNumber;
+import com.foodtraceability.traceability.domain.vo.Quantity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Entity
 @Table(name = "production_batch", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"product_id", "batch_number"})
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProductionBatch {
 
     @Id
@@ -26,8 +31,12 @@ public class ProductionBatch {
     @Column(name = "batch_number", nullable = false, length = 50)
     private String batchNumber;
 
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Product product;
 
@@ -55,9 +64,35 @@ public class ProductionBatch {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    public static ProductionBatch create(BatchNumber batchNo, Long productId, LocalDate productionDate,
+                                          String shelfLife, Quantity qty) {
+        ProductionBatch batch = new ProductionBatch();
+        batch.batchNumber = batchNo.value();
+        batch.productId = productId;
+        batch.productionDate = productionDate;
+        batch.shelfLife = shelfLife;
+        batch.quantity = qty.value();
+        batch.unit = qty.unit();
+        batch.isDeleted = false;
+        return batch;
+    }
+
+    public void registerEvent(DomainEvent event) {
+        domainEvents.add(event);
+    }
+
+    public List<DomainEvent> pullEvents() {
+        var events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
     }
 
     public boolean isDeleted() {
@@ -74,5 +109,14 @@ public class ProductionBatch {
 
     public void associateTransportSale(TransportSale transportSale) {
         this.transportSaleId = transportSale.getId();
+    }
+
+    public void markQualified() {
+    }
+
+    public void markUnqualified() {
+    }
+
+    public void associateInspection(Long inspectionId) {
     }
 }

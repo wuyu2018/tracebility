@@ -1,7 +1,5 @@
 package com.foodtraceability.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,29 +10,14 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BatchMaterialRelation {
 
     @EmbeddedId
     private BatchMaterialRelationId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("batchId")
-    @JoinColumn(name = "batch_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private ProductionBatch batch;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("materialPurchaseId")
-    @JoinColumn(name = "material_purchase_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private MaterialPurchase materialPurchase;
-
-    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase materialPurchase) {
+    public static BatchMaterialRelation create(Long batchId, Long materialPurchaseId) {
         BatchMaterialRelation relation = new BatchMaterialRelation();
-        relation.id = new BatchMaterialRelationId(batch.getId(), materialPurchase.getId());
-        relation.batch = batch;
-        relation.materialPurchase = materialPurchase;
+        relation.id = new BatchMaterialRelationId(batchId, materialPurchaseId);
         return relation;
     }
 }

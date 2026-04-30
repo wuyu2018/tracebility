@@ -137,10 +137,10 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
 
         // ===== 6. 批次-原料关联 (BatchMaterialRelation) =====
         bmrRepository.saveAll(List.of(
-            BatchMaterialRelation.create(batch1, mp1),
-            BatchMaterialRelation.create(batch1, mp2),
-            BatchMaterialRelation.create(batch2, mp3),
-            BatchMaterialRelation.create(batch3, mp4)
+            BatchMaterialRelation.create(batch1.getId(), mp1.getId()),
+            BatchMaterialRelation.create(batch1.getId(), mp2.getId()),
+            BatchMaterialRelation.create(batch2.getId(), mp3.getId()),
+            BatchMaterialRelation.create(batch3.getId(), mp4.getId())
         ));
         log.info("[数据库初始化] 批次-原料关联初始化完成");
 
@@ -222,7 +222,7 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     private ProductionBatch createBatch(Product product, String batchNumber, LocalDate productionDate, String shelfLife, Double quantity, String unit) {
         ProductionBatch b = new ProductionBatch();
         b.setBatchNumber(batchNumber);
-        b.setProduct(product);
+        b.setProductId(product.getId());
         b.setProductionDate(productionDate);
         b.setShelfLife(shelfLife);
         b.setQuantity(quantity);

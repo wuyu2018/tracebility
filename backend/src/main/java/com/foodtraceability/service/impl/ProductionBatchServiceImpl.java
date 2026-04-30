@@ -83,7 +83,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     private ProductionBatch createBatchEntity(ProductionBatchDTO dto, Product product) {
         ProductionBatch batch = new ProductionBatch();
         batch.setBatchNumber(generateBatchNumber());
-        batch.setProduct(product);
+        batch.setProductId(product.getId());
         batch.setProductionDate(dto.getProductionDate());
         batch.setShelfLife(dto.getShelfLife() != null ? dto.getShelfLife() : product.getShelfLife());
         batch.setQuantity(dto.getQuantity());
@@ -97,10 +97,9 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
             return;
         }
         for (Long mpId : materialPurchaseIds) {
-            batchMaterialValidator.validate(batch.getId(), mpId);
             MaterialPurchase materialPurchase = materialRepository.findById(mpId)
                     .orElseThrow(() -> new RuntimeException("原材料采购记录不存在: " + mpId));
-            BatchMaterialRelation relation = BatchMaterialRelation.create(batch, materialPurchase);
+            BatchMaterialRelation relation = BatchMaterialRelation.create(batch.getId(), mpId);
             relationRepository.save(relation);
         }
     }
@@ -144,9 +143,9 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
     private void updateBatchFields(ProductionBatch batch, ProductionBatchDTO dto) {
         if (dto.getProductId() != null) {
-            Product product = productRepository.findById(dto.getProductId())
+            productRepository.findById(dto.getProductId())
                     .orElseThrow(() -> new RuntimeException("产品不存在"));
-            batch.setProduct(product);
+            batch.setProductId(dto.getProductId());
         }
         if (dto.getProductionDate() != null) {
             batch.setProductionDate(dto.getProductionDate());
@@ -301,7 +300,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
         ProductionBatch batch = new ProductionBatch();
         batch.setBatchNumber(generateBatchNumber());
-        batch.setProduct(product);
+        batch.setProductId(product.getId());
         batch.setProductionDate(LocalDate.now());
         batch.setShelfLife(product.getShelfLife());
         batch.setQuantity(0.0);

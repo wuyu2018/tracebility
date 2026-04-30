@@ -123,7 +123,7 @@ class BatchMaterialValidatorTest {
     private ProductionBatch createBatch(Long id, Product product) {
         ProductionBatch b = new ProductionBatch();
         b.setId(id);
-        b.setProduct(product);
+        b.setProductId(product.getId());
         return b;
     }
 }
