@@ -11,5 +11,5 @@ import java.util.List;
 public interface InspectionRepository extends JpaRepository<Inspection, Long> {
     List<Inspection> findByBatch(ProductionBatch batch);
 
-    List<Inspection> findByBatchId(Long batchId);
+    List<Inspection> findByBatch_Id(Long batchId);
 }

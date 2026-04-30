@@ -56,7 +56,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(productRepo.findById(1L)).thenReturn(Optional.of(product));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of(createRelation(10L, 1000L)));
         when(materialPurchaseRepo.findById(1000L)).thenReturn(Optional.of(mp));
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
 
         TraceabilityQueryApplicationService.TraceResult result = service.queryByCode("SC123");
 
@@ -85,7 +85,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(batchRepo.findById(10L)).thenReturn(Optional.of(batch));
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of());
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
 
         TraceabilityQueryApplicationService.TraceResult result = service.queryByCode("SC456");
 
@@ -104,7 +104,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(batchRepo.findById(10L)).thenReturn(Optional.of(batch));
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of());
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
 
         TraceabilityQueryApplicationService.TraceResult result = service.queryByCode("SC789");
 
@@ -126,7 +126,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(batchRepo.findByBatchNumberAndIsDeletedFalse("B202604300001")).thenReturn(Optional.of(batch));
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of());
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
 
         TraceabilityQueryApplicationService.TraceResult result = service.queryByBatchNumber("B202604300001");
 
@@ -159,7 +159,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(batchRepo.findById(10L)).thenReturn(Optional.of(batch));
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of());
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
         when(storageRepo.findById(200L)).thenReturn(Optional.of(storage));
         when(transportSaleRepo.findById(300L)).thenReturn(Optional.of(ts));
 
@@ -181,7 +181,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(batchRepo.findById(10L)).thenReturn(Optional.of(batch));
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of());
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of(inspection));
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of(inspection));
 
         var result = service.queryByCode("SC111");
 
@@ -208,7 +208,7 @@ class TraceabilityQueryApplicationServiceTest {
         when(productRepo.findById(1L)).thenReturn(Optional.of(createProduct(1L)));
         when(relationRepo.findById_BatchId(10L)).thenReturn(List.of(createRelation(10L, 1000L)));
         when(materialPurchaseRepo.findById(1000L)).thenReturn(Optional.of(mp));
-        when(inspectionRepo.findByBatchId(10L)).thenReturn(List.of());
+        when(inspectionRepo.findByBatch_Id(10L)).thenReturn(List.of());
 
         var result = service.queryByCode("SC222");
 

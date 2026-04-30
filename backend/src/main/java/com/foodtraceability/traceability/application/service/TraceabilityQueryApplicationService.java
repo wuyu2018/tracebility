@@ -123,7 +123,7 @@ public class TraceabilityQueryApplicationService {
     }
 
     private Inspection findInspection(Long batchId) {
-        List<Inspection> inspections = inspectionRepo.findByBatchId(batchId);
+        List<Inspection> inspections = inspectionRepo.findByBatch_Id(batchId);
         return inspections.isEmpty() ? null : inspections.get(0);
     }
 

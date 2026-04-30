@@ -70,7 +70,7 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     @Override
     @Transactional(readOnly = true)
     public List<SecurityCodeDTO> getCodesByBatchId(Long batchId) {
-        return codeRepository.findByBatchId(batchId).stream()
+        return codeRepository.findByBatch_Id(batchId).stream()
                 .map(this::toDTO)
                 .toList();
     }
