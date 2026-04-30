@@ -3,9 +3,9 @@ package com.foodtraceability.service.impl;
 import com.foodtraceability.domain.DomainException;
 import com.foodtraceability.dto.ProductDTO;
 import com.foodtraceability.entity.Product;
+import com.foodtraceability.policy.DeletionPolicy;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.service.ProductService;
-import com.foodtraceability.service.domain.ProductDeletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -22,12 +22,12 @@ public class ProductApplicationService implements ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductApplicationService.class);
 
     private final ProductRepository repository;
-    private final ProductDeletionService deletionService;
+    private final DeletionPolicy deletionPolicy;
 
     @Autowired
-    public ProductApplicationService(ProductRepository repository, ProductDeletionService deletionService) {
+    public ProductApplicationService(ProductRepository repository, DeletionPolicy deletionPolicy) {
         this.repository = repository;
-        this.deletionService = deletionService;
+        this.deletionPolicy = deletionPolicy;
     }
 
     @Override
@@ -44,18 +44,8 @@ public class ProductApplicationService implements ProductService {
     public Product updateProduct(Long id, ProductDTO dto) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new DomainException("产品不存在"));
-        BeanUtils.copyProperties(dto, entity);
+        copyNonNullProperties(dto, entity);
         return repository.save(entity);
-    }
-
-    @Override
-    @Transactional
-    public void updateQrCode(Long id, String qrCodeUrl, String antiFakeCode) {
-        Product entity = repository.findById(id)
-                .orElseThrow(() -> new DomainException("产品不存在"));
-        entity.setQrCodeUrl(qrCodeUrl);
-        entity.setAntiFakeCode(antiFakeCode);
-        repository.save(entity);
     }
 
     @Override
@@ -63,7 +53,15 @@ public class ProductApplicationService implements ProductService {
     public void deleteProduct(Long id) {
         Product product = repository.findById(id)
                 .orElseThrow(() -> new DomainException("产品不存在"));
-        deletionService.deleteProduct(product);
+        deletionPolicy.deleteProduct(product);
+    }
+
+    @Override
+    @Transactional
+    public void hardDeleteProduct(Long id) {
+        Product product = repository.findById(id)
+                .orElseThrow(() -> new DomainException("产品不存在"));
+        deletionPolicy.hardDeleteProduct(product);
     }
 
     @Override
@@ -101,5 +99,15 @@ public class ProductApplicationService implements ProductService {
     @Transactional(readOnly = true)
     public Optional<Product> getProductByAntiFakeCode(String antiFakeCode) {
         return repository.findByAntiFakeCode(antiFakeCode);
+    }
+
+    private void copyNonNullProperties(ProductDTO source, Product target) {
+        if (source.getName() != null) target.setName(source.getName());
+        if (source.getSpecification() != null) target.setSpecification(source.getSpecification());
+        if (source.getShelfLife() != null) target.setShelfLife(source.getShelfLife());
+        if (source.getImageUrl() != null) target.setImageUrl(source.getImageUrl());
+        if (source.getContactPhone() != null) target.setContactPhone(source.getContactPhone());
+        if (source.getContactEmail() != null) target.setContactEmail(source.getContactEmail());
+        if (source.getQrCodeUrl() != null) target.setQrCodeUrl(source.getQrCodeUrl());
     }
 }

@@ -20,8 +20,6 @@ public class ComplaintDTO {
 
     private LocalDateTime complaintTime;
 
-    private String antiFakeCode;
-
     private String batchNumber;
 
     private Boolean isProcessed;

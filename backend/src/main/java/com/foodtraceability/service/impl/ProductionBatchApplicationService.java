@@ -44,7 +44,8 @@ public class ProductionBatchApplicationService implements ProductionBatchService
             BatchMaterialRelationRepository relationRepository,
             InspectionRepository inspectionRepository,
             StorageRepository storageRepository,
-            TransportSaleRepository transportSaleRepository) {
+            TransportSaleRepository transportSaleRepository,
+            BatchMaterialValidator batchMaterialValidator) {
         this.batchRepository = batchRepository;
         this.productRepository = productRepository;
         this.materialRepository = materialRepository;
@@ -98,10 +99,11 @@ public class ProductionBatchApplicationService implements ProductionBatchService
         if (materialPurchaseIds == null || materialPurchaseIds.isEmpty()) {
             return;
         }
-        for (Long materialId : materialIds) {
-            MaterialPurchase material = materialRepository.findById(materialId)
-                    .orElseThrow(() -> new DomainException("原材料不存在: " + materialId));
-            BatchMaterialRelation relation = BatchMaterialRelation.create(batch, material);
+        for (Long mpId : materialPurchaseIds) {
+            batchMaterialValidator.validate(batch.getId(), mpId);
+            MaterialPurchase materialPurchase = materialRepository.findById(mpId)
+                    .orElseThrow(() -> new DomainException("原材料采购记录不存在: " + mpId));
+            BatchMaterialRelation relation = BatchMaterialRelation.create(batch, materialPurchase);
             relationRepository.save(relation);
         }
     }

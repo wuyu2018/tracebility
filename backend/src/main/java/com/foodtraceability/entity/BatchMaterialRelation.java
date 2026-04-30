@@ -36,7 +36,7 @@ public class BatchMaterialRelation {
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
-    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase material) {
+    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase materialPurchase) {
         BatchMaterialRelation relation = new BatchMaterialRelation();
         relation.id = new BatchMaterialRelationId(batch.getId(), materialPurchase.getId());
         relation.batch = batch;
@@ -45,7 +45,7 @@ public class BatchMaterialRelation {
     }
 
     public boolean isValid() {
-        return this.batch != null && this.material != null;
+        return this.batch != null && this.materialPurchase != null;
     }
 
     public List<DomainEvent> getDomainEvents() {

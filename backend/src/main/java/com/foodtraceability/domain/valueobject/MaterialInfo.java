@@ -18,7 +18,7 @@ public class MaterialInfo {
             return null;
         }
         return new MaterialInfo(
-            material.getMaterialName(),
+            material.getMaterial() != null ? material.getMaterial().getName() : null,
             material.getBatchNumber(),
             material.getSupplierName(),
             material.getProducerName()

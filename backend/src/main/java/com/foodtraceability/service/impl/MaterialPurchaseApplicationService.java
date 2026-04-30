@@ -4,11 +4,10 @@ import com.foodtraceability.domain.DomainException;
 import com.foodtraceability.dto.MaterialPurchaseDTO;
 import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.MaterialPurchase;
-import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
 import com.foodtraceability.repository.MaterialRepository;
 import com.foodtraceability.service.MaterialPurchaseService;
-import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +22,7 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
     @Autowired
     public MaterialPurchaseApplicationService(
             MaterialPurchaseRepository repository,
-            ProductRepository productRepository) {
+            MaterialRepository materialRepository) {
         this.repository = repository;
         this.materialRepository = materialRepository;
     }
@@ -31,12 +30,18 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
     @Override
     @Transactional
     public MaterialPurchase createMaterialPurchase(MaterialPurchaseDTO dto) {
-        Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new DomainException("产品不存在"));
+        Material material = materialRepository.findById(dto.getMaterialId())
+                .orElseThrow(() -> new DomainException("原料品种不存在"));
 
         MaterialPurchase entity = new MaterialPurchase();
         entity.setMaterial(material);
-        BeanUtils.copyProperties(dto, entity);
+        entity.setBatchNumber(dto.getBatchNumber());
+        entity.setSupplierName(dto.getSupplierName());
+        entity.setProducerName(dto.getProducerName());
+        entity.setProducerAddress(dto.getProducerAddress());
+        entity.setPurchaseDate(dto.getPurchaseDate());
+        entity.setQuantity(dto.getQuantity());
+        entity.setUnit(dto.getUnit());
         entity.setIsDeleted(false);
         return repository.save(entity);
     }
@@ -47,22 +52,18 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
         MaterialPurchase entity = repository.findById(id)
                 .orElseThrow(() -> new DomainException("原材料采购记录不存在"));
 
-        if (dto.getProductId() != null && !dto.getProductId().equals(entity.getProduct().getId())) {
-            Product product = productRepository.findById(dto.getProductId())
-                    .orElseThrow(() -> new DomainException("产品不存在"));
-            entity.setProduct(product);
+        if (dto.getMaterialId() != null) {
+            Material material = materialRepository.findById(dto.getMaterialId())
+                    .orElseThrow(() -> new DomainException("原料品种不存在"));
+            entity.setMaterial(material);
         }
-
-        entity.updateBasicInfo(
-                dto.getMaterialName(),
-                dto.getBatchNumber(),
-                dto.getSupplierName(),
-                dto.getProducerName(),
-                dto.getProducerAddress(),
-                dto.getPurchaseDate(),
-                dto.getQuantity(),
-                dto.getUnit()
-        );
+        if (dto.getBatchNumber() != null) entity.setBatchNumber(dto.getBatchNumber());
+        if (dto.getSupplierName() != null) entity.setSupplierName(dto.getSupplierName());
+        if (dto.getProducerName() != null) entity.setProducerName(dto.getProducerName());
+        if (dto.getProducerAddress() != null) entity.setProducerAddress(dto.getProducerAddress());
+        if (dto.getPurchaseDate() != null) entity.setPurchaseDate(dto.getPurchaseDate());
+        if (dto.getQuantity() != null) entity.setQuantity(dto.getQuantity());
+        if (dto.getUnit() != null) entity.setUnit(dto.getUnit());
 
         return repository.save(entity);
     }

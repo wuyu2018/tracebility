@@ -56,13 +56,12 @@ public class MaterialPurchase {
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
-    public static MaterialPurchase create(Product product, String materialName, String batchNumber) {
-        MaterialPurchase material = new MaterialPurchase();
-        material.product = product;
-        material.materialName = materialName;
-        material.batchNumber = batchNumber;
-        material.isDeleted = false;
-        return material;
+    public static MaterialPurchase create(Material material, String batchNumber) {
+        MaterialPurchase mp = new MaterialPurchase();
+        mp.material = material;
+        mp.batchNumber = batchNumber;
+        mp.isDeleted = false;
+        return mp;
     }
 
     public void softDelete() {
@@ -92,10 +91,9 @@ public class MaterialPurchase {
         this.unit = unit;
     }
 
-    public void updateBasicInfo(String materialName, String batchNumber,
+    public void updateBasicInfo(String batchNumber,
                                 String supplierName, String producerName, String producerAddress,
                                 LocalDateTime purchaseDate, Double quantity, String unit) {
-        if (materialName != null) this.materialName = materialName;
         if (batchNumber != null) this.batchNumber = batchNumber;
         if (supplierName != null) this.supplierName = supplierName;
         if (producerName != null) this.producerName = producerName;

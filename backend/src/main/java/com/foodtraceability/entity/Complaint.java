@@ -29,17 +29,10 @@ public class Complaint {
     @Column(name = "complaint_time")
     private LocalDateTime complaintTime;
 
-    @Column(name = "product_name", length = 100)
-    private String productName;
-
-    @Column(name = "batch_number", length = 50)
-    private String batchNumber;
-
     @Column(name = "is_processed")
     private Boolean isProcessed = false;
 
-    public static Complaint create(String productName, String complaintReason) {
-        validateProductName(productName);
+    public static Complaint create(SecurityCode securityCode, String complaintReason) {
         validateComplaintReason(complaintReason);
 
         Complaint complaint = new Complaint();
@@ -55,28 +48,12 @@ public class Complaint {
         this.complaintReason = newReason;
     }
 
-    public void linkToProduct(String antiFakeCodeOrBatchNumber) {
-        if (antiFakeCodeOrBatchNumber != null && !antiFakeCodeOrBatchNumber.isEmpty()) {
-            if (antiFakeCodeOrBatchNumber.startsWith("SC")) {
-                this.antiFakeCode = antiFakeCodeOrBatchNumber;
-            } else {
-                this.batchNumber = antiFakeCodeOrBatchNumber;
-            }
-        }
-    }
-
     public void markAsProcessed() {
         this.isProcessed = true;
     }
 
     public boolean isProcessed() {
         return Boolean.TRUE.equals(this.isProcessed);
-    }
-
-    private static void validateProductName(String productName) {
-        if (productName == null || productName.isBlank()) {
-            throw new BusinessException("请选择要投诉的产品");
-        }
     }
 
     private static void validateComplaintReason(String complaintReason) {

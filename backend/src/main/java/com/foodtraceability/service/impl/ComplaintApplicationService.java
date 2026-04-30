@@ -3,12 +3,15 @@ package com.foodtraceability.service.impl;
 import com.foodtraceability.domain.DomainException;
 import com.foodtraceability.dto.ComplaintDTO;
 import com.foodtraceability.entity.Complaint;
+import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.ComplaintRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
 import com.foodtraceability.service.ComplaintService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ComplaintApplicationService implements ComplaintService {
@@ -19,7 +22,8 @@ public class ComplaintApplicationService implements ComplaintService {
     private final SecurityCodeRepository securityCodeRepository;
 
     @Autowired
-    public ComplaintApplicationService(ComplaintRepository complaintRepository) {
+    public ComplaintApplicationService(ComplaintRepository complaintRepository,
+                                      SecurityCodeRepository securityCodeRepository) {
         this.complaintRepository = complaintRepository;
         this.securityCodeRepository = securityCodeRepository;
     }
@@ -32,16 +36,9 @@ public class ComplaintApplicationService implements ComplaintService {
         }
 
         SecurityCode securityCode = securityCodeRepository.findByCode(complaintDTO.getAntiFakeCode())
-                .orElseThrow(() -> new BusinessException("防伪码不存在: " + complaintDTO.getAntiFakeCode()));
+                .orElseThrow(() -> new DomainException("防伪码不存在: " + complaintDTO.getAntiFakeCode()));
 
         Complaint complaint = Complaint.create(securityCode, complaintDTO.getComplaintReason());
-
-        if (complaintDTO.getAntiFakeCode() != null || complaintDTO.getBatchNumber() != null) {
-            String codeOrBatch = complaintDTO.getAntiFakeCode() != null
-                    ? complaintDTO.getAntiFakeCode()
-                    : complaintDTO.getBatchNumber();
-            complaint.linkToProduct(codeOrBatch);
-        }
 
         Complaint savedComplaint = complaintRepository.save(complaint);
         log.info("[投诉创建] 投诉已保存 - ID: {}, 防伪码: {}",
@@ -73,9 +70,13 @@ public class ComplaintApplicationService implements ComplaintService {
         dto.setId(complaint.getId());
         dto.setComplaintReason(complaint.getComplaintReason());
         dto.setComplaintTime(complaint.getComplaintTime());
-        dto.setBatchNumber(complaint.getBatchNumber());
-        dto.setAntiFakeCode(complaint.getAntiFakeCode());
-        dto.setIsProcessed(complaint.isProcessed());
+        if (complaint.getSecurityCode() != null) {
+            dto.setAntiFakeCode(complaint.getSecurityCode().getCode());
+            if (complaint.getSecurityCode().getBatch() != null) {
+                dto.setBatchNumber(complaint.getSecurityCode().getBatch().getBatchNumber());
+            }
+        }
+        dto.setIsProcessed(false);
         return dto;
     }
 }
