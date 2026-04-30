@@ -1,27 +1,35 @@
 package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.foodtraceability.traceability.domain.event.DomainEvent;
+import com.foodtraceability.traceability.domain.event.GoodsStored;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "storage")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Storage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "batch_id", nullable = false)
+    private Long batchId;
+
+    @Deprecated
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id")
+    @JoinColumn(name = "batch_id", insertable = false, updatable = false,
+                foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProductionBatch batch;
 
@@ -40,7 +48,32 @@ public class Storage {
     @Column(name = "warehouse_location", length = 100)
     private String warehouseLocation;
 
+    @Transient
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
+    public static Storage create(Long batchId, LocalDateTime storageTime, Double quantity,
+                                  String unit, String warehouseLocation) {
+        Storage s = new Storage();
+        s.batchId = batchId;
+        s.storageTime = storageTime;
+        s.quantity = quantity;
+        s.unit = unit;
+        s.warehouseLocation = warehouseLocation;
+        return s;
+    }
+
+    public void registerEvent(DomainEvent event) {
+        domainEvents.add(event);
+    }
+
+    public List<DomainEvent> pullEvents() {
+        var events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+
+    @Deprecated
     public void associateBatch(ProductionBatch batch) {
-        this.batch = batch;
+        this.batchId = batch.getId();
     }
 }
