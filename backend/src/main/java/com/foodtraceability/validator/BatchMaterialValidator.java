@@ -1,0 +1,56 @@
+package com.foodtraceability.validator;
+
+import com.foodtraceability.entity.*;
+import com.foodtraceability.exception.BusinessException;
+import com.foodtraceability.repository.BatchMaterialRelationRepository;
+import com.foodtraceability.repository.MaterialPurchaseRepository;
+import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.service.ProductMaterialRelationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+public class BatchMaterialValidator {
+    private static final Logger log = LoggerFactory.getLogger(BatchMaterialValidator.class);
+
+    private final ProductionBatchRepository batchRepository;
+    private final MaterialPurchaseRepository materialPurchaseRepository;
+    private final ProductMaterialRelationService pmrService;
+
+    public BatchMaterialValidator(ProductionBatchRepository batchRepository,
+                                  MaterialPurchaseRepository materialPurchaseRepository,
+                                  ProductMaterialRelationService pmrService) {
+        this.batchRepository = batchRepository;
+        this.materialPurchaseRepository = materialPurchaseRepository;
+        this.pmrService = pmrService;
+    }
+
+    public void validate(Long batchId, Long materialPurchaseId) {
+        ProductionBatch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new BusinessException("生产批次不存在: " + batchId));
+
+        MaterialPurchase purchase = materialPurchaseRepository.findById(materialPurchaseId)
+                .orElseThrow(() -> new BusinessException("原料采购记录不存在: " + materialPurchaseId));
+
+        Product product = batch.getProduct();
+        Material material = purchase.getMaterial();
+
+        if (material == null) {
+            throw new BusinessException("原料采购记录未关联原料品种");
+        }
+
+        boolean visible = pmrService.isMaterialVisibleToProduct(product.getId(), material.getId());
+
+        if (!visible) {
+            log.warn("[原料授权校验] 拒绝 - 产品:{} 原料品种:{} 不可见",
+                    product.getName(), material.getName());
+            throw new BusinessException(
+                    String.format("原料品种'%s'未授权给产品'%s'，请在产品管理中先绑定该原料",
+                            material.getName(), product.getName()));
+        }
+
+        log.debug("[原料授权校验] 通过 - 产品:{} 原料品种:{}",
+                product.getName(), material.getName());
+    }
+}

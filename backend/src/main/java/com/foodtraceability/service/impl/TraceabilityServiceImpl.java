@@ -139,9 +139,9 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batchId);
         return relations.stream()
                 .map(r -> {
-                    MaterialPurchase m = r.getMaterial();
+                    MaterialPurchase m = r.getMaterialPurchase();
                     TraceInfoDTO.MaterialInfo mi = new TraceInfoDTO.MaterialInfo();
-                    mi.setMaterialName(m.getMaterialName());
+                    mi.setMaterialName(m.getMaterial() != null ? m.getMaterial().getName() : null);
                     mi.setBatchNumber(m.getBatchNumber());
                     mi.setSupplierName(m.getSupplierName());
                     mi.setProducerName(m.getProducerName());

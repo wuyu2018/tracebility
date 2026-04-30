@@ -7,6 +7,4 @@ import java.util.List;
 
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
-    List<Complaint> findByProductName(String productName);
-    void deleteByProductName(String productName);
 }

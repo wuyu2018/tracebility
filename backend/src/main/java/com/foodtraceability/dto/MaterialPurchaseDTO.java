@@ -6,8 +6,7 @@ import java.time.LocalDateTime;
 @Data
 public class MaterialPurchaseDTO {
     private Long id;
-    private Long productId;
-    private String productName;
+    private Long materialId;
     private String materialName;
     private String batchNumber;
     private String supplierName;

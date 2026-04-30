@@ -12,4 +12,5 @@ public interface SecurityCodeRepository extends JpaRepository<SecurityCode, Long
     Optional<SecurityCode> findByCode(String code);
     List<SecurityCode> findByBatchId(Long batchId);
     long countByBatchId(Long batchId);
+    boolean existsByBatchProductId(Long productId);
 }

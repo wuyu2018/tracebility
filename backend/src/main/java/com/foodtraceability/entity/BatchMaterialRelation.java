@@ -15,24 +15,26 @@ import lombok.AllArgsConstructor;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BatchMaterialRelation {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @EmbeddedId
+    private BatchMaterialRelationId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("batchId")
     @JoinColumn(name = "batch_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProductionBatch batch;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material_id", nullable = false)
+    @MapsId("materialPurchaseId")
+    @JoinColumn(name = "material_purchase_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private MaterialPurchase material;
+    private MaterialPurchase materialPurchase;
 
-    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase material) {
+    public static BatchMaterialRelation create(ProductionBatch batch, MaterialPurchase materialPurchase) {
         BatchMaterialRelation relation = new BatchMaterialRelation();
+        relation.id = new BatchMaterialRelationId(batch.getId(), materialPurchase.getId());
         relation.batch = batch;
-        relation.material = material;
+        relation.materialPurchase = materialPurchase;
         return relation;
     }
 }

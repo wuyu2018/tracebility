@@ -18,8 +18,9 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "anti_fake_code", length = 64)
-    private String antiFakeCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "security_code_id")
+    private SecurityCode securityCode;
 
     @Column(name = "complaint_reason", length = 500)
     private String complaintReason;
@@ -27,18 +28,11 @@ public class Complaint {
     @Column(name = "complaint_time")
     private LocalDateTime complaintTime;
 
-    @Column(name = "product_name", length = 100)
-    private String productName;
-
-    @Column(name = "batch_number", length = 50)
-    private String batchNumber;
-
-    public static Complaint create(String productName, String complaintReason) {
-        validateProductName(productName);
+    public static Complaint create(SecurityCode securityCode, String complaintReason) {
         validateComplaintReason(complaintReason);
 
         Complaint complaint = new Complaint();
-        complaint.setProductName(productName);
+        complaint.setSecurityCode(securityCode);
         complaint.setComplaintReason(complaintReason);
         complaint.setComplaintTime(LocalDateTime.now());
         return complaint;
@@ -47,12 +41,6 @@ public class Complaint {
     public void updateReason(String newReason) {
         validateComplaintReason(newReason);
         this.complaintReason = newReason;
-    }
-
-    private static void validateProductName(String productName) {
-        if (productName == null || productName.isBlank()) {
-            throw new BusinessException("请选择要投诉的产品");
-        }
     }
 
     private static void validateComplaintReason(String complaintReason) {
