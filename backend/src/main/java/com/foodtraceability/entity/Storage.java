@@ -2,7 +2,7 @@ package com.foodtraceability.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.foodtraceability.traceability.domain.event.DomainEvent;
-import com.foodtraceability.traceability.domain.event.GoodsStored;
+import com.foodtraceability.traceability.domain.event.GoodsReceived;
 
 import jakarta.persistence.*;
 import lombok.Getter;

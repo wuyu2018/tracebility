@@ -7,7 +7,7 @@ import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
 import com.foodtraceability.traceability.application.dto.RecordStorageRequest;
 import com.foodtraceability.traceability.application.dto.RecordStorageResponse;
-import com.foodtraceability.traceability.domain.event.GoodsStored;
+import com.foodtraceability.traceability.domain.event.GoodsReceived;
 import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +46,14 @@ public class StorageApplicationService {
         batch.setStorageId(storageId);
         batchRepo.save(batch);
 
-        var event = new GoodsStored(storageId, req.batchId(), req.storageTime());
+        var event = new GoodsReceived(storageId, req.batchId(), req.storageTime());
         publishAfterCommit(event);
 
         log.info("Storage recorded: id={}, batchId={}", storageId, req.batchId());
         return new RecordStorageResponse(storageId, req.batchId(), req.warehouseLocation());
     }
 
-    private void publishAfterCommit(GoodsStored event) {
+    private void publishAfterCommit(GoodsReceived event) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(
                     new TransactionSynchronization() {

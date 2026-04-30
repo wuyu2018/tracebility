@@ -32,7 +32,7 @@ public class InspectionCompletedEventListener {
     private void freezeSecurityCodes(Long batchId) {
         var codes = securityCodeRepo.findByBatch_Id(batchId);
         for (SecurityCode sc : codes) {
-            sc.setStatus(SecurityCode.STATUS_FROZEN);
+            sc.freeze();
         }
         securityCodeRepo.saveAll(codes);
         log.warn("[Event] 批次不合格，已冻结 {} 个防伪码 (batchId={})", codes.size(), batchId);

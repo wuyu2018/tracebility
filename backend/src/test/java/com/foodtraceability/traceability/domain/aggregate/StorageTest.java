@@ -2,7 +2,7 @@ package com.foodtraceability.traceability.domain.aggregate;
 
 import com.foodtraceability.entity.Storage;
 import com.foodtraceability.traceability.domain.event.DomainEvent;
-import com.foodtraceability.traceability.domain.event.GoodsStored;
+import com.foodtraceability.traceability.domain.event.GoodsReceived;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -29,7 +29,7 @@ class StorageTest {
     @Test
     void registerAndPullEvents() {
         Storage s = Storage.create(10L, LocalDateTime.now(), 100.0, "盒", "B区");
-        GoodsStored event = new GoodsStored(1L, 10L, LocalDateTime.now());
+        GoodsReceived event = new GoodsReceived(1L, 10L, LocalDateTime.now());
 
         s.registerEvent(event);
         List<DomainEvent> pulled = s.pullEvents();

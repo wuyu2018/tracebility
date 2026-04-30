@@ -113,6 +113,10 @@ public class SecurityCode {
         this.scanCount++;
     }
 
+    public void freeze() {
+        this.status = STATUS_FROZEN;
+    }
+
     public void recordQueryAndActivateIfNeeded() {
         if (isFirstQuery()) {
             activate();

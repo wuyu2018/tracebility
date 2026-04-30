@@ -2,9 +2,7 @@ package com.foodtraceability.traceability.domain.service;
 
 import com.foodtraceability.entity.Product;
 import com.foodtraceability.exception.BusinessException;
-import org.springframework.stereotype.Component;
 
-@Component
 public class BatchCreationValidator {
 
     public Product validateProduct(Product product) {

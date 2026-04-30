@@ -38,12 +38,11 @@ public class ProductionBatchApplicationService {
     public ProductionBatchApplicationService(ProductionBatchRepository batchRepo,
                                              ProductRepository productRepo,
                                              BatchMaterialRelationRepository relationRepo,
-                                             BatchCreationValidator validator,
                                              DomainEventPublisherImpl eventPublisher) {
         this.batchRepo = batchRepo;
         this.productRepo = productRepo;
         this.relationRepo = relationRepo;
-        this.validator = validator;
+        this.validator = new BatchCreationValidator();
         this.eventPublisher = eventPublisher;
     }
 

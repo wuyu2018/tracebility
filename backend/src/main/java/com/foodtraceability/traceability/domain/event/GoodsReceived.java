@@ -3,13 +3,13 @@ package com.foodtraceability.traceability.domain.event;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-public class GoodsStored implements DomainEvent {
+public class GoodsReceived implements DomainEvent {
     private final Instant occurredAt;
     private final Long storageId;
     private final Long batchId;
     private final LocalDateTime storageTime;
 
-    public GoodsStored(Long storageId, Long batchId, LocalDateTime storageTime) {
+    public GoodsReceived(Long storageId, Long batchId, LocalDateTime storageTime) {
         this.occurredAt = Instant.now();
         this.storageId = storageId;
         this.batchId = batchId;

@@ -7,12 +7,12 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
-class GoodsStoredTest {
+class GoodsReceivedTest {
 
     @Test
     void create_setsFields() {
         LocalDateTime now = LocalDateTime.of(2026, 4, 30, 10, 0);
-        GoodsStored event = new GoodsStored(1L, 10L, now);
+        GoodsReceived event = new GoodsReceived(1L, 10L, now);
 
         assertEquals(1L, event.storageId());
         assertEquals(10L, event.batchId());
