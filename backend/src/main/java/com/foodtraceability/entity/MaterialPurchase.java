@@ -13,9 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "material_purchase", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"product_id", "batch_number"})
-})
+@Table(name = "material_purchase")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,14 +25,11 @@ public class MaterialPurchase {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "material_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private Product product;
+    private Material material;
 
-    @Column(name = "material_name", nullable = false, length = 100)
-    private String materialName;
-
-    @Column(name = "batch_number", nullable = false, length = 50)
+    @Column(name = "batch_number", length = 50)
     private String batchNumber;
 
     @Column(name = "supplier_name", length = 100)
@@ -49,7 +44,7 @@ public class MaterialPurchase {
     @Column(name = "purchase_date")
     private LocalDateTime purchaseDate;
 
-    @Column(name = "quantity")
+    @Column
     private Double quantity;
 
     @Column(length = 20)

@@ -11,6 +11,7 @@ public interface ProductService {
     Product updateProduct(Long id, ProductDTO dto);
     void updateQrCode(Long id, String qrCodeUrl, String antiFakeCode);
     void deleteProduct(Long id);
+    void hardDeleteProduct(Long id);
     void clearQrCode(Long id);
     List<Product> listAllProducts();
     List<Product> searchProducts(String keyword);

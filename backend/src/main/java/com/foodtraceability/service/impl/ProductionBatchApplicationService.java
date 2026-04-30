@@ -8,6 +8,7 @@ import com.foodtraceability.dto.TransportSaleDTO;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import com.foodtraceability.service.ProductionBatchService;
+import com.foodtraceability.validator.BatchMaterialValidator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,8 @@ public class ProductionBatchApplicationService implements ProductionBatchService
 
     private static final AtomicLong batchCounter = new AtomicLong(0);
 
+    private final BatchMaterialValidator batchMaterialValidator;
+
     @Autowired
     public ProductionBatchApplicationService(
             ProductionBatchRepository batchRepository,
@@ -49,6 +52,7 @@ public class ProductionBatchApplicationService implements ProductionBatchService
         this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
+        this.batchMaterialValidator = batchMaterialValidator;
     }
 
     @PostConstruct
@@ -90,8 +94,8 @@ public class ProductionBatchApplicationService implements ProductionBatchService
         return batch;
     }
 
-    private void associateMaterials(ProductionBatch batch, List<Long> materialIds) {
-        if (materialIds == null || materialIds.isEmpty()) {
+    private void associateMaterials(ProductionBatch batch, List<Long> materialPurchaseIds) {
+        if (materialPurchaseIds == null || materialPurchaseIds.isEmpty()) {
             return;
         }
         for (Long materialId : materialIds) {

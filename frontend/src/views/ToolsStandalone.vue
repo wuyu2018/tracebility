@@ -117,6 +117,7 @@ import InsertDataTool from '../components/InsertDataTool.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi, getProductsForInsert } from '../services/api'
 import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
 import { useRouter } from 'vue-router'
+import axios from '../utils/axios'
 
 const router = useRouter()
 const activeTab = ref('qrcode')

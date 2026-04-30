@@ -2,13 +2,13 @@ package com.foodtraceability.service.impl;
 
 import com.foodtraceability.domain.DomainException;
 import com.foodtraceability.dto.MaterialPurchaseDTO;
+import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.MaterialPurchase;
-import com.foodtraceability.entity.Product;
+import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
-import com.foodtraceability.repository.ProductRepository;
+import com.foodtraceability.repository.MaterialRepository;
 import com.foodtraceability.service.MaterialPurchaseService;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,14 +18,14 @@ import java.util.List;
 public class MaterialPurchaseApplicationService implements MaterialPurchaseService {
 
     private final MaterialPurchaseRepository repository;
-    private final ProductRepository productRepository;
+    private final MaterialRepository materialRepository;
 
     @Autowired
     public MaterialPurchaseApplicationService(
             MaterialPurchaseRepository repository,
             ProductRepository productRepository) {
         this.repository = repository;
-        this.productRepository = productRepository;
+        this.materialRepository = materialRepository;
     }
 
     @Override
@@ -34,12 +34,10 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new DomainException("产品不存在"));
 
-        MaterialPurchase entity = MaterialPurchase.create(
-                product,
-                dto.getMaterialName(),
-                dto.getBatchNumber()
-        );
+        MaterialPurchase entity = new MaterialPurchase();
+        entity.setMaterial(material);
         BeanUtils.copyProperties(dto, entity);
+        entity.setIsDeleted(false);
         return repository.save(entity);
     }
 
@@ -86,7 +84,7 @@ public class MaterialPurchaseApplicationService implements MaterialPurchaseServi
 
     @Override
     @Transactional(readOnly = true)
-    public List<MaterialPurchase> getMaterialPurchasesByProductId(Long productId) {
-        return repository.findByProductIdAndIsDeletedFalse(productId);
+    public List<MaterialPurchase> getMaterialPurchasesByMaterialId(Long materialId) {
+        return repository.findByMaterialIdAndIsDeletedFalse(materialId);
     }
 }

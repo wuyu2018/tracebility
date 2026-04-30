@@ -19,8 +19,9 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "anti_fake_code", length = 64)
-    private String antiFakeCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "security_code_id")
+    private SecurityCode securityCode;
 
     @Column(name = "complaint_reason", length = 500)
     private String complaintReason;
@@ -42,7 +43,7 @@ public class Complaint {
         validateComplaintReason(complaintReason);
 
         Complaint complaint = new Complaint();
-        complaint.setProductName(productName);
+        complaint.setSecurityCode(securityCode);
         complaint.setComplaintReason(complaintReason);
         complaint.setComplaintTime(LocalDateTime.now());
         complaint.setIsProcessed(false);

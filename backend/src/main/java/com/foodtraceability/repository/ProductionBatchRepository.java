@@ -17,4 +17,6 @@ public interface ProductionBatchRepository extends JpaRepository<ProductionBatch
     List<ProductionBatch> findByProductIdAndIsDeletedFalse(Long productId);
 
     Optional<ProductionBatch> findByBatchNumberAndIsDeletedFalse(String batchNumber);
+
+    boolean existsByProductId(Long productId);
 }

@@ -10,5 +10,5 @@ public interface MaterialPurchaseService {
     MaterialPurchase updateMaterialPurchase(Long id, MaterialPurchaseDTO dto);
     void deleteMaterialPurchase(Long id);
     List<MaterialPurchase> listAllMaterialPurchases();
-    List<MaterialPurchase> getMaterialPurchasesByProductId(Long productId);
+    List<MaterialPurchase> getMaterialPurchasesByMaterialId(Long materialId);
 }
