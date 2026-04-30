@@ -13,12 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ProductionBatchServiceImpl implements ProductionBatchService {
@@ -30,19 +27,17 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
 
-    private static final AtomicLong batchCounter = new AtomicLong(0);
-
     private final BatchMaterialValidator batchMaterialValidator;
 
     @Autowired
     public ProductionBatchServiceImpl(ProductionBatchRepository batchRepository,
-                                     ProductRepository productRepository,
-                                     MaterialPurchaseRepository materialRepository,
-                                     BatchMaterialRelationRepository relationRepository,
-                                     InspectionRepository inspectionRepository,
-                                     StorageRepository storageRepository,
-                                     TransportSaleRepository transportSaleRepository,
-                                     BatchMaterialValidator batchMaterialValidator) {
+                                      ProductRepository productRepository,
+                                      MaterialPurchaseRepository materialRepository,
+                                      BatchMaterialRelationRepository relationRepository,
+                                      InspectionRepository inspectionRepository,
+                                      StorageRepository storageRepository,
+                                      TransportSaleRepository transportSaleRepository,
+                                      BatchMaterialValidator batchMaterialValidator) {
         this.batchRepository = batchRepository;
         this.productRepository = productRepository;
         this.materialRepository = materialRepository;
@@ -53,15 +48,14 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         this.batchMaterialValidator = batchMaterialValidator;
     }
 
-    @PostConstruct
-    public void initBatchCounter() {
-        batchRepository.findAll().stream()
+    private long nextBatchSeq() {
+        return batchRepository.findByIsDeletedFalse().stream()
                 .map(ProductionBatch::getBatchNumber)
                 .filter(n -> n != null && n.matches("B\\d{8}\\d{4}"))
                 .map(n -> n.substring(9))
                 .mapToLong(Long::parseLong)
                 .max()
-                .ifPresent(max -> batchCounter.set(max));
+                .orElse(0) + 1;
     }
 
     @Override
@@ -288,7 +282,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
     private String generateBatchNumber() {
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long counter = batchCounter.incrementAndGet();
+        long counter = nextBatchSeq();
         return "B" + dateStr + String.format("%04d", counter);
     }
 

@@ -13,7 +13,6 @@ import com.foodtraceability.traceability.domain.service.BatchCreationValidator;
 import com.foodtraceability.traceability.domain.vo.BatchNumber;
 import com.foodtraceability.traceability.domain.vo.Quantity;
 import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,14 +22,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @Transactional
 public class ProductionBatchApplicationService {
 
     private static final Logger log = LoggerFactory.getLogger(ProductionBatchApplicationService.class);
-    private static final AtomicLong batchCounter = new AtomicLong(0);
 
     private final ProductionBatchRepository batchRepo;
     private final ProductRepository productRepo;
@@ -50,15 +47,14 @@ public class ProductionBatchApplicationService {
         this.eventPublisher = eventPublisher;
     }
 
-    @PostConstruct
-    public void initCounter() {
-        batchRepo.findByIsDeletedFalse().stream()
+    private long nextBatchSeq() {
+        return batchRepo.findByIsDeletedFalse().stream()
                 .map(ProductionBatch::getBatchNumber)
                 .filter(n -> n != null && n.matches("B\\d{8}\\d{4}"))
                 .map(n -> n.substring(9))
                 .mapToLong(Long::parseLong)
                 .max()
-                .ifPresent(max -> batchCounter.set(max));
+                .orElse(0) + 1;
     }
 
     public CreateBatchResponse createBatch(CreateBatchRequest req) {
@@ -72,7 +68,7 @@ public class ProductionBatchApplicationService {
 
         BatchNumber batchNo = BatchNumber.generate(
                 LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-                batchCounter.incrementAndGet());
+                nextBatchSeq());
         Quantity qty = Quantity.of(req.quantity() != null ? req.quantity() : 0.0,
                 req.unit() != null ? req.unit() : "");
 
