@@ -10,7 +10,7 @@
 
       <el-steps :active="currentStep" finish-status="success" class="main-steps">
         <el-step title="产品信息" description="录入产品基本信息" />
-        <el-step title="原材料" description="录入原材料采购信息" />
+        <el-step title="原材料" description="品种管理+采购录入" />
         <el-step title="生产批次" description="创建生产批次并关联原材料" />
         <el-step title="防伪码" description="生成防伪码" />
       </el-steps>
@@ -58,7 +58,41 @@
         </div>
 
         <div v-show="currentStep === 1" class="step-panel">
-          <h2>原材料采购管理</h2>
+          <h2>原料品种管理</h2>
+          <el-button type="success" size="small" @click="showVarietyDialog(null)" style="margin-bottom:1rem">新增品种</el-button>
+          <el-table :data="materialVarieties" style="width:100%;margin-bottom:2rem" max-height="200">
+            <el-table-column prop="id" label="ID" width="60" />
+            <el-table-column prop="name" label="品种名称" />
+            <el-table-column prop="isActive" label="状态" width="80">
+              <template #default="scope">
+                <el-tag :type="scope.row.isActive ? 'success' : 'info'" size="small">
+                  {{ scope.row.isActive ? '启用' : '停用' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="180">
+              <template #default="scope">
+                <el-button size="small" @click="showVarietyDialog(scope.row)">编辑</el-button>
+                <el-button v-if="scope.row.isActive" size="small" type="warning" @click="toggleVarietyActive(scope.row.id, false)">停用</el-button>
+                <el-button v-else size="small" type="success" @click="toggleVarietyActive(scope.row.id, true)">启用</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <el-dialog v-model="varietyDialogVisible" :title="editingVariety ? '编辑品种' : '新增品种'" width="400px">
+            <el-form :model="varietyForm" label-width="80px">
+              <el-form-item label="品种名称" required>
+                <el-input v-model="varietyForm.name" placeholder="如：有机生牛乳" />
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="varietyDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="saveVariety" :loading="loading">保存</el-button>
+            </template>
+          </el-dialog>
+
+          <el-divider />
+          <h2>原材料采购录入</h2>
           <el-form :model="materialForm" label-width="120px" class="product-form">
             <el-form-item label="选择原料品种" required>
               <el-select v-model="materialForm.materialId" placeholder="请选择原料品种" @change="onMaterialSelect" filterable>
@@ -298,10 +332,63 @@ const productForm = reactive({
 })
 
 const materialVarieties = ref([])
+const varietyDialogVisible = ref(false)
+const editingVariety = ref(null)
+const varietyForm = reactive({ name: '' })
+
+function showVarietyDialog(row) {
+  editingVariety.value = row
+  varietyForm.name = row ? row.name : ''
+  varietyDialogVisible.value = true
+}
+
+async function saveVariety() {
+  if (!varietyForm.name.trim()) {
+    ElMessage.warning('品种名称不能为空')
+    return
+  }
+  loading.value = true
+  try {
+    if (editingVariety.value) {
+      await axios.put(`${API_BASE}/material-varieties/${editingVariety.value.id}`, { name: varietyForm.name })
+      ElMessage.success('品种已更新')
+    } else {
+      await axios.post(`${API_BASE}/material-varieties`, { name: varietyForm.name })
+      ElMessage.success('品种已创建')
+    }
+    varietyDialogVisible.value = false
+    loadAllVarieties()
+    loadMaterialVarieties()
+  } catch (e) {
+    ElMessage.error(e.response?.data?.error || '保存失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function toggleVarietyActive(id, activate) {
+  try {
+    await axios.post(`${API_BASE}/material-varieties/${id}/${activate ? 'activate' : 'deactivate'}`)
+    ElMessage.success(activate ? '品种已启用' : '品种已停用')
+    loadAllVarieties()
+    loadMaterialVarieties()
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
+}
 
 async function loadMaterialVarieties() {
   try {
     const res = await axios.get(`${API_BASE}/material-varieties?activeOnly=true`)
+    materialVarieties.value = res.data
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+async function loadAllVarieties() {
+  try {
+    const res = await axios.get(`${API_BASE}/material-varieties?activeOnly=false`)
     materialVarieties.value = res.data
   } catch (e) {
     console.error(e)
@@ -640,6 +727,7 @@ function nextStep() {
 onMounted(() => {
   loadProducts()
   loadMaterials()
+  loadAllVarieties()
   loadMaterialVarieties()
   loadBatches()
 })
