@@ -117,6 +117,7 @@ import InsertDataTool from '../components/InsertDataTool.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
 import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
 import { useRouter } from 'vue-router'
+import axios from '../utils/axios'
 
 const router = useRouter()
 const activeTab = ref('qrcode')
@@ -179,15 +180,7 @@ function downloadQrCode(row) {
 
 async function loadProductList() {
   try {
-    const response = await fetch('/api/insert/products/list', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    const data = await response.json()
-    console.log('产品列表原始数据:', data)
-    
+    const { data } = await axios.post('/insert/products/list')
     if (Array.isArray(data)) {
       productList.value = data
     } else if (data && Array.isArray(data.data)) {
@@ -195,10 +188,6 @@ async function loadProductList() {
     } else {
       productList.value = []
     }
-    
-    console.log('处理后产品列表:', productList.value)
-    console.log('有二维码的产品:', productsWithQrCode.value.length)
-    console.log('无二维码的产品:', productsWithoutQrCode.value.length)
   } catch (error) {
     console.error('Failed to load product list:', error)
     productList.value = []

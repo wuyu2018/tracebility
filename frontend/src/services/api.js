@@ -1,11 +1,4 @@
-import axios from '../utils/axios'
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+import api from '../utils/axios'
 
 // ==================== 认证相关 ====================
 

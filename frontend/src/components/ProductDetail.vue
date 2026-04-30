@@ -274,7 +274,7 @@ import { ref, onMounted, computed } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import axios from '../utils/axios'
 
-const API_BASE = '/api'
+const API_BASE = ''
 
 const activeTab = ref('products')
 const loading = ref(false)

@@ -260,7 +260,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/axios'
 
-const API_BASE = '/api'
+const API_BASE = ''
 
 const currentStep = ref(0)
 const loading = ref(false)
