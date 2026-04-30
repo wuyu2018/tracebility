@@ -69,17 +69,17 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
 
         if (hasExistingData()) {
             log.info("[数据库初始化] 检测到数据库已有数据，跳过初始化");
-            return;
+        } else {
+            log.info("[数据库初始化] 数据库为空，开始初始化数据...");
+            try {
+                initializeData();
+                log.info("[数据库初始化] 数据库初始化完成");
+            } catch (Exception e) {
+                log.error("[数据库初始化] 初始化失败: {}", e.getMessage(), e);
+            }
         }
 
-        log.info("[数据库初始化] 数据库为空，开始初始化数据...");
-
-        try {
-            initializeData();
-            log.info("[数据库初始化] 数据库初始化完成");
-        } catch (Exception e) {
-            log.error("[数据库初始化] 初始化失败: {}", e.getMessage(), e);
-        }
+        ensureAdminExists();
     }
 
     private boolean hasExistingData() {
@@ -173,7 +173,9 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
         securityCodeRepository.saveAll(List.of(sc1, sc2, sc3));
         log.info("[数据库初始化] 防伪码初始化完成");
 
-        // ===== 11. 管理员 =====
+    }
+
+    private void ensureAdminExists() {
         if (adminRepository.findByUsername("admin").isEmpty()) {
             Admin admin = new Admin();
             admin.setUsername("admin");
