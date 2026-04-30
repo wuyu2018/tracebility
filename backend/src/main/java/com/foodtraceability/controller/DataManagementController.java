@@ -151,7 +151,7 @@ public class DataManagementController {
                     .map(result -> ResponseEntity.ok((Object) result))
                     .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
         } catch (Exception e) {
-            log.error("[产品详情] 获取失败 - 防伪码: {}, 错误: {}", maskCode(antiFakeCode), e.getMessage());
+            log.error("[产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -163,16 +163,9 @@ public class DataManagementController {
                     .map(result -> ResponseEntity.ok((Object) result))
                     .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
         } catch (Exception e) {
-            log.error("[管理员产品详情] 获取失败 - 防伪码: {}, 错误: {}", maskCode(antiFakeCode), e.getMessage());
+            log.error("[管理员产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
-    }
-
-    private String maskCode(String code) {
-        if (code == null || code.length() <= 8) {
-            return "***";
-        }
-        return code.substring(0, 4) + "****" + code.substring(code.length() - 4);
     }
 
     // ============ 原料品种 (Material) ============
@@ -614,7 +607,7 @@ public class DataManagementController {
             var result = inspections.stream().map(i -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", i.getId());
-                dto.put("batchId", i.getBatch() != null ? i.getBatch().getId() : null);
+                dto.put("batchId", i.getBatchId());
                 dto.put("sampleName", i.getSampleName());
                 dto.put("sampleQuantity", i.getSampleQuantity());
                 dto.put("sampleSpecification", i.getSampleSpecification());
@@ -635,7 +628,7 @@ public class DataManagementController {
             var result = storages.stream().map(s -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", s.getId());
-                dto.put("batchId", s.getBatch() != null ? s.getBatch().getId() : null);
+                dto.put("batchId", s.getBatchId());
                 dto.put("storageTime", s.getStorageTime());
                 dto.put("outboundTime", s.getOutboundTime());
                 dto.put("quantity", s.getQuantity());
@@ -657,7 +650,7 @@ public class DataManagementController {
             var result = transportSales.stream().map(t -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", t.getId());
-                dto.put("batchId", t.getBatch() != null ? t.getBatch().getId() : null);
+                dto.put("batchId", t.getBatchId());
                 dto.put("transportCompany", t.getTransportCompany());
                 dto.put("vehicleNumber", t.getVehicleNumber());
                 dto.put("salesRegion", t.getSalesRegion());

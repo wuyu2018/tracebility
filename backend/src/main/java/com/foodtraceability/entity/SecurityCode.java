@@ -113,6 +113,11 @@ public class SecurityCode {
         this.scanCount++;
     }
 
+    public static String maskCode(String code) {
+        if (code == null || code.length() <= 8) return "***";
+        return code.substring(0, 4) + "****" + code.substring(code.length() - 4);
+    }
+
     public void freeze() {
         this.status = STATUS_FROZEN;
     }

@@ -49,6 +49,10 @@ public class TransportSale {
     @Column(name = "receiver_contact", length = 50)
     private String receiverContact;
 
+    public Long getBatchId() {
+        return batch != null ? batch.getId() : null;
+    }
+
     public void associateBatch(ProductionBatch batch) {
         this.batch = batch;
     }
