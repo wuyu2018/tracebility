@@ -145,7 +145,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                     MaterialPurchase m = materialPurchaseRepository
                             .findById(r.getId().getMaterialPurchaseId()).orElse(null);
                     TraceInfoDTO.MaterialInfo mi = new TraceInfoDTO.MaterialInfo();
-                    mi.setMaterialName(m.getMaterial() != null ? m.getMaterial().getName() : null);
+                    mi.setMaterialName(m.getMaterialName());
                     mi.setBatchNumber(m.getBatchNumber());
                     mi.setSupplierName(m.getSupplierName());
                     mi.setProducerName(m.getProducerName());

@@ -141,18 +141,10 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
                     .orElseThrow(() -> new RuntimeException("产品不存在"));
             batch.setProductId(dto.getProductId());
         }
-        if (dto.getProductionDate() != null) {
-            batch.setProductionDate(dto.getProductionDate());
-        }
-        if (dto.getShelfLife() != null) {
-            batch.setShelfLife(dto.getShelfLife());
-        }
-        if (dto.getQuantity() != null) {
-            batch.setQuantity(dto.getQuantity());
-        }
-        if (dto.getUnit() != null) {
-            batch.setUnit(dto.getUnit());
-        }
+        batch.changeProductionDate(dto.getProductionDate());
+        batch.changeShelfLife(dto.getShelfLife());
+        batch.changeQuantity(dto.getQuantity());
+        batch.changeUnit(dto.getUnit());
     }
 
     private void updateStorage(ProductionBatch batch, StorageDTO storageDto) {
@@ -292,14 +284,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("产品不存在"));
 
-        ProductionBatch batch = new ProductionBatch();
-        batch.setBatchNumber(generateBatchNumber());
-        batch.setProductId(product.getId());
-        batch.setProductionDate(LocalDate.now());
-        batch.setShelfLife(product.getShelfLife());
-        batch.setQuantity(0.0);
-        batch.setUnit("");
-        batch.setIsDeleted(false);
+        ProductionBatch batch = ProductionBatch.quickCreate(
+                generateBatchNumber(), product.getId(), product.getShelfLife());
         return batchRepository.save(batch);
     }
 

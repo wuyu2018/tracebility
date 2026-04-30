@@ -7,7 +7,6 @@ import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
 import com.foodtraceability.repository.MaterialRepository;
 import com.foodtraceability.service.MaterialPurchaseService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +29,10 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
         Material material = materialRepository.findById(dto.getMaterialId())
                 .orElseThrow(() -> new BusinessException("原料品种不存在"));
 
-        MaterialPurchase entity = new MaterialPurchase();
-        entity.setMaterial(material);
-        BeanUtils.copyProperties(dto, entity);
-        entity.setIsDeleted(false);
+        MaterialPurchase entity = MaterialPurchase.recordPurchase(
+                material, dto.getBatchNumber(), dto.getSupplierName(),
+                dto.getProducerName(), dto.getProducerAddress(),
+                dto.getPurchaseDate(), dto.getQuantity(), dto.getUnit());
         return repository.save(entity);
     }
 
@@ -48,7 +47,10 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
                     .orElseThrow(() -> new BusinessException("原料品种不存在"));
             entity.setMaterial(material);
         }
-        BeanUtils.copyProperties(dto, entity);
+        entity.updatePurchaseDetails(
+                dto.getBatchNumber(), dto.getSupplierName(),
+                dto.getProducerName(), dto.getProducerAddress(),
+                dto.getPurchaseDate(), dto.getQuantity(), dto.getUnit());
         return repository.save(entity);
     }
 

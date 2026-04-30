@@ -46,14 +46,8 @@ public class GetAllComplaintInfoServiceImpl implements GetAllComplaintInfoServic
         info.setId(complaint.getId());
         info.setComplaintReason(complaint.getComplaintReason());
         info.setComplaintTime(complaint.getComplaintTime());
-        if (complaint.getSecurityCode() != null) {
-            if (complaint.getSecurityCode().getBatch() != null) {
-                info.setBatchNumber(complaint.getSecurityCode().getBatch().getBatchNumber());
-                if (complaint.getSecurityCode().getBatch().getProduct() != null) {
-                    info.setProductName(complaint.getSecurityCode().getBatch().getProduct().getName());
-                }
-            }
-        }
+        info.setBatchNumber(complaint.getBatchNumber());
+        info.setProductName(complaint.getProductName());
         return info;
     }
 }

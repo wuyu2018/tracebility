@@ -112,6 +112,34 @@ public class ProductionBatch {
         this.transportSaleId = transportSale.getId();
     }
 
+    public void changeProductionDate(LocalDate productionDate) {
+        if (productionDate != null) this.productionDate = productionDate;
+    }
+
+    public void changeShelfLife(String shelfLife) {
+        if (shelfLife != null) this.shelfLife = shelfLife;
+    }
+
+    public void changeQuantity(Double quantity) {
+        if (quantity != null) this.quantity = quantity;
+    }
+
+    public void changeUnit(String unit) {
+        if (unit != null) this.unit = unit;
+    }
+
+    public static ProductionBatch quickCreate(String batchNumber, Long productId, String shelfLife) {
+        ProductionBatch batch = new ProductionBatch();
+        batch.batchNumber = batchNumber;
+        batch.productId = productId;
+        batch.productionDate = LocalDate.now();
+        batch.shelfLife = shelfLife;
+        batch.quantity = 0.0;
+        batch.unit = "";
+        batch.isDeleted = false;
+        return batch;
+    }
+
     public void markQualified() {
     }
 

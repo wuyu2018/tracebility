@@ -49,6 +49,38 @@ public class MaterialPurchase {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
+    public String getMaterialName() {
+        return material != null ? material.getName() : null;
+    }
+
+    public static MaterialPurchase recordPurchase(Material material, String batchNumber, String supplierName,
+                                                    String producerName, String producerAddress,
+                                                    LocalDateTime purchaseDate, Double quantity, String unit) {
+        MaterialPurchase mp = new MaterialPurchase();
+        mp.material = material;
+        mp.batchNumber = batchNumber;
+        mp.supplierName = supplierName;
+        mp.producerName = producerName;
+        mp.producerAddress = producerAddress;
+        mp.purchaseDate = purchaseDate;
+        mp.quantity = quantity;
+        mp.unit = unit;
+        mp.isDeleted = false;
+        return mp;
+    }
+
+    public void updatePurchaseDetails(String batchNumber, String supplierName, String producerName,
+                                       String producerAddress, LocalDateTime purchaseDate,
+                                       Double quantity, String unit) {
+        if (batchNumber != null) this.batchNumber = batchNumber;
+        if (supplierName != null) this.supplierName = supplierName;
+        if (producerName != null) this.producerName = producerName;
+        if (producerAddress != null) this.producerAddress = producerAddress;
+        if (purchaseDate != null) this.purchaseDate = purchaseDate;
+        if (quantity != null) this.quantity = quantity;
+        if (unit != null) this.unit = unit;
+    }
+
     public void softDelete() {
         this.isDeleted = true;
     }

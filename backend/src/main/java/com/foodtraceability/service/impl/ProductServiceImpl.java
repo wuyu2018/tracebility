@@ -46,13 +46,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private void copyNonNullProperties(ProductDTO source, Product target) {
-        if (source.getName() != null) target.setName(source.getName());
-        if (source.getSpecification() != null) target.setSpecification(source.getSpecification());
-        if (source.getShelfLife() != null) target.setShelfLife(source.getShelfLife());
-        if (source.getImageUrl() != null) target.setImageUrl(source.getImageUrl());
-        if (source.getContactPhone() != null) target.setContactPhone(source.getContactPhone());
-        if (source.getContactEmail() != null) target.setContactEmail(source.getContactEmail());
-        if (source.getQrCodeUrl() != null) target.setQrCodeUrl(source.getQrCodeUrl());
+        target.changeName(source.getName());
+        target.changeSpecification(source.getSpecification());
+        target.changeShelfLife(source.getShelfLife());
+        target.changeImageUrl(source.getImageUrl());
+        target.changeContactPhone(source.getContactPhone());
+        target.changeContactEmail(source.getContactEmail());
+        target.changeQrCodeUrl(source.getQrCodeUrl());
     }
 
     @Override

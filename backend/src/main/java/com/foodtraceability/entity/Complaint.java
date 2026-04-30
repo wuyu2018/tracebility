@@ -28,6 +28,23 @@ public class Complaint {
     @Column(name = "complaint_time")
     private LocalDateTime complaintTime;
 
+    public String getAntiFakeCode() {
+        return securityCode != null ? securityCode.getCode() : null;
+    }
+
+    public String getBatchNumber() {
+        if (securityCode == null) return null;
+        if (securityCode.getBatch() == null) return null;
+        return securityCode.getBatch().getBatchNumber();
+    }
+
+    public String getProductName() {
+        if (securityCode == null) return null;
+        if (securityCode.getBatch() == null) return null;
+        if (securityCode.getBatch().getProduct() == null) return null;
+        return securityCode.getBatch().getProduct().getName();
+    }
+
     public static Complaint create(SecurityCode securityCode, String complaintReason) {
         validateComplaintReason(complaintReason);
 

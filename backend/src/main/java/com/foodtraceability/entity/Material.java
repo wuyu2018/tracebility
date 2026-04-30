@@ -47,6 +47,14 @@ public class Material {
         return Boolean.TRUE.equals(this.isActive);
     }
 
+    public void changeName(String name) {
+        if (name != null) this.name = name;
+    }
+
+    public void setActiveStatus(Boolean active) {
+        if (active != null) this.isActive = active;
+    }
+
     public void deactivate() {
         this.isActive = false;
     }

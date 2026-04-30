@@ -51,6 +51,34 @@ public class Product {
         this.isDeleted = true;
     }
 
+    public void changeName(String name) {
+        if (name != null) this.name = name;
+    }
+
+    public void changeSpecification(String specification) {
+        if (specification != null) this.specification = specification;
+    }
+
+    public void changeShelfLife(String shelfLife) {
+        if (shelfLife != null) this.shelfLife = shelfLife;
+    }
+
+    public void changeImageUrl(String imageUrl) {
+        if (imageUrl != null) this.imageUrl = imageUrl;
+    }
+
+    public void changeContactPhone(String contactPhone) {
+        if (contactPhone != null) this.contactPhone = contactPhone;
+    }
+
+    public void changeContactEmail(String contactEmail) {
+        if (contactEmail != null) this.contactEmail = contactEmail;
+    }
+
+    public void changeQrCodeUrl(String qrCodeUrl) {
+        if (qrCodeUrl != null) this.qrCodeUrl = qrCodeUrl;
+    }
+
     public void clearQrCode() {
         this.antiFakeCode = null;
         this.qrCodeUrl = null;

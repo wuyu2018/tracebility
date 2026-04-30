@@ -68,15 +68,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         dto.setId(complaint.getId());
         dto.setComplaintReason(complaint.getComplaintReason());
         dto.setComplaintTime(complaint.getComplaintTime());
-        if (complaint.getSecurityCode() != null) {
-            dto.setAntiFakeCode(complaint.getSecurityCode().getCode());
-            if (complaint.getSecurityCode().getBatch() != null) {
-                dto.setBatchNumber(complaint.getSecurityCode().getBatch().getBatchNumber());
-                if (complaint.getSecurityCode().getBatch().getProduct() != null) {
-                    dto.setProductName(complaint.getSecurityCode().getBatch().getProduct().getName());
-                }
-            }
-        }
+        dto.setAntiFakeCode(complaint.getAntiFakeCode());
+        dto.setBatchNumber(complaint.getBatchNumber());
+        dto.setProductName(complaint.getProductName());
         return dto;
     }
 }
