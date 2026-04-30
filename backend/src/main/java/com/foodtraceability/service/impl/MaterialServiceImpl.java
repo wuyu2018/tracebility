@@ -45,7 +45,8 @@ public class MaterialServiceImpl implements MaterialService {
     public Material updateMaterial(Long id, MaterialDTO dto) {
         Material entity = repository.findById(id)
                 .orElseThrow(() -> new BusinessException("原料品种不存在: " + id));
-        BeanUtils.copyProperties(dto, entity);
+        if (dto.getName() != null) entity.setName(dto.getName());
+        if (dto.getIsActive() != null) entity.setIsActive(dto.getIsActive());
         Material saved = repository.save(entity);
         log.info("[原料品种] 更新 - ID: {}, 名称: {}", saved.getId(), saved.getName());
         return saved;

@@ -41,8 +41,18 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(Long id, ProductDTO dto) {
         Product entity = repository.findById(id)
                 .orElseThrow(() -> new BusinessException("产品不存在"));
-        BeanUtils.copyProperties(dto, entity);
+        copyNonNullProperties(dto, entity);
         return repository.save(entity);
+    }
+
+    private void copyNonNullProperties(ProductDTO source, Product target) {
+        if (source.getName() != null) target.setName(source.getName());
+        if (source.getSpecification() != null) target.setSpecification(source.getSpecification());
+        if (source.getShelfLife() != null) target.setShelfLife(source.getShelfLife());
+        if (source.getImageUrl() != null) target.setImageUrl(source.getImageUrl());
+        if (source.getContactPhone() != null) target.setContactPhone(source.getContactPhone());
+        if (source.getContactEmail() != null) target.setContactEmail(source.getContactEmail());
+        if (source.getQrCodeUrl() != null) target.setQrCodeUrl(source.getQrCodeUrl());
     }
 
     @Override
