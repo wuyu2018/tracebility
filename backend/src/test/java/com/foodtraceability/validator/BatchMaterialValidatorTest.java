@@ -4,6 +4,7 @@ import com.foodtraceability.entity.*;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.BatchMaterialRelationRepository;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
+import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.service.ProductMaterialRelationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +24,8 @@ class BatchMaterialValidatorTest {
     @Mock
     private ProductionBatchRepository batchRepository;
     @Mock
+    private ProductRepository productRepository;
+    @Mock
     private MaterialPurchaseRepository materialPurchaseRepository;
     @Mock
     private ProductMaterialRelationService pmrService;
@@ -32,7 +35,7 @@ class BatchMaterialValidatorTest {
     @BeforeEach
     void setUp() {
         validator = new BatchMaterialValidator(
-                batchRepository, materialPurchaseRepository, pmrService);
+                batchRepository, productRepository, materialPurchaseRepository, pmrService);
     }
 
     @Test
@@ -43,6 +46,7 @@ class BatchMaterialValidatorTest {
         ProductionBatch batch = createBatch(50L, product);
 
         when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
         when(pmrService.isMaterialVisibleToProduct(1L, 10L)).thenReturn(true);
 
@@ -57,6 +61,7 @@ class BatchMaterialValidatorTest {
         ProductionBatch batch = createBatch(50L, product);
 
         when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
         when(pmrService.isMaterialVisibleToProduct(1L, 10L)).thenReturn(false);
 
@@ -92,11 +97,28 @@ class BatchMaterialValidatorTest {
         ProductionBatch batch = createBatch(50L, product);
 
         when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> validator.validate(50L, 100L));
         assertTrue(ex.getMessage().contains("未关联原料品种"));
+    }
+
+    @Test
+    void validate_throws_whenProductNotFound() {
+        Product product = createProduct(1L, "有机纯牛奶");
+        Material material = createMaterial(10L, "有机生牛乳");
+        MaterialPurchase purchase = createMaterialPurchase(100L, material);
+        ProductionBatch batch = createBatch(50L, product);
+
+        when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+        when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> validator.validate(50L, 100L));
+        assertTrue(ex.getMessage().contains("产品不存在"));
     }
 
     private Product createProduct(Long id, String name) {

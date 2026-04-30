@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface BatchMaterialRelationRepository extends JpaRepository<BatchMaterialRelation, BatchMaterialRelationId> {
-    List<BatchMaterialRelation> findByBatchId(Long batchId);
+    List<BatchMaterialRelation> findById_BatchId(Long batchId);
 }

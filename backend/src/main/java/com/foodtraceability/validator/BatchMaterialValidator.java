@@ -2,8 +2,8 @@ package com.foodtraceability.validator;
 
 import com.foodtraceability.entity.*;
 import com.foodtraceability.exception.BusinessException;
-import com.foodtraceability.repository.BatchMaterialRelationRepository;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
+import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.service.ProductMaterialRelationService;
 import org.slf4j.Logger;
@@ -15,13 +15,16 @@ public class BatchMaterialValidator {
     private static final Logger log = LoggerFactory.getLogger(BatchMaterialValidator.class);
 
     private final ProductionBatchRepository batchRepository;
+    private final ProductRepository productRepository;
     private final MaterialPurchaseRepository materialPurchaseRepository;
     private final ProductMaterialRelationService pmrService;
 
     public BatchMaterialValidator(ProductionBatchRepository batchRepository,
+                                  ProductRepository productRepository,
                                   MaterialPurchaseRepository materialPurchaseRepository,
                                   ProductMaterialRelationService pmrService) {
         this.batchRepository = batchRepository;
+        this.productRepository = productRepository;
         this.materialPurchaseRepository = materialPurchaseRepository;
         this.pmrService = pmrService;
     }
@@ -33,7 +36,8 @@ public class BatchMaterialValidator {
         MaterialPurchase purchase = materialPurchaseRepository.findById(materialPurchaseId)
                 .orElseThrow(() -> new BusinessException("原料采购记录不存在: " + materialPurchaseId));
 
-        Product product = batch.getProduct();
+        Product product = productRepository.findById(batch.getProductId())
+                .orElseThrow(() -> new BusinessException("产品不存在: " + batch.getProductId()));
         Material material = purchase.getMaterial();
 
         if (material == null) {

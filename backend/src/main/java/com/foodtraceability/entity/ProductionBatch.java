@@ -36,7 +36,8 @@ public class ProductionBatch {
 
     @Deprecated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    @JoinColumn(name = "product_id", insertable = false, updatable = false,
+                foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Product product;
 

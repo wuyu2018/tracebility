@@ -139,7 +139,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     }
 
     private List<TraceInfoDTO.MaterialInfo> buildMaterialInfos(Long batchId) {
-        List<BatchMaterialRelation> relations = relationRepository.findByBatchId(batchId);
+        List<BatchMaterialRelation> relations = relationRepository.findById_BatchId(batchId);
         return relations.stream()
                 .map(r -> {
                     MaterialPurchase m = materialPurchaseRepository
