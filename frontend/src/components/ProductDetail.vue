@@ -272,7 +272,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const API_BASE = '/api'
 

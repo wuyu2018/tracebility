@@ -8,23 +8,6 @@
 
     <!-- 添加标签页切换 -->
     <el-tabs v-model="activeTab" class="tools-tabs">
-      <el-tab-pane label="防伪工具" name="security">
-        <div class="tools-page">
-          <h1>防伪工具</h1>
-          <p class="tools-desc">生成防伪验证二维码</p>
-
-          <section class="tool-card">
-            <h2>防伪验证二维码</h2>
-            <p class="card-desc">扫描此二维码可直达防伪验证页面</p>
-            <div class="qr-wrap">
-              <canvas ref="qrCanvas" class="qr-canvas"></canvas>
-            </div>
-            <p class="qr-url">{{ verifyUrl }}</p>
-            <button type="button" class="btn-download" @click="downloadQr">下载二维码</button>
-          </section>
-        </div>
-      </el-tab-pane>
-
       <!-- 防伪码生成管理标签页 -->
       <el-tab-pane label="防伪码生成" name="qrcode">
         <div class="tools-page">
@@ -136,8 +119,7 @@ import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const activeTab = ref('security')
-const qrCanvas = ref(null)
+const activeTab = ref('qrcode')
 
 // 认证状态
 const isAdminLoggedIn = computed(() => isAuthenticated())
@@ -179,30 +161,6 @@ function getVerifyUrl() {
 
 function getVerifyUrlWithCode(code) {
   return getVerifyUrl() + '?code=' + code
-}
-
-const verifyUrl = computed(() => getVerifyUrl())
-
-function drawQr() {
-  const url = getVerifyUrl()
-  if (!qrCanvas.value || !url) return
-  QRCode.toCanvas(qrCanvas.value, url, {
-    width: 200,
-    margin: 2,
-  }, (err) => {
-    if (err) console.error(err)
-  })
-}
-
-function downloadQr() {
-  const url = getVerifyUrl()
-  if (!url) return
-  QRCode.toDataURL(url, { width: 400, margin: 2 }).then((dataUrl) => {
-    const a = document.createElement('a')
-    a.href = dataUrl
-    a.download = '防伪验证二维码.png'
-    a.click()
-  })
 }
 
 function downloadQrCode(row) {
@@ -415,7 +373,6 @@ async function batchDeleteProducts() {
 }
 
 onMounted(() => {
-  drawQr()
   loadProductList()
 })
 </script>
