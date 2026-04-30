@@ -2,40 +2,25 @@ import api from '../utils/axios'
 
 // ==================== 认证相关 ====================
 
-/**
- * 存储验证码
- */
 export async function storeCaptcha(username, captcha) {
   const { data } = await api.post('/captcha', { username, captcha })
   return data
 }
 
-/**
- * 管理员登录
- */
 export async function adminLogin(username, password, captcha) {
-  const { data } = await api.post('/login', {
-    username,
-    password,
-    captcha
-  })
+  const { data } = await api.post('/login', { username, password, captcha })
   return data
 }
 
-/**
- * 管理员注册
- */
 export async function registerAdmin(username, password, currentPassword, currentAdminUsername) {
   const { data } = await api.post('/admin/register', {
-    username,
-    password,
-    currentPassword,
-    currentAdminUsername
+    username, password, currentPassword, currentAdminUsername
   })
   return data
 }
 
-// ==================== 防伪验证 ====================
+// ==================== v1 防伪验证（旧） ====================
+
 export async function verifyAntiFakeCodeGet(code) {
   const { data } = await api.get('/verify', { params: { code } })
   return data
@@ -45,6 +30,41 @@ export async function traceByBatchNumber(batchNumber) {
   const { data } = await api.get(`/trace/batch/${batchNumber}`)
   return data
 }
+
+// ==================== v2 防伪验证 ====================
+
+export async function verifyAntiFakeCodeV2(code) {
+  const { data } = await api.get('/v2/trace/verify', { params: { code } })
+  return data
+}
+
+export async function traceByBatchNumberV2(batchNumber) {
+  const { data } = await api.get(`/v2/trace/batch/${batchNumber}`)
+  return data
+}
+
+// ==================== v2 批次管理 ====================
+
+export async function createBatchV2(payload) {
+  const { data } = await api.post('/v2/batches', payload)
+  return data
+}
+
+// ==================== v2 仓储 ====================
+
+export async function recordStorage(payload) {
+  const { data } = await api.post('/v2/storage', payload)
+  return data
+}
+
+// ==================== v2 检验 ====================
+
+export async function completeInspection(payload) {
+  const { data } = await api.post('/v2/inspections', payload)
+  return data
+}
+
+// ==================== 旧 API（保留兼容） ====================
 
 export async function getPurchaseInfo(antiFakeCode) {
   const { data } = await api.post('/purchase-info', { antiFakeCode })
@@ -176,7 +196,7 @@ export async function generateQrCode(productId) {
 }
 
 export async function batchGenerateQrCodes(productIds) {
-  const { data } = await api.post('/insert/products/batch-generate-qrcode',  productIds );
+  const { data } = await api.post('/insert/products/batch-generate-qrcode', productIds);
   return data;
 }
 

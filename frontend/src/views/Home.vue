@@ -19,7 +19,7 @@
 
     <div v-else-if="showFakeAlert" class="fake-alert">
       <div class="alert-content">
-        <span class="alert-icon">⚠️</span>
+        <span class="alert-icon">&#9888;&#65039;</span>
         <h3>产品可能是伪品</h3>
         <p>{{ fakeAlertMessage }}</p>
         <p class="tip">请谨慎购买，如有疑问请联系正规渠道核实</p>
@@ -35,7 +35,7 @@ import { ref, onMounted } from 'vue'
 import VerifyForm from '../components/VerifyForm.vue'
 import ResultDisplay from '../components/ResultDisplay.vue'
 import IntroductionSection from '../components/IntroductionSection.vue'
-import { verifyAntiFakeCodeGet } from '../services/api'
+import { verifyAntiFakeCodeV2 } from '../services/api'
 
 const verifyFormRef = ref(null)
 const traceData = ref(null)
@@ -44,7 +44,7 @@ const showFakeAlert = ref(false)
 const fakeAlertMessage = ref('')
 
 const onVerified = (data) => {
-  traceData.value = data
+  traceData.value = mapV2ToV1(data)
   showResult.value = true
   showFakeAlert.value = false
 }
@@ -66,7 +66,7 @@ onMounted(() => {
 
 async function queryByCode(code) {
   try {
-    const result = await verifyAntiFakeCodeGet(code)
+    const result = await verifyAntiFakeCodeV2(code)
     if (result.valid) {
       if (result.data) {
         onVerified(result.data)
@@ -80,6 +80,15 @@ async function queryByCode(code) {
     }
   } catch (error) {
     onInvalid('验证失败，请检查网络连接')
+  }
+}
+
+function mapV2ToV1(v2) {
+  if (!v2) return null
+  return {
+    ...v2,
+    isQueried: v2.isRepeatedQuery !== undefined ? v2.isRepeatedQuery : v2.isQueried,
+    scanCount: v2.scanCount || 0
   }
 }
 </script>
@@ -144,7 +153,7 @@ async function queryByCode(code) {
   line-height: 1.6;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .hero p {
     font-size: 0.9rem;
   }
@@ -190,16 +199,9 @@ async function queryByCode(code) {
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-5px);
-  }
-  75% {
-    transform: translateX(5px);
-  }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
 .alert-icon {

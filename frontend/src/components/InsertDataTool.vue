@@ -233,7 +233,7 @@
         </el-descriptions>
 
         <h4>检测报告</h4>
-        <el-form v-if="inspectionForm" :model="inspectionForm" label-width="100px">
+        <el-form v-if="inspectionForm" :model="inspectionForm" label-width="120px">
           <el-form-item label="样品名称">
             <el-input v-model="inspectionForm.sampleName" />
           </el-form-item>
@@ -245,6 +245,15 @@
           </el-form-item>
           <el-form-item label="检测报告图片">
             <el-input v-model="inspectionForm.imageUrl" placeholder="图片URL" />
+          </el-form-item>
+          <el-form-item label="检测结果" required>
+            <el-radio-group v-model="inspectionForm.qualified">
+              <el-radio :value="true">合格</el-radio>
+              <el-radio :value="false">不合格</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="inspectionForm.qualified === false" label="不合格原因" required>
+            <el-input v-model="inspectionForm.failReason" type="textarea" placeholder="请填写不合格原因" />
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="submitInspection">保存检测报告</el-button>
@@ -259,6 +268,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/axios'
+import { createBatchV2, recordStorage, completeInspection } from '../services/api'
 
 const API_BASE = ''
 
@@ -332,7 +342,9 @@ const inspectionForm = reactive({
   sampleName: '',
   sampleQuantity: null,
   sampleSpecification: '',
-  imageUrl: ''
+  imageUrl: '',
+  qualified: null,
+  failReason: ''
 })
 
 async function loadProducts() {
@@ -479,33 +491,32 @@ async function submitBatch() {
   }
   loading.value = true
   try {
-    const payload = { ...batchForm }
-    if (payload.storageTime && payload.outboundTime) {
-      payload.storage = {
-        storageTime: payload.storageTime,
-        outboundTime: payload.outboundTime,
-        warehouseLocation: payload.warehouseLocation
-      }
-      payload.transportSale = {
-        time: payload.storageTime,
-        transportCompany: payload.transportCompany,
-        vehicleNumber: payload.vehicleNumber,
-        salesRegion: payload.salesRegion,
-        receiverName: payload.receiverName,
-        receiverContact: payload.receiverContact
+    const payload = {
+      productId: batchForm.productId,
+      productionDate: batchForm.productionDate,
+      shelfLife: batchForm.shelfLife || '',
+      quantity: batchForm.quantity,
+      unit: batchForm.unit || '',
+      materialPurchaseIds: batchForm.materialIds
+    }
+    const res = await createBatchV2(payload)
+    ElMessage.success(`批次生成成功！批次号：${res.batchNumber}`)
+
+    if (batchForm.storageTime) {
+      try {
+        await recordStorage({
+          batchId: res.id,
+          storageTime: batchForm.storageTime,
+          quantity: batchForm.quantity,
+          unit: batchForm.unit || '',
+          warehouseLocation: batchForm.warehouseLocation || ''
+        })
+        ElMessage.success('仓储记录已保存')
+      } catch (e2) {
+        ElMessage.warning('批次已创建，但仓储记录保存失败')
       }
     }
-    delete payload.storageTime
-    delete payload.outboundTime
-    delete payload.warehouseLocation
-    delete payload.transportCompany
-    delete payload.vehicleNumber
-    delete payload.salesRegion
-    delete payload.receiverName
-    delete payload.receiverContact
 
-    const res = await axios.post(`${API_BASE}/batches`, payload)
-    ElMessage.success(`批次生成成功！批次号：${res.data.batchNumber}`)
     resetBatchForm()
     loadBatches()
   } catch (e) {
@@ -591,11 +602,30 @@ async function viewBatchDetail(batch) {
 
 async function submitInspection() {
   if (!batchDetail.value) return
+  if (inspectionForm.qualified === null) {
+    ElMessage.warning('请选择检测结果（合格/不合格）')
+    return
+  }
+  if (inspectionForm.qualified === false && !inspectionForm.failReason) {
+    ElMessage.warning('不合格必须填写原因')
+    return
+  }
   try {
-    await axios.post(`${API_BASE}/batches/${batchDetail.value.id}/inspection`, inspectionForm)
-    ElMessage.success('检测报告保存成功')
+    const payload = {
+      batchId: batchDetail.value.id,
+      sampleName: inspectionForm.sampleName || '',
+      sampleQuantity: inspectionForm.sampleQuantity,
+      sampleSpecification: inspectionForm.sampleSpecification || '',
+      imageUrl: inspectionForm.imageUrl || '',
+      qualified: inspectionForm.qualified,
+      failReason: inspectionForm.qualified === false ? inspectionForm.failReason : ''
+    }
+    const res = await completeInspection(payload)
+    ElMessage.success(`检测报告保存成功: ${res.resultStatus}`)
+    inspectionForm.qualified = null
+    inspectionForm.failReason = ''
   } catch (e) {
-    ElMessage.error('保存失败')
+    ElMessage.error(e.response?.data?.error || '保存失败')
   }
 }
 
