@@ -34,6 +34,10 @@ public class SecurityCode {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private ProductionBatch batch;
 
+    public Long getBatchId() {
+        return batch != null ? batch.getId() : null;
+    }
+
     @Column(name = "status", nullable = false, length = 20)
     private String status = STATUS_INACTIVE;
 

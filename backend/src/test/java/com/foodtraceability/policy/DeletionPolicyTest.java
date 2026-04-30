@@ -50,7 +50,7 @@ class DeletionPolicyTest {
     void softDeleteProduct_whenHasSecurityCodes() {
         Product product = createProduct(2L, "有机酸奶");
         when(batchRepository.existsByProductId(2L)).thenReturn(false);
-        when(securityCodeRepository.existsByBatchProductId(2L)).thenReturn(true);
+        when(securityCodeRepository.existsByBatch_Product_Id(2L)).thenReturn(true);
 
         deletionPolicy.deleteProduct(product);
 
@@ -64,7 +64,7 @@ class DeletionPolicyTest {
     void physicallyDeleteProduct_whenNoBatchesAndNoCodes() {
         Product product = createProduct(3L, "测试产品");
         when(batchRepository.existsByProductId(3L)).thenReturn(false);
-        when(securityCodeRepository.existsByBatchProductId(3L)).thenReturn(false);
+        when(securityCodeRepository.existsByBatch_Product_Id(3L)).thenReturn(false);
 
         deletionPolicy.deleteProduct(product);
 
@@ -77,7 +77,7 @@ class DeletionPolicyTest {
     void hardDeleteProduct_succeeds_whenNoAssociations() {
         Product product = createProduct(4L, "测试产品");
         when(batchRepository.existsByProductId(4L)).thenReturn(false);
-        when(securityCodeRepository.existsByBatchProductId(4L)).thenReturn(false);
+        when(securityCodeRepository.existsByBatch_Product_Id(4L)).thenReturn(false);
 
         deletionPolicy.hardDeleteProduct(product);
 
@@ -100,7 +100,7 @@ class DeletionPolicyTest {
     void hardDeleteProduct_throws_whenHasCodes() {
         Product product = createProduct(6L, "有码产品");
         when(batchRepository.existsByProductId(6L)).thenReturn(false);
-        when(securityCodeRepository.existsByBatchProductId(6L)).thenReturn(true);
+        when(securityCodeRepository.existsByBatch_Product_Id(6L)).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> deletionPolicy.hardDeleteProduct(product));

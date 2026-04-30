@@ -38,7 +38,7 @@ public class DeletionPolicy {
         log.info("[DeletionPolicy] 删除产品 - ID: {}, 名称: {}", productId, product.getName());
 
         boolean hasBatches = batchRepository.existsByProductId(productId);
-        boolean hasCodes = securityCodeRepository.existsByBatchProductId(productId);
+        boolean hasCodes = securityCodeRepository.existsByBatch_Product_Id(productId);
 
         if (!hasBatches && !hasCodes) {
             physicallyDeleteProduct(product);
@@ -51,7 +51,7 @@ public class DeletionPolicy {
     public void hardDeleteProduct(Product product) {
         Long productId = product.getId();
         boolean hasBatches = batchRepository.existsByProductId(productId);
-        boolean hasCodes = securityCodeRepository.existsByBatchProductId(productId);
+        boolean hasCodes = securityCodeRepository.existsByBatch_Product_Id(productId);
 
         if (hasBatches || hasCodes) {
             throw new BusinessException(

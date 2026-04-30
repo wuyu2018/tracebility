@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface InspectionRepository extends JpaRepository<Inspection, Long> {
     List<Inspection> findByBatch(ProductionBatch batch);
+
+    List<Inspection> findByBatchId(Long batchId);
 }
