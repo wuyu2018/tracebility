@@ -120,8 +120,8 @@ export async function deleteMaterialPurchase(id) {
   return responseData;
 }
 
-export async function getMaterials(productId) {
-  const params = productId ? `?productId=${productId}` : ''
+export async function getMaterials(materialId) {
+  const params = materialId ? `?materialId=${materialId}` : ''
   const { data } = await api.get(`/materials${params}`);
   return data;
 }

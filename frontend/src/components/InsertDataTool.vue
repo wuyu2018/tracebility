@@ -60,13 +60,10 @@
         <div v-show="currentStep === 1" class="step-panel">
           <h2>原材料采购管理</h2>
           <el-form :model="materialForm" label-width="120px" class="product-form">
-            <el-form-item label="选择产品" required>
-              <el-select v-model="materialForm.productId" placeholder="请选择产品" @change="onProductSelect">
-                <el-option v-for="p in products" :key="p.id" :label="p.name" :value="p.id" />
+            <el-form-item label="选择原料品种" required>
+              <el-select v-model="materialForm.materialId" placeholder="请选择原料品种" @change="onMaterialSelect" filterable>
+                <el-option v-for="m in materialVarieties" :key="m.id" :label="m.name" :value="m.id" />
               </el-select>
-            </el-form-item>
-            <el-form-item label="原料名称" required>
-              <el-input v-model="materialForm.materialName" placeholder="请输入原料名称" />
             </el-form-item>
             <el-form-item label="采购批次号" required>
               <el-input v-model="materialForm.batchNumber" placeholder="请输入采购批次号" />
@@ -98,7 +95,11 @@
           <el-divider>已录入原材料</el-divider>
           <el-table :data="materials" style="width: 100%">
             <el-table-column prop="id" label="ID" width="60" />
-            <el-table-column prop="materialName" label="原料名称" />
+            <el-table-column label="原料名称">
+              <template #default="scope">
+                {{ scope.row.material?.name || scope.row.materialName || '-' }}
+              </template>
+            </el-table-column>
             <el-table-column prop="batchNumber" label="批次号" />
             <el-table-column prop="purchaseDate" label="采购时间" width="160" />
             <el-table-column prop="quantity" label="数量" width="80" />
@@ -134,7 +135,7 @@
             </el-form-item>
             <el-form-item label="选择原材料批次" required>
               <el-select v-model="batchForm.materialIds" multiple placeholder="至少选择一个原料批次">
-                <el-option v-for="m in availableMaterials" :key="m.id" :label="`${m.materialName} (${m.batchNumber})`" :value="m.id" />
+                <el-option v-for="m in availableMaterials" :key="m.id" :label="`${m.material?.name || m.materialName || '-'} (${m.batchNumber})`" :value="m.id" />
               </el-select>
             </el-form-item>
             <el-form-item label="入库时间">
@@ -257,7 +258,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const API_BASE = '/api'
 
@@ -286,9 +287,20 @@ const productForm = reactive({
   contactEmail: ''
 })
 
+const materialVarieties = ref([])
+
+async function loadMaterialVarieties() {
+  try {
+    const res = await axios.get(`${API_BASE}/material-varieties?activeOnly=true`)
+    materialVarieties.value = res.data
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 const materialForm = reactive({
   id: null,
-  productId: null,
+  materialId: null,
   materialName: '',
   batchNumber: '',
   supplierName: '',
@@ -350,18 +362,17 @@ async function loadBatches() {
   }
 }
 
-function onProductSelect() {
-  loadMaterialsForProduct()
+function onMaterialSelect() {
+  const m = materialVarieties.value.find(v => v.id === materialForm.materialId)
+  materialForm.materialName = m ? m.name : ''
 }
 
 async function loadMaterialsForProduct() {
-  if (batchForm.productId) {
-    try {
-      const res = await axios.get(`${API_BASE}/materials?productId=${batchForm.productId}`)
-      availableMaterials.value = res.data
-    } catch (e) {
-      console.error(e)
-    }
+  try {
+    const res = await axios.get(`${API_BASE}/materials`)
+    availableMaterials.value = res.data
+  } catch (e) {
+    console.error(e)
   }
 }
 
@@ -414,8 +425,8 @@ function resetProductForm() {
 }
 
 async function submitMaterial() {
-  if (!materialForm.productId || !materialForm.materialName || !materialForm.batchNumber) {
-    ElMessage.warning('请填写必填项')
+  if (!materialForm.materialId || !materialForm.batchNumber) {
+    ElMessage.warning('请选择原料品种并填写批次号')
     return
   }
   loading.value = true
@@ -438,7 +449,7 @@ async function submitMaterial() {
 
 function resetMaterialForm() {
   Object.keys(materialForm).forEach(k => {
-    if (k === 'id' || k === 'productId') materialForm[k] = null
+    if (k === 'id' || k === 'materialId') materialForm[k] = null
     else if (typeof materialForm[k] === 'string') materialForm[k] = ''
     else materialForm[k] = null
   })
@@ -599,6 +610,7 @@ function nextStep() {
 onMounted(() => {
   loadProducts()
   loadMaterials()
+  loadMaterialVarieties()
   loadBatches()
 })
 </script>

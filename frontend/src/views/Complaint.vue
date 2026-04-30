@@ -15,13 +15,14 @@
         class="complaint-form"
         @submit.prevent="submitComplaint"
       >
-        <el-form-item label="选择产品" prop="productName">
-          <ProductSelector
-            v-model="complaintForm.productName"
-            role="consumer"
-            @change="handleProductChange"
+        <el-form-item label="防伪码" prop="antiFakeCode">
+          <el-input
+            v-model="complaintForm.antiFakeCode"
+            placeholder="请输入产品防伪码"
+            clearable
+            maxlength="50"
           />
-          <div class="form-tip">必填项，请选择产品</div>
+          <div class="form-tip">必填项，请扫描或输入产品防伪码</div>
         </el-form-item>
 
         <el-form-item label="投诉原因" prop="complaintReason">
@@ -67,17 +68,15 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
-import ProductSelector from '@/components/ProductSelector.vue'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
-  productName: '',
-  complaintReason: '',
-  complaintTime: ''
+  antiFakeCode: '',
+  complaintReason: ''
 })
 const complaintRules = {
-  productName: [
-    { required: true, message: '请选择产品', trigger: 'change' }
+  antiFakeCode: [
+    { required: true, message: '请输入防伪码', trigger: 'blur' }
   ],
   complaintReason: [
     { required: true, message: '投诉原因不能为空', trigger: 'blur' }
@@ -88,14 +87,6 @@ const errorMessage = ref('')
 const API_BASE_URL = '/api'
 const COMPLAINT_API = `${API_BASE_URL}/complaint`
 
-const handleProductChange = (product) => {
-  if (product) {
-    complaintForm.productName = product.name
-  } else {
-    complaintForm.productName = ''
-  }
-}
-
 const submitComplaint = async () => {
   try {
     const valid = await complaintFormRef.value.validate()
@@ -105,12 +96,8 @@ const submitComplaint = async () => {
     errorMessage.value = ''
 
     const requestData = {
-      productName: complaintForm.productName,
+      antiFakeCode: complaintForm.antiFakeCode.trim(),
       complaintReason: complaintForm.complaintReason.trim()
-    }
-
-    if (complaintForm.complaintTime) {
-      requestData.complaintTime = complaintForm.complaintTime
     }
 
     const response = await axios.post(COMPLAINT_API, requestData, {
@@ -205,8 +192,6 @@ const resetForm = () => {
     complaintFormRef.value.resetFields()
   }
   errorMessage.value = ''
-  complaintForm.complaintTime = ''
-  complaintForm.productId = ''
 }
 
 
