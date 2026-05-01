@@ -272,6 +272,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import axios from '../utils/axios'
 
 const API_BASE = ''
@@ -341,9 +342,13 @@ async function handleSearch() {
   loading.value = true
   
   try {
-    const res = await axios.get(`${API_BASE}/product-detail?antiFakeCode=${encodeURIComponent(searchKeyword.value.trim())}`)
+    const res = await axios.get(`${API_BASE}/admin/product-detail?antiFakeCode=${encodeURIComponent(searchKeyword.value.trim())}`)
     if (res.data && !res.data.error) {
       searchResult.value = res.data
+      currentTrace.value = res.data
+      traceDialogVisible.value = true
+    } else {
+      ElMessage.warning('未找到该防伪码对应的产品信息')
     }
   } catch (error) {
     console.error('搜索失败:', error)

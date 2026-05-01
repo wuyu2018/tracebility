@@ -604,6 +604,21 @@ async function submitBatch() {
       }
     }
 
+    if (batchForm.transportCompany || batchForm.salesRegion) {
+      try {
+        await axios.post(`${API_BASE}/batches/${res.id}/transport-sale`, {
+          transportCompany: batchForm.transportCompany,
+          vehicleNumber: batchForm.vehicleNumber,
+          salesRegion: batchForm.salesRegion,
+          receiverName: batchForm.receiverName,
+          receiverContact: batchForm.receiverContact
+        })
+        ElMessage.success('运输销售信息已保存')
+      } catch (e2) {
+        ElMessage.warning('批次已创建，但运输销售信息保存失败')
+      }
+    }
+
     resetBatchForm()
     loadBatches()
   } catch (e) {
