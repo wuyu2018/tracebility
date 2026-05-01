@@ -13,9 +13,6 @@ RUN npm install --registry https://registry.npmmirror.com
 
 COPY . .
 
-ARG NGINX_HOST
-ARG NGINX_PORT
-ENV VITE_API_BASE_URL="https://${NGINX_HOST}:${NGINX_PORT}/api"
 RUN npm run build
 
 FROM nginx:alpine
