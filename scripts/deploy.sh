@@ -16,7 +16,7 @@ fi
 source .env
 
 # Validate required variables
-required_vars=("MYSQL_ROOT_PASSWORD" "MYSQL_DATABASE" "MYSQL_USER" "MYSQL_PASSWORD")
+required_vars=("JWT_SECRET" "MYSQL_ROOT_PASSWORD" "MYSQL_DATABASE" "MYSQL_USER" "MYSQL_PASSWORD")
 for var in "${required_vars[@]}"; do
     if [ -z "${!var}" ]; then
         echo "Error: $var is not set in .env"
@@ -24,14 +24,16 @@ for var in "${required_vars[@]}"; do
     fi
 done
 
+COMPOSE_FILE="docker-compose.prod.yml"
+
 echo "Stopping existing containers..."
-docker-compose down || true
+docker-compose -f $COMPOSE_FILE down || true
 
 echo "Building images..."
-docker-compose build --no-cache
+docker-compose -f $COMPOSE_FILE build --no-cache
 
 echo "Starting services..."
-docker-compose up -d
+docker-compose -f $COMPOSE_FILE up -d
 
 echo "Waiting for backend to be ready..."
 for i in {1..30}; do
