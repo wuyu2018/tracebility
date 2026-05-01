@@ -259,7 +259,6 @@ async function batchGenerateSelectedQrCodes() {
   batchGenerating.value = true
   try {
     const productIds = selectedPendingProducts.value.map(p => p.id).filter(id => id != null)
-    console.log('生成选中的二维码产品IDs:', productIds)
     
     if (productIds.length === 0) {
       ElMessage.warning('未找到有效的产品ID')
@@ -287,7 +286,6 @@ async function batchGenerateQrCodes() {
   batchGenerating.value = true
   try {
     const productIds = productsWithoutQrCode.value.map(p => p.id).filter(id => id != null)
-    console.log('生成二维码产品IDs:', productIds)
     
     if (productIds.length === 0) {
       ElMessage.warning('未找到有效的产品ID')
@@ -340,7 +338,6 @@ async function batchDeleteProducts() {
     
     batchDeleting.value = true
     const productIds = selectedProducts.value.map(p => p.id).filter(id => id != null)
-    console.log('删除产品IDs:', productIds)
     
     if (productIds.length === 0) {
       ElMessage.warning('未找到有效的产品ID')

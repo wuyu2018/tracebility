@@ -98,6 +98,7 @@
 import { ref, reactive, computed } from 'vue'
 import axios from '../utils/axios'
 import { ElMessage } from 'element-plus'
+import { getUsername } from '../utils/auth'
 
 const adminForm = reactive({
   username: '',
@@ -195,7 +196,7 @@ const handleAddAdmin = async () => {
     return
   }
 
-  const currentAdminUsername = localStorage.getItem('adminUsername')
+  const currentAdminUsername = getUsername()
   if (!currentAdminUsername) {
     errorMsg.value = '无法获取当前管理员信息，请重新登录'
     return

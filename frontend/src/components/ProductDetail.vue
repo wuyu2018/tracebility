@@ -364,7 +364,7 @@ function clearSearch() {
 
 async function viewProductTrace(product) {
   if (!product.antiFakeCode) {
-    alert('该产品暂无防伪码，无法查看溯源')
+    ElMessage.warning('该产品暂无防伪码，无法查看溯源')
     return
   }
   
@@ -376,7 +376,7 @@ async function viewProductTrace(product) {
     if (res.data && !res.data.error) {
       currentTrace.value = res.data
     } else {
-      alert('未找到该产品的溯源信息')
+      ElMessage.warning('未找到该产品的溯源信息')
       traceDialogVisible.value = false
     }
   } catch (error) {

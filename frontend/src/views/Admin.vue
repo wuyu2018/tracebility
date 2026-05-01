@@ -75,8 +75,6 @@ import { useRouter } from 'vue-router'
 import { adminLogin, storeCaptcha } from '../services/api'
 import { setToken, setUsername } from '../utils/auth'
 
-// Use same-origin path so HTTPS/TLS is always respected in production.
-const API_BASE_URL = '/api'
 const router = useRouter()
 const isOpen = ref(false)
 
@@ -146,8 +144,6 @@ const handleLogin = async () => {
     setUsername(response.username)
     
     loginSuccess.value = true
-    adminUsername.value = response.username
-    localStorage.setItem('adminUsername', response.username)
     errorMsg.value = ''
     
     // 使用完整 URL，避免在网关/非根路径部署时跳转失败

@@ -42,6 +42,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import jsQR from 'jsqr'
 import { verifyAntiFakeCodeGet } from '../services/api'
 
@@ -71,7 +72,7 @@ async function startScan() {
       }
     }, 100)
   } catch (err) {
-    alert('无法访问摄像头，请确保已授予权限')
+    ElMessage.warning('无法访问摄像头，请确保已授予权限')
   }
 }
 
