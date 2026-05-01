@@ -117,3 +117,11 @@ test-output/
 *.pid
 *.pid.lock
 *.lck
+
+.env.example
+docker-compose.prod.yml
+edge-nginx.conf
+CONTEXT.md
+CLAUDE.md
+skills-lock.json
+.monkeycode/
