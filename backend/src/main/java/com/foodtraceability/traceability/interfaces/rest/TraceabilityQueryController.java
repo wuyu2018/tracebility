@@ -78,9 +78,8 @@ public class TraceabilityQueryController {
                         r.storage().getStorageTime(), r.storage().getOutboundTime(),
                         r.storage().getWarehouseLocation()) : null,
                 r.transportSale() != null ? new TraceabilityQueryResponse.TransportSaleInfo(
-                        r.transportSale().getTime(), r.transportSale().getTransportCompany(),
-                        r.transportSale().getVehicleNumber(), r.transportSale().getSalesRegion(),
-                        r.transportSale().getReceiverName(), r.transportSale().getReceiverContact()) : null,
+                        r.transportSale().getTime(), null, null,
+                        r.transportSale().getSalesRegion(), null, null) : null,
                 r.status(),
                 r.isRepeatedQuery(),
                 r.scanCount(),

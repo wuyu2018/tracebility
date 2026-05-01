@@ -12,6 +12,8 @@
     "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.6.2",
     "element-plus": "^2.13.5",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.3",
     "vue": "^3.4.0",
     "vue-router": "^4.2.5"
   },

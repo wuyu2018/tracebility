@@ -176,15 +176,20 @@ public class SmartDatabaseInitializer implements CommandLineRunner {
     }
 
     private void ensureAdminExists() {
-        if (adminRepository.findByUsername("admin").isEmpty()) {
-            Admin admin = new Admin();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            adminRepository.save(admin);
-            log.info("[数据库初始化] 管理员账号初始化完成 (admin/admin123)");
-        } else {
+        if (adminRepository.findByUsername("admin").isPresent()) {
             log.info("[数据库初始化] 管理员账号已存在，跳过初始化");
+            return;
         }
+        String defaultPwd = System.getenv("DEFAULT_ADMIN_PASSWORD");
+        if (defaultPwd == null || defaultPwd.isBlank()) {
+            log.warn("[数据库初始化] 环境变量 DEFAULT_ADMIN_PASSWORD 未设置，跳过默认管理员创建。请通过注册接口手动创建管理员账号。");
+            return;
+        }
+        Admin admin = new Admin();
+        admin.setUsername("admin");
+        admin.setPassword(passwordEncoder.encode(defaultPwd));
+        adminRepository.save(admin);
+        log.info("[数据库初始化] 管理员账号初始化完成");
     }
 
     private Product createProduct(String name, String specification, String shelfLife, String imageUrl, String phone, String email) {

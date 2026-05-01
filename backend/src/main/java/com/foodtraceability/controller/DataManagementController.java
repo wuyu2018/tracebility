@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class DataManagementController {
 
     private static final Logger log = LoggerFactory.getLogger(DataManagementController.class);
@@ -61,7 +60,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[产品管理] 创建产品失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -73,7 +72,7 @@ public class DataManagementController {
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             log.error("[产品管理] 更新产品失败 - ID: {}, {}", id, e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -85,7 +84,7 @@ public class DataManagementController {
             return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
         } catch (Exception e) {
             log.error("[产品管理] 删除产品失败 - ID: {}, {}", id, e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -97,7 +96,7 @@ public class DataManagementController {
             return ResponseEntity.ok(Map.of("success", true, "message", "物理删除成功"));
         } catch (Exception e) {
             log.error("[产品管理] 物理删除产品失败 - ID: {}, {}", id, e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -120,7 +119,7 @@ public class DataManagementController {
             return ResponseEntity.ok(productService.listAllProducts());
         } catch (Exception e) {
             log.error("[产品选择] 查询失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -131,7 +130,7 @@ public class DataManagementController {
             return ResponseEntity.ok(productService.listAllProducts());
         } catch (Exception e) {
             log.error("[数据导入] 获取产品列表失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -140,7 +139,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(productService.getProductById(id));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -152,7 +151,7 @@ public class DataManagementController {
                     .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
         } catch (Exception e) {
             log.error("[产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -164,7 +163,7 @@ public class DataManagementController {
                     .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
         } catch (Exception e) {
             log.error("[管理员产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -178,7 +177,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[原料品种] 创建失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -190,7 +189,7 @@ public class DataManagementController {
             }
             return ResponseEntity.ok(materialService.listAllMaterials());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -199,7 +198,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(materialService.getMaterialById(id));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -209,7 +208,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(materialService.updateMaterial(id, dto));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -220,7 +219,7 @@ public class DataManagementController {
             materialService.deleteMaterial(id);
             return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -230,7 +229,7 @@ public class DataManagementController {
             materialService.deactivateMaterial(id);
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -240,7 +239,7 @@ public class DataManagementController {
             materialService.activateMaterial(id);
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -254,7 +253,7 @@ public class DataManagementController {
             var relation = productMaterialRelationService.bindMaterialToProduct(productId, materialId);
             return ResponseEntity.status(HttpStatus.CREATED).body(relation);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -263,7 +262,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(productMaterialRelationService.getRelationsByProductId(productId));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -273,7 +272,7 @@ public class DataManagementController {
             productMaterialRelationService.unbindMaterialFromProduct(productId, materialId);
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -283,7 +282,7 @@ public class DataManagementController {
             productMaterialRelationService.toggleVisibility(id, body.get("isHidden"));
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -297,7 +296,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[原材料采购] 创建失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -309,7 +308,7 @@ public class DataManagementController {
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             log.error("[原材料采购] 更新失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -321,7 +320,7 @@ public class DataManagementController {
             return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
         } catch (Exception e) {
             log.error("[原材料采购] 删除失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -344,7 +343,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);  
         } catch (Exception e) {
             log.error("[生产批次管理] 创建批次失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -361,7 +360,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(batchService.getBatchById(id));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -370,7 +369,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(batchService.getBatchByBatchNumber(batchNumber));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -382,7 +381,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[生产批次管理] 添加检测报告失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -394,7 +393,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[生产批次管理] 添加仓储信息失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -406,7 +405,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[生产批次管理] 添加运输销售信息失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -418,7 +417,7 @@ public class DataManagementController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[防伪码管理] 生成防伪码失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -427,7 +426,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(securityCodeService.getCodesByBatchId(id));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -436,7 +435,7 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(securityCodeService.exportCodes(batchId));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -459,7 +458,7 @@ public class DataManagementController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[产品二维码] 生成失败 - 产品ID: {}, 错误: {}", productId, e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -498,7 +497,7 @@ public class DataManagementController {
             ));
         } catch (Exception e) {
             log.error("[产品二维码] 批量生成失败 - 错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -533,7 +532,7 @@ public class DataManagementController {
             ));
         } catch (Exception e) {
             log.error("[产品管理] 清除二维码失败 - 错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -559,7 +558,7 @@ public class DataManagementController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             log.error("[原材料管理] 插入原材料失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -570,7 +569,7 @@ public class DataManagementController {
             return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
         } catch (Exception e) {
             log.error("[原材料管理] 删除原材料失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -583,7 +582,7 @@ public class DataManagementController {
             return ResponseEntity.ok(materialPurchaseService.listAllMaterialPurchases());
         } catch (Exception e) {
             log.error("[原材料管理] 获取原材料列表失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -617,7 +616,7 @@ public class DataManagementController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[检验检测] 获取列表失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -639,7 +638,7 @@ public class DataManagementController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[仓储] 获取列表失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 
@@ -664,7 +663,7 @@ public class DataManagementController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("[运输销售] 获取列表失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
 }

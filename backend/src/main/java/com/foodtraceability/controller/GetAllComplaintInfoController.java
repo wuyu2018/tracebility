@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class GetAllComplaintInfoController {
 
     private static final Logger log = LoggerFactory.getLogger(GetAllComplaintInfoController.class);
@@ -39,7 +38,7 @@ public class GetAllComplaintInfoController {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[投诉查询] 查询失败 - 错误: {}, 耗时: {}ms", e.getMessage(), duration);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("获取投诉信息失败: " + e.getMessage());
+                    .body("获取投诉信息失败");
         }
     }
 
@@ -68,7 +67,7 @@ public class GetAllComplaintInfoController {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[投诉删除] 删除失败 - ID: {}, 错误: {}, 耗时: {}ms", id, e.getMessage(), duration);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("删除投诉信息失败: " + e.getMessage());
+                    .body("删除投诉信息失败");
         }
     }
 
@@ -110,7 +109,7 @@ public class GetAllComplaintInfoController {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[投诉批量删除] 批量删除失败 - 错误: {}, 耗时: {}ms", e.getMessage(), duration);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("批量删除投诉信息失败: " + e.getMessage());
+                    .body("批量删除投诉信息失败");
         }
     }
 }

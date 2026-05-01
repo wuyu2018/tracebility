@@ -19,7 +19,7 @@ public class JwtTokenProvider {
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    @Value("${jwt.secret:food-traceability-system-jwt-secret-key-2026}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expiration-ms:86400000}")
@@ -36,10 +36,10 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -48,48 +48,39 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token);
-        
-        } catch (SecurityException ex) {
-            log.error("[JWT 验证] 无效的 JWT 签名");
-            throw new BusinessException("无效的 JWT 签名");
-        } catch (MalformedJwtException ex) {
-            log.error("[JWT 验证] 无效的 JWT 格式");
-            throw new BusinessException("无效的 JWT 格式");
+                    .parseSignedClaims(token);
+            return true;
         } catch (ExpiredJwtException ex) {
             log.error("[JWT 验证] JWT 已过期");
             throw new BusinessException("JWT 已过期，请重新登录");
-        } catch (UnsupportedJwtException ex) {
-            log.error("[JWT 验证] 不支持的 JWT");
-            throw new BusinessException("不支持的 JWT");
+        } catch (JwtException ex) {
+            log.error("[JWT 验证] JWT 无效 - {}", ex.getMessage());
+            throw new BusinessException("无效的 JWT");
         } catch (IllegalArgumentException ex) {
             log.error("[JWT 验证] JWT claims 字符串为空");
             throw new BusinessException("JWT claims 字符串为空");
         }
-
-        return true;
     }
 
     public long getExpirationTime() {

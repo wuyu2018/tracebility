@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class TraceabilityController {
 
     private static final Logger log = LoggerFactory.getLogger(TraceabilityController.class);

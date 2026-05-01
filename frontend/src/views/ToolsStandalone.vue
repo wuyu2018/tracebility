@@ -108,7 +108,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
+import QRCode from 'qrcode'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
 import AddAdmin from '/src/views/AddAdmin.vue'
 import ProductDetail from '../components/ProductDetail.vue'

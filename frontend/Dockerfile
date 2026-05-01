@@ -15,7 +15,7 @@ COPY . .
 
 ARG NGINX_HOST
 ARG NGINX_PORT
-ENV VUE_APP_API_BASE_URL="https://${NGINX_HOST}:${NGINX_PORT}/api"
+ENV VITE_API_BASE_URL="https://${NGINX_HOST}:${NGINX_PORT}/api"
 RUN npm run build
 
 FROM nginx:alpine

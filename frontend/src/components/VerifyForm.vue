@@ -42,6 +42,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import jsQR from 'jsqr'
 import { verifyAntiFakeCodeGet } from '../services/api'
 
 const emit = defineEmits(['verified', 'invalid'])
@@ -55,14 +56,6 @@ const showCamera = ref(false)
 const videoRef = ref(null)
 let stream = null
 let scanInterval = null
-let jsQR = null
-
-async function loadJsQR() {
-  if (jsQR) return jsQR
-  const module = await import('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/+esm')
-  jsQR = module.default
-  return jsQR
-}
 
 async function startScan() {
   try {
@@ -70,8 +63,6 @@ async function startScan() {
       video: { facingMode: 'environment' }
     })
     showCamera.value = true
-
-    await loadJsQR()
 
     setTimeout(() => {
       if (videoRef.value) {
@@ -87,7 +78,6 @@ async function startScan() {
 function startQrScan() {
   scanInterval = setInterval(async () => {
     if (!videoRef.value || videoRef.value.readyState !== 4) return
-    if (!jsQR) return
 
     try {
       const canvas = document.createElement('canvas')

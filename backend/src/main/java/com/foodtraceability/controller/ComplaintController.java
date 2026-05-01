@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ComplaintController {
 
     private static final Logger log = LoggerFactory.getLogger(ComplaintController.class);

@@ -67,7 +67,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from 'axios'
+import axios from '../utils/axios'
 
 const complaintFormRef = ref()
 const complaintForm = reactive({
@@ -84,8 +84,7 @@ const complaintRules = {
 }
 const submitting = ref(false)
 const errorMessage = ref('')
-const API_BASE_URL = '/api'
-const COMPLAINT_API = `${API_BASE_URL}/complaint`
+const COMPLAINT_API = '/complaint'
 
 const submitComplaint = async () => {
   try {
