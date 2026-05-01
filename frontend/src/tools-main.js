@@ -3,9 +3,8 @@ import ToolsPage from './views/Admin.vue'
 import './assets/css/main.css'
 import router from './router'
 
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import ElementPlus from 'element-plus'
 
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
