@@ -59,6 +59,12 @@ server:
 
 app:
   verify-url: ${APP_VERIFY_URL:http://localhost}
+  default-admin:
+    username: ${DEFAULT_ADMIN_USERNAME:}
+    password: ${DEFAULT_ADMIN_PASSWORD:}
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
 
 management:
   endpoints:
