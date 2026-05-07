@@ -1,6 +1,5 @@
 package com.foodtraceability.controller.builder;
 
-import com.foodtraceability.dto.PurchaseInfoDTO;
 import com.foodtraceability.dto.TraceInfoDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -29,15 +28,6 @@ public class TraceabilityResponseBuilder {
 
     public ResponseEntity<Map<String, Object>> validTrace(TraceInfoDTO traceInfo) {
         return ResponseEntity.ok(Map.of("valid", true, "data", traceInfo));
-    }
-
-    public ResponseEntity<Map<String, Object>> validQuick(PurchaseInfoDTO purchaseInfo) {
-        return ResponseEntity.ok(Map.of(
-                "valid", true,
-                "productName", purchaseInfo.getName() != null ? purchaseInfo.getName() : "",
-                "specification", purchaseInfo.getSpecification() != null ? purchaseInfo.getSpecification() : "",
-                "message", "产品信息验证通过，如需查看完整溯源信息请提供批次号"
-        ));
     }
 }
 
