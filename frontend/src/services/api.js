@@ -66,11 +66,6 @@ export async function completeInspection(payload) {
 
 // ==================== 旧 API（保留兼容） ====================
 
-export async function getPurchaseInfo(antiFakeCode) {
-  const { data } = await api.post('/purchase-info', { antiFakeCode })
-  return data
-}
-
 export async function selectProducts(keyword, role = 'consumer') {
   const params = new URLSearchParams()
   if (keyword) params.append('keyword', keyword)
