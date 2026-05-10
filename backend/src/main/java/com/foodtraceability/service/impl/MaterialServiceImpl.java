@@ -1,10 +1,12 @@
 package com.foodtraceability.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.dto.MaterialDTO;
 import com.foodtraceability.entity.Material;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.policy.DeletionPolicy;
 import com.foodtraceability.repository.MaterialRepository;
+import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.service.MaterialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +14,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MaterialServiceImpl implements MaterialService {
@@ -20,10 +24,15 @@ public class MaterialServiceImpl implements MaterialService {
 
     private final MaterialRepository repository;
     private final DeletionPolicy deletionPolicy;
+    private final BlockchainService blockchainService;
+    private final ObjectMapper objectMapper;
 
-    public MaterialServiceImpl(MaterialRepository repository, DeletionPolicy deletionPolicy) {
+    public MaterialServiceImpl(MaterialRepository repository, DeletionPolicy deletionPolicy,
+                               BlockchainService blockchainService) {
         this.repository = repository;
         this.deletionPolicy = deletionPolicy;
+        this.blockchainService = blockchainService;
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -36,6 +45,18 @@ public class MaterialServiceImpl implements MaterialService {
         BeanUtils.copyProperties(dto, entity);
         entity.setIsActive(true);
         Material saved = repository.save(entity);
+
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", saved.getId());
+            snapshot.put("name", saved.getName());
+            snapshot.put("isActive", saved.isActive());
+            blockchainService.appendMaterialChainBlock("MATERIAL", saved.getId(), "CREATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for Material CREATE", e);
+        }
+
         log.info("[原料品种] 创建 - ID: {}, 名称: {}", saved.getId(), saved.getName());
         return saved;
     }
@@ -48,6 +69,18 @@ public class MaterialServiceImpl implements MaterialService {
         entity.changeName(dto.getName());
         entity.setActiveStatus(dto.getIsActive());
         Material saved = repository.save(entity);
+
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", saved.getId());
+            snapshot.put("name", saved.getName());
+            snapshot.put("isActive", saved.isActive());
+            blockchainService.appendMaterialChainBlock("MATERIAL", saved.getId(), "UPDATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for Material UPDATE", e);
+        }
+
         log.info("[原料品种] 更新 - ID: {}, 名称: {}", saved.getId(), saved.getName());
         return saved;
     }

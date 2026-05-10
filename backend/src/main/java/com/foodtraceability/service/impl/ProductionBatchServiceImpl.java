@@ -1,13 +1,17 @@
 package com.foodtraceability.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.dto.ProductionBatchDTO;
 import com.foodtraceability.dto.InspectionDTO;
 import com.foodtraceability.dto.StorageDTO;
 import com.foodtraceability.dto.TransportSaleDTO;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
+import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.service.ProductionBatchService;
 import com.foodtraceability.validator.BatchMaterialValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductionBatchServiceImpl implements ProductionBatchService {
+    private static final Logger log = LoggerFactory.getLogger(ProductionBatchServiceImpl.class);
+
     private final ProductionBatchRepository batchRepository;
     private final ProductRepository productRepository;
     private final MaterialPurchaseRepository materialRepository;
@@ -26,6 +34,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     private final InspectionRepository inspectionRepository;
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
+    private final BlockchainService blockchainService;
+    private final ObjectMapper objectMapper;
 
     private final BatchMaterialValidator batchMaterialValidator;
 
@@ -37,6 +47,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
                                       InspectionRepository inspectionRepository,
                                       StorageRepository storageRepository,
                                       TransportSaleRepository transportSaleRepository,
+                                      BlockchainService blockchainService,
                                       BatchMaterialValidator batchMaterialValidator) {
         this.batchRepository = batchRepository;
         this.productRepository = productRepository;
@@ -45,6 +56,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
+        this.blockchainService = blockchainService;
+        this.objectMapper = new ObjectMapper();
         this.batchMaterialValidator = batchMaterialValidator;
     }
 
@@ -70,6 +83,21 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         associateMaterials(batch, dto.getMaterialIds());
         associateStorage(batch, dto.getStorage());
         associateTransportSale(batch, dto.getTransportSale());
+
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", batch.getId());
+            snapshot.put("batchNumber", batch.getBatchNumber());
+            snapshot.put("productId", batch.getProductId());
+            snapshot.put("productionDate", batch.getProductionDate() != null ? batch.getProductionDate().toString() : null);
+            snapshot.put("shelfLife", batch.getShelfLife());
+            snapshot.put("quantity", batch.getQuantity());
+            snapshot.put("unit", batch.getUnit());
+            blockchainService.appendBatchChainBlock(batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for ProductionBatch CREATE (V1)", e);
+        }
 
         return batch;
     }
@@ -229,6 +257,21 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         inspection.setBatchId(batch.getId());
         inspection = inspectionRepository.save(inspection);
 
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", inspection.getId());
+            snapshot.put("batchId", inspection.getBatchId());
+            snapshot.put("sampleName", inspection.getSampleName());
+            snapshot.put("sampleQuantity", inspection.getSampleQuantity());
+            snapshot.put("sampleSpecification", inspection.getSampleSpecification());
+            snapshot.put("resultStatus", inspection.getResultStatus());
+            snapshot.put("resultDetail", inspection.getResultDetail());
+            blockchainService.appendBatchChainBlock(batchId, "INSPECTION", inspection.getId(), "CREATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for Inspection CREATE (V1)", e);
+        }
+
         InspectionDTO result = new InspectionDTO();
         BeanUtils.copyProperties(inspection, result);
         return result;
@@ -248,6 +291,20 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         batch.associateStorage(storage);
         batchRepository.save(batch);
 
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", storage.getId());
+            snapshot.put("batchId", storage.getBatchId());
+            snapshot.put("storageTime", storage.getStorageTime() != null ? storage.getStorageTime().toString() : null);
+            snapshot.put("quantity", storage.getQuantity());
+            snapshot.put("unit", storage.getUnit());
+            snapshot.put("warehouseLocation", storage.getWarehouseLocation());
+            blockchainService.appendBatchChainBlock(batchId, "STORAGE", storage.getId(), "CREATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for Storage CREATE (V1)", e);
+        }
+
         StorageDTO result = new StorageDTO();
         BeanUtils.copyProperties(storage, result);
         return result;
@@ -266,6 +323,24 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
         batch.associateTransportSale(transportSale);
         batchRepository.save(batch);
+
+        try {
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("id", transportSale.getId());
+            snapshot.put("batchId", transportSale.getBatchId());
+            snapshot.put("environmentTemperature", transportSale.getEnvironmentTemperature());
+            snapshot.put("productTemperature", transportSale.getProductTemperature());
+            snapshot.put("time", transportSale.getTime() != null ? transportSale.getTime().toString() : null);
+            snapshot.put("transportCompany", transportSale.getTransportCompany());
+            snapshot.put("vehicleNumber", transportSale.getVehicleNumber());
+            snapshot.put("salesRegion", transportSale.getSalesRegion());
+            snapshot.put("receiverName", transportSale.getReceiverName());
+            snapshot.put("receiverContact", transportSale.getReceiverContact());
+            blockchainService.appendBatchChainBlock(batchId, "TRANSPORT_SALE", transportSale.getId(), "CREATE",
+                    objectMapper.writeValueAsString(snapshot), null);
+        } catch (Exception e) {
+            log.error("[Blockchain] Failed to append block for TransportSale CREATE (V1)", e);
+        }
 
         TransportSaleDTO result = new TransportSaleDTO();
         BeanUtils.copyProperties(transportSale, result);
