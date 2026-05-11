@@ -96,7 +96,7 @@
           <el-form :model="materialForm" label-width="120px" class="product-form">
             <el-form-item label="选择原料品种" required>
               <el-select v-model="materialForm.materialId" placeholder="请选择原料品种" @change="onMaterialSelect" filterable>
-                <el-option v-for="m in materialVarieties" :key="m.id" :label="m.name" :value="m.id" />
+                <el-option v-for="m in activeMaterialVarieties" :key="m.id" :label="m.name" :value="m.id" />
               </el-select>
             </el-form-item>
             <el-form-item label="采购批次号" required>
@@ -305,7 +305,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/axios'
 import { createBatchV2, recordStorage, completeInspection } from '../services/api'
@@ -364,7 +364,6 @@ async function saveVariety() {
     }
     varietyDialogVisible.value = false
     loadAllVarieties()
-    loadMaterialVarieties()
   } catch (e) {
     ElMessage.error(e.response?.data?.error || '保存失败')
   } finally {
@@ -377,7 +376,6 @@ async function toggleVarietyActive(id, activate) {
     await axios.post(`${API_BASE}/v2/material-varieties/${id}/${activate ? 'activate' : 'deactivate'}`)
     ElMessage.success(activate ? '品种已启用' : '品种已停用')
     loadAllVarieties()
-    loadMaterialVarieties()
   } catch (e) {
     ElMessage.error('操作失败')
   }
@@ -400,6 +398,10 @@ async function loadAllVarieties() {
     console.error(e)
   }
 }
+
+const activeMaterialVarieties = computed(() =>
+  materialVarieties.value.filter(m => m.isActive)
+)
 
 const materialForm = reactive({
   id: null,
@@ -470,7 +472,7 @@ async function loadBatches() {
 }
 
 function onMaterialSelect() {
-  const m = materialVarieties.value.find(v => v.id === materialForm.materialId)
+  const m = activeMaterialVarieties.value.find(v => v.id === materialForm.materialId)
   materialForm.materialName = m ? m.name : ''
 }
 
@@ -755,7 +757,6 @@ onMounted(() => {
   loadProducts()
   loadMaterials()
   loadAllVarieties()
-  loadMaterialVarieties()
   loadBatches()
 })
 </script>
