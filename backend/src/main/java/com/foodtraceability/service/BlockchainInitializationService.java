@@ -109,6 +109,10 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("shelfLife", batch.getShelfLife());
                 snapshot.put("quantity", batch.getQuantity());
                 snapshot.put("unit", batch.getUnit());
+                snapshot.put("storageId", batch.getStorageId());
+                snapshot.put("transportSaleId", batch.getTransportSaleId());
+                snapshot.put("isDeleted", batch.isDeleted());
+                snapshot.put("createdAt", batch.getCreatedAt() != null ? batch.getCreatedAt().toString() : null);
                 blockchainService.appendBatchChainBlock(batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {

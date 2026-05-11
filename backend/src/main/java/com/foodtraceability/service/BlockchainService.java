@@ -28,11 +28,15 @@ public class BlockchainService {
     }
 
     public String calculateHash(String entityType, Long entityId, String action,
-                                 String previousHash, String dataSnapshot, LocalDateTime timestamp) {
+                                 String previousHash, String dataSnapshot, LocalDateTime timestamp,
+                                 Long batchId, Long operatorId, String refMasterChainHash) {
         String input = entityType + "|" + entityId + "|" + action + "|"
                 + (previousHash != null ? previousHash : "") + "|"
                 + (dataSnapshot != null ? dataSnapshot : "") + "|"
-                + timestamp;
+                + timestamp + "|"
+                + (batchId != null ? batchId : "") + "|"
+                + (operatorId != null ? operatorId : "") + "|"
+                + (refMasterChainHash != null ? refMasterChainHash : "");
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
@@ -78,7 +82,8 @@ public class BlockchainService {
                 .orElse(null);
 
         LocalDateTime now = LocalDateTime.now();
-        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now);
+        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
+                null, operatorId, null);
         String signature = sign(currentHash);
 
         BlockchainLog block = BlockchainLog.createMaterialChainBlock(
@@ -105,7 +110,8 @@ public class BlockchainService {
                 .orElse(null);
 
         LocalDateTime now = LocalDateTime.now();
-        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now);
+        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
+                batchId, operatorId, refMasterHash);
         String signature = sign(currentHash);
 
         BlockchainLog block = BlockchainLog.createBatchChainBlock(
@@ -165,7 +171,8 @@ public class BlockchainService {
 
             String expectedHash = calculateHash(
                     block.getEntityType(), block.getEntityId(), block.getAction(),
-                    block.getPreviousHash(), block.getDataSnapshot(), block.getTimestamp());
+                    block.getPreviousHash(), block.getDataSnapshot(), block.getTimestamp(),
+                    block.getBatchId(), block.getOperatorId(), block.getRefMasterChainHash());
 
             if (!expectedHash.equals(block.getCurrentHash())) {
                 errors.add("current_hash mismatch: expected " + expectedHash
