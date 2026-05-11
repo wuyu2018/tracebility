@@ -1,5 +1,6 @@
 package com.foodtraceability.traceability.interfaces.rest;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.traceability.application.service.MaterialApplicationService;
 import com.foodtraceability.traceability.interfaces.dto.CreateMaterialVarietyRequest;
 import com.foodtraceability.traceability.interfaces.dto.MaterialVarietyResponse;
@@ -25,6 +26,7 @@ public class MaterialVarietyController {
     }
 
     @PostMapping
+    @OperationLog(entityType = "MATERIAL", action = "CREATE")
     public ResponseEntity<?> createMaterialVariety(@RequestBody CreateMaterialVarietyRequest req) {
         log.info("[V2] 创建物料品种: {}", req.getName());
         try {
@@ -58,6 +60,7 @@ public class MaterialVarietyController {
     }
 
     @PutMapping("/{id}")
+    @OperationLog(entityType = "MATERIAL", action = "UPDATE")
     public ResponseEntity<?> updateMaterialVariety(@PathVariable Long id,
                                                     @RequestBody UpdateMaterialVarietyRequest req) {
         log.info("[V2] 更新物料品种: id={}", id);
@@ -71,6 +74,7 @@ public class MaterialVarietyController {
     }
 
     @DeleteMapping("/{id}")
+    @OperationLog(entityType = "MATERIAL", action = "DELETE")
     public ResponseEntity<?> deleteMaterialVariety(@PathVariable Long id) {
         log.info("[V2] 删除物料品种: id={}", id);
         try {
@@ -83,6 +87,7 @@ public class MaterialVarietyController {
     }
 
     @PostMapping("/{id}/activate")
+    @OperationLog(entityType = "MATERIAL", action = "ACTIVATE")
     public ResponseEntity<?> activateMaterialVariety(@PathVariable Long id) {
         log.info("[V2] 启用物料品种: id={}", id);
         try {
@@ -94,6 +99,7 @@ public class MaterialVarietyController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @OperationLog(entityType = "MATERIAL", action = "DEACTIVATE")
     public ResponseEntity<?> deactivateMaterialVariety(@PathVariable Long id) {
         log.info("[V2] 停用物料品种: id={}", id);
         try {

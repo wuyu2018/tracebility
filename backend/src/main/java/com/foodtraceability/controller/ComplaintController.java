@@ -1,5 +1,6 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.ComplaintDTO;
 import com.foodtraceability.service.ComplaintService;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class ComplaintController {
     }
 
     @PostMapping("/complaint")
+    @OperationLog(entityType = "COMPLAINT", action = "CREATE")
     public ResponseEntity<?> createComplaint(@Valid @RequestBody ComplaintDTO complaintDTO) {
         log.info("[投诉提交] 新增投诉 - 防伪码: {}, 投诉原因: {}", 
             complaintDTO.getAntiFakeCode(), complaintDTO.getComplaintReason());

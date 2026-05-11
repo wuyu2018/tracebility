@@ -1,5 +1,6 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.AdminLoginDTO;
 import com.foodtraceability.dto.LoginResponseDTO;
 import com.foodtraceability.entity.Admin;
@@ -43,6 +44,7 @@ public class AdminController {
     }
 
     @PostMapping("/login")
+    @OperationLog(entityType = "ADMIN", action = "LOGIN")
     public ResponseEntity<?> login(@Valid @RequestBody AdminLoginDTO loginDTO) {
         log.info("[管理员登录] 登录尝试 - 用户名: {}", loginDTO.getUsername());
         long startTime = System.currentTimeMillis();
@@ -64,6 +66,7 @@ public class AdminController {
     }
 
     @PostMapping("/admin/register")
+    @OperationLog(entityType = "ADMIN", action = "REGISTER")
     public ResponseEntity<?> registerAdmin(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String password = request.get("password");

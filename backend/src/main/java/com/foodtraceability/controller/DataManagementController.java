@@ -1,5 +1,6 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.*;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
@@ -53,6 +54,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/products")
+    @OperationLog(entityType = "PRODUCT", action = "CREATE")
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO dto) {
         log.info("[产品管理] 创建产品 - 名称: {}", dto.getName());
         try {
@@ -65,6 +67,7 @@ public class DataManagementController {
     }
 
     @PutMapping("/products/{id}")
+    @OperationLog(entityType = "PRODUCT", action = "UPDATE")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductDTO dto) {
         log.info("[产品管理] 更新产品 - ID: {}", id);
         try {
@@ -77,6 +80,7 @@ public class DataManagementController {
     }
 
     @DeleteMapping("/products/{id}")
+    @OperationLog(entityType = "PRODUCT", action = "DELETE")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         log.info("[产品管理] 删除产品 - ID: {}", id);
         try {
@@ -89,6 +93,7 @@ public class DataManagementController {
     }
 
     @DeleteMapping("/products/{id}/hard")
+    @OperationLog(entityType = "PRODUCT", action = "HARD_DELETE")
     public ResponseEntity<?> hardDeleteProduct(@PathVariable Long id) {
         log.info("[产品管理] 物理删除产品 - ID: {}", id);
         try {
@@ -193,6 +198,7 @@ public class DataManagementController {
     // ============ 产品-原料可见性 (ProductMaterialRelation) ============
 
     @PostMapping("/product-materials")
+    @OperationLog(entityType = "PRODUCT", action = "UPDATE")
     public ResponseEntity<?> bindMaterialToProduct(@RequestBody Map<String, Long> body) {
         try {
             Long productId = body.get("productId");
@@ -224,6 +230,7 @@ public class DataManagementController {
     }
 
     @PatchMapping("/product-materials/{id}/visibility")
+    @OperationLog(entityType = "PRODUCT", action = "UPDATE")
     public ResponseEntity<?> toggleVisibility(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         try {
             productMaterialRelationService.toggleVisibility(id, body.get("isHidden"));
@@ -270,6 +277,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/batches/{id}/security-codes")
+    @OperationLog(entityType = "SECURITY_CODE", action = "CREATE")
     public ResponseEntity<?> generateSecurityCodes(@PathVariable Long id, @RequestBody GenerateSecurityCodeRequest request) {
         log.info("[防伪码管理] 生成防伪码 - 批次ID: {}, 数量: {}", id, request.getQuantity());
         try {
@@ -300,6 +308,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/products/{productId}/generate-qrcode")
+    @OperationLog(entityType = "SECURITY_CODE", action = "CREATE")
     public ResponseEntity<?> generateQrCodeForProduct(@PathVariable Long productId) {
         log.info("[产品二维码] 为产品生成二维码 - 产品ID: {}", productId);
         try {
@@ -323,6 +332,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/products/batch-generate-qrcode")
+    @OperationLog(entityType = "SECURITY_CODE", action = "CREATE")
     public ResponseEntity<?> batchGenerateQrCodes(@RequestBody List<Long> productIds) {
         log.info("[产品二维码] 批量生成二维码 - 产品数量: {}", productIds.size());
         try {
@@ -362,6 +372,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/products/batch-delete")
+    @OperationLog(entityType = "PRODUCT", action = "BATCH_DELETE")
     public ResponseEntity<?> batchDeleteProducts(@RequestBody String body) {
         log.info("[产品管理] 批量删除产品 - 请求体: {}", body);
         try {
@@ -397,6 +408,7 @@ public class DataManagementController {
     }
 
     @PostMapping("/insert/material-purchase")
+    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "CREATE")
     public ResponseEntity<?> insertMaterialPurchase(@RequestBody Map<String, Object> request) {
         try {
             Object materialIdObj = request.get("materialId");
@@ -423,6 +435,7 @@ public class DataManagementController {
     }
 
     @DeleteMapping("/insert/material-purchase/{id}")
+    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "DELETE")
     public ResponseEntity<?> deleteInsertMaterialPurchase(@PathVariable Long id) {
         try {
             materialPurchaseService.deleteMaterialPurchase(id);

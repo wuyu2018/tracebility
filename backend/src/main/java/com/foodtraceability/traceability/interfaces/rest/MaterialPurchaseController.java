@@ -1,5 +1,6 @@
 package com.foodtraceability.traceability.interfaces.rest;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.traceability.application.service.MaterialPurchaseApplicationService;
 import com.foodtraceability.traceability.interfaces.dto.CreateMaterialPurchaseRequest;
 import com.foodtraceability.traceability.interfaces.dto.MaterialPurchaseResponse;
@@ -25,6 +26,7 @@ public class MaterialPurchaseController {
     }
 
     @PostMapping
+    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "CREATE")
     public ResponseEntity<?> createMaterialPurchase(@RequestBody CreateMaterialPurchaseRequest req) {
         log.info("[V2] 创建采购单: materialId={}", req.getMaterialId());
         try {
@@ -57,6 +59,7 @@ public class MaterialPurchaseController {
     }
 
     @PutMapping("/{id}")
+    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "UPDATE")
     public ResponseEntity<?> updateMaterialPurchase(@PathVariable Long id,
                                                      @RequestBody UpdateMaterialPurchaseRequest req) {
         log.info("[V2] 更新采购单: id={}", id);
@@ -70,6 +73,7 @@ public class MaterialPurchaseController {
     }
 
     @DeleteMapping("/{id}")
+    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "DELETE")
     public ResponseEntity<?> deleteMaterialPurchase(@PathVariable Long id) {
         log.info("[V2] 删除采购单: id={}", id);
         try {
