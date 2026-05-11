@@ -80,6 +80,7 @@ blockchain:
   rsa:
     private-key-path: ${BLOCKCHAIN_RSA_PRIVATE_KEY:}
     public-key-path: ${BLOCKCHAIN_RSA_PUBLIC_KEY:}
+  genesis-hash: ${BLOCKCHAIN_GENESIS_HASH:0000000000000000000000000000000000000000000000000000000000000000}
 
 logging:
   level:

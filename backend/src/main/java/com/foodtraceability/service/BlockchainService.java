@@ -12,6 +12,8 @@ import java.security.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 public class BlockchainService {
 
@@ -20,11 +22,14 @@ public class BlockchainService {
     private final BlockchainLogRepository blockchainLogRepo;
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
+    private final String genesisHash;
 
-    public BlockchainService(BlockchainLogRepository blockchainLogRepo, KeyPair blockchainKeyPair) {
+    public BlockchainService(BlockchainLogRepository blockchainLogRepo, KeyPair blockchainKeyPair,
+                              @Value("${blockchain.genesis-hash}") String genesisHash) {
         this.blockchainLogRepo = blockchainLogRepo;
         this.privateKey = blockchainKeyPair.getPrivate();
         this.publicKey = blockchainKeyPair.getPublic();
+        this.genesisHash = genesisHash;
     }
 
     public String calculateHash(String entityType, Long entityId, String action,
@@ -79,7 +84,7 @@ public class BlockchainService {
         String previousHash = blockchainLogRepo
                 .findTopByChainTypeOrderByTimestampDesc("MATERIAL")
                 .map(BlockchainLog::getCurrentHash)
-                .orElse(null);
+                .orElse(genesisHash);
 
         LocalDateTime now = LocalDateTime.now();
         String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
@@ -102,12 +107,12 @@ public class BlockchainService {
         String previousHash = blockchainLogRepo
                 .findTopByChainTypeAndBatchIdOrderByTimestampDesc("BATCH", batchId)
                 .map(BlockchainLog::getCurrentHash)
-                .orElse(null);
+                .orElse(genesisHash);
 
         String refMasterHash = blockchainLogRepo
                 .findTopByChainTypeOrderByTimestampDesc("MATERIAL")
                 .map(BlockchainLog::getCurrentHash)
-                .orElse(null);
+                .orElse(genesisHash);
 
         LocalDateTime now = LocalDateTime.now();
         String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
@@ -160,13 +165,11 @@ public class BlockchainService {
             BlockchainLog block = blocks.get(i);
             List<String> errors = new ArrayList<>();
 
-            if (i > 0) {
-                String expectedPrev = blocks.get(i - 1).getCurrentHash();
-                if (!expectedPrev.equals(block.getPreviousHash())) {
-                    errors.add("previous_hash mismatch: expected " + expectedPrev
-                            + ", got " + block.getPreviousHash());
-                    chainBroken = true;
-                }
+            String expectedPrev = i > 0 ? blocks.get(i - 1).getCurrentHash() : genesisHash;
+            if (!expectedPrev.equals(block.getPreviousHash())) {
+                errors.add("previous_hash mismatch at index " + i + ": expected " + expectedPrev
+                        + ", got " + block.getPreviousHash());
+                chainBroken = true;
             }
 
             String expectedHash = calculateHash(

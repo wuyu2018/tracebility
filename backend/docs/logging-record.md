@@ -2,11 +2,85 @@
 
 ## 概述
 
-项目中不存在独立的 `operation_log` 或 `audit_log` 数据表。持久化的操作审计完全依赖 `blockchain_log`（详见 `blockchain-logic.md`）。除此之外的日志分为四层：**应用日志**（SLF4J）、**扫码追踪**、**登录防暴**、**投诉记录**。
+持久化的操作审计包含两类：**区块链日志**（`blockchain_log`，防篡改）和**操作日志**（`operation_log`，可查询）。除此之外还有**应用日志**（SLF4J）、**扫码追踪**、**登录防暴**、**投诉记录**。
 
 ---
 
-## 一、应用日志（SLF4J）
+## 一、操作日志（operation_log 表）
+
+通过 AOP 注解 `@OperationLog` 自动记录关键业务操作。
+
+### 表结构
+
+```sql
+CREATE TABLE operation_log (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  operator VARCHAR(50),          -- 操作人用户名（从 JWT 提取）
+  entity_type VARCHAR(50),       -- PRODUCT / MATERIAL / BATCH 等
+  entity_id BIGINT,              -- 被操作记录的 ID
+  action VARCHAR(20),            -- CREATE / UPDATE / DELETE / ACTIVATE / DEACTIVATE / LOGIN
+  summary VARCHAR(500),          -- 可读描述，如 "创建产品 ID=3"
+  created_at DATETIME            -- 操作时间
+);
+```
+
+### 触发方式
+
+`@OperationLog(entityType = "PRODUCT", action = "CREATE")` 加到 Controller 方法上，AOP 切面自动拦截：
+
+```
+@OperationLog(entityType = "PRODUCT", action = "CREATE")
+@PostMapping("/products")
+public ResponseEntity<?> createProduct(@RequestBody ProductDTO dto) { ... }
+```
+
+切面执行流程：
+1. 从 `SecurityContextHolder` 提取当前登录用户名
+2. 执行业务方法
+3. 从 `@PathVariable` 或返回值提取 `entityId`
+4. 拼装 `summary`（如 "删除产品 ID=5"）
+5. INSERT 到 `operation_log` 表
+
+### 已标注的接口
+
+| Controller | 方法 | entity_type | action |
+|---|---|---|---|
+| `DataManagementController` | createProduct | PRODUCT | CREATE |
+| | updateProduct | PRODUCT | UPDATE |
+| | deleteProduct | PRODUCT | DELETE |
+| | hardDeleteProduct | PRODUCT | HARD_DELETE |
+| | bindMaterialToProduct | PRODUCT | UPDATE |
+| | toggleVisibility | PRODUCT | UPDATE |
+| | generateSecurityCodes | SECURITY_CODE | CREATE |
+| | generateQrCodeForProduct | SECURITY_CODE | CREATE |
+| | batchGenerateQrCodes | SECURITY_CODE | CREATE |
+| | batchDeleteProducts | PRODUCT | BATCH_DELETE |
+| | insertMaterialPurchase | MATERIAL_PURCHASE | CREATE |
+| | deleteInsertMaterialPurchase | MATERIAL_PURCHASE | DELETE |
+| `MaterialVarietyController` | createMaterialVariety | MATERIAL | CREATE |
+| | updateMaterialVariety | MATERIAL | UPDATE |
+| | deleteMaterialVariety | MATERIAL | DELETE |
+| | activateMaterialVariety | MATERIAL | ACTIVATE |
+| | deactivateMaterialVariety | MATERIAL | DEACTIVATE |
+| `MaterialPurchaseController` | createMaterialPurchase | MATERIAL_PURCHASE | CREATE |
+| | updateMaterialPurchase | MATERIAL_PURCHASE | UPDATE |
+| | deleteMaterialPurchase | MATERIAL_PURCHASE | DELETE |
+| `AdminController` | login | ADMIN | LOGIN |
+| | registerAdmin | ADMIN | REGISTER |
+| `ComplaintController` | createComplaint | COMPLAINT | CREATE |
+
+### 与 blockchain_log 的分工
+
+| | operation_log | blockchain_log |
+|---|---|---|
+| 目的 | 快速查询、管理审计 | 防篡改、外部验证 |
+| 写入方式 | AOP 注解自动 | 事件监听手动 |
+| 查询 | 按 entity_type/operator/时间 SQL | JSON snapshot 难直接查 |
+| 防篡改 | 否（可删改） | 是（链式哈希 + RSA 签名） |
+
+---
+
+## 二、应用日志（SLF4J）
 
 使用 `LoggerFactory.getLogger()`，无 AOP 日志切面，无请求/响应拦截器。各模块使用统一的中文前缀标识日志来源。
 
@@ -151,15 +225,15 @@ chainType | batchId/GLOBAL | hash | date | RSA-signature
 
 | 机制 | 存储位置 | 触发方式 | 是否可篡改 |
 |---|---|---|---|
-| 区块链操作日志 | `blockchain_log` 表 | 业务操作完成事件（@TransactionalEventListener） | 是（SHA-256 + RSA） |
+| 操作日志 | `operation_log` 表 | @OperationLog AOP 注解 | 否（可删改） |
+| 区块链日志 | `blockchain_log` 表 | @TransactionalEventListener | 是（SHA-256 + RSA） |
 | 每日锚定 | `blockchain_anchor` 表 + 签名文件 | 定时任务凌晨 3 点 | 是（RSA 签名） |
 | 扫码追踪 | `security_code` 表 | 每次扫码查询 | 否（scan_count 可累加） |
 | 登录防暴 | Redis | 每次登录失败/成功 | 否（内存临时存储） |
 | 投诉记录 | `complaint` 表 | 用户提交投诉 | 否 |
 | 应用日志 | stdout / 日志文件 | 贯穿执行过程 | 否 |
 
-### 已知不足
+### 待完善
 
-- `blockchain_log` 中 `operator_id` 始终为 null，未记录操作人
-- 无法通过 AOP 切面统一记录方法级调用日志
+- `operation_log` 当前与应用库同库，后续可拆到独立日志服务器（仅 INSERT 权限）
 - 投诉记录未纳入区块链审计
