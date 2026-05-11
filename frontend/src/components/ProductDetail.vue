@@ -315,7 +315,7 @@ async function loadAllData() {
   try {
     const [productsRes, materialsRes, batchesRes, inspectionsRes, storagesRes, transportsRes] = await Promise.all([
       axios.get(`${API_BASE}/products`),
-      axios.get(`${API_BASE}/materials`),
+      axios.get(`${API_BASE}/v2/material-purchases`),
       axios.get(`${API_BASE}/batches`),
       axios.get(`${API_BASE}/insert/inspections`),
       axios.get(`${API_BASE}/insert/storages`),

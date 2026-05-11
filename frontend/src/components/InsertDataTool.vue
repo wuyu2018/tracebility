@@ -350,10 +350,10 @@ async function saveVariety() {
   loading.value = true
   try {
     if (editingVariety.value) {
-      await axios.put(`${API_BASE}/material-varieties/${editingVariety.value.id}`, { name: varietyForm.name })
+      await axios.put(`${API_BASE}/v2/material-varieties/${editingVariety.value.id}`, { name: varietyForm.name })
       ElMessage.success('品种已更新')
     } else {
-      await axios.post(`${API_BASE}/material-varieties`, { name: varietyForm.name })
+      await axios.post(`${API_BASE}/v2/material-varieties`, { name: varietyForm.name })
       ElMessage.success('品种已创建')
     }
     varietyDialogVisible.value = false
@@ -368,7 +368,7 @@ async function saveVariety() {
 
 async function toggleVarietyActive(id, activate) {
   try {
-    await axios.post(`${API_BASE}/material-varieties/${id}/${activate ? 'activate' : 'deactivate'}`)
+    await axios.post(`${API_BASE}/v2/material-varieties/${id}/${activate ? 'activate' : 'deactivate'}`)
     ElMessage.success(activate ? '品种已启用' : '品种已停用')
     loadAllVarieties()
     loadMaterialVarieties()
@@ -379,7 +379,7 @@ async function toggleVarietyActive(id, activate) {
 
 async function loadMaterialVarieties() {
   try {
-    const res = await axios.get(`${API_BASE}/material-varieties?activeOnly=true`)
+    const res = await axios.get(`${API_BASE}/v2/material-varieties?activeOnly=true`)
     materialVarieties.value = res.data
   } catch (e) {
     console.error(e)
@@ -388,7 +388,7 @@ async function loadMaterialVarieties() {
 
 async function loadAllVarieties() {
   try {
-    const res = await axios.get(`${API_BASE}/material-varieties?activeOnly=false`)
+    const res = await axios.get(`${API_BASE}/v2/material-varieties?activeOnly=false`)
     materialVarieties.value = res.data
   } catch (e) {
     console.error(e)
@@ -445,7 +445,7 @@ async function loadProducts() {
 
 async function loadMaterials() {
   try {
-    const res = await axios.get(`${API_BASE}/materials`)
+    const res = await axios.get(`${API_BASE}/v2/material-purchases`)
     materials.value = res.data
   } catch (e) {
     console.error(e)
@@ -468,7 +468,7 @@ function onMaterialSelect() {
 
 async function loadMaterialsForProduct() {
   try {
-    const res = await axios.get(`${API_BASE}/materials`)
+    const res = await axios.get(`${API_BASE}/v2/material-purchases`)
     availableMaterials.value = res.data
   } catch (e) {
     console.error(e)
@@ -531,10 +531,10 @@ async function submitMaterial() {
   loading.value = true
   try {
     if (materialForm.id) {
-      await axios.put(`${API_BASE}/materials/${materialForm.id}`, materialForm)
+      await axios.put(`${API_BASE}/v2/material-purchases/${materialForm.id}`, materialForm)
       ElMessage.success('原材料更新成功')
     } else {
-      await axios.post(`${API_BASE}/materials`, materialForm)
+      await axios.post(`${API_BASE}/v2/material-purchases`, materialForm)
       ElMessage.success('原材料保存成功')
     }
     resetMaterialForm()
@@ -557,7 +557,7 @@ function resetMaterialForm() {
 async function deleteMaterial(id) {
   try {
     await ElMessageBox.confirm('确定要删除该原材料吗？', '提示', { type: 'warning' })
-    await axios.delete(`${API_BASE}/materials/${id}`)
+    await axios.delete(`${API_BASE}/v2/material-purchases/${id}`)
     ElMessage.success('删除成功')
     loadMaterials()
   } catch (e) {
@@ -606,7 +606,8 @@ async function submitBatch() {
 
     if (batchForm.transportCompany || batchForm.salesRegion) {
       try {
-        await axios.post(`${API_BASE}/batches/${res.id}/transport-sale`, {
+        await axios.post(`${API_BASE}/v2/transport-sales`, {
+          batchId: res.id,
           transportCompany: batchForm.transportCompany,
           vehicleNumber: batchForm.vehicleNumber,
           salesRegion: batchForm.salesRegion,

@@ -169,18 +169,6 @@ public class DataManagementController {
 
     // ============ 原料品种 (Material) ============
 
-    @PostMapping("/material-varieties")
-    public ResponseEntity<?> createMaterialVariety(@RequestBody MaterialDTO dto) {
-        log.info("[原料品种] 创建 - 名称: {}", dto.getName());
-        try {
-            com.foodtraceability.entity.Material created = materialService.createMaterial(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[原料品种] 创建失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
     @GetMapping("/material-varieties")
     public ResponseEntity<?> listMaterialVarieties(@RequestParam(required = false, defaultValue = "true") Boolean activeOnly) {
         try {
@@ -197,47 +185,6 @@ public class DataManagementController {
     public ResponseEntity<?> getMaterialVariety(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(materialService.getMaterialById(id));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PutMapping("/material-varieties/{id}")
-    public ResponseEntity<?> updateMaterialVariety(@PathVariable Long id, @RequestBody MaterialDTO dto) {
-        log.info("[原料品种] 更新 - ID: {}", id);
-        try {
-            return ResponseEntity.ok(materialService.updateMaterial(id, dto));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @DeleteMapping("/material-varieties/{id}")
-    public ResponseEntity<?> deleteMaterialVariety(@PathVariable Long id) {
-        log.info("[原料品种] 删除 - ID: {}", id);
-        try {
-            materialService.deleteMaterial(id);
-            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/material-varieties/{id}/deactivate")
-    public ResponseEntity<?> deactivateMaterialVariety(@PathVariable Long id) {
-        try {
-            materialService.deactivateMaterial(id);
-            return ResponseEntity.ok(Map.of("success", true));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/material-varieties/{id}/activate")
-    public ResponseEntity<?> activateMaterialVariety(@PathVariable Long id) {
-        try {
-            materialService.activateMaterial(id);
-            return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
@@ -288,63 +235,12 @@ public class DataManagementController {
 
     // ============ 原料采购批次 (MaterialPurchase) ============
 
-    @PostMapping("/materials")
-    public ResponseEntity<?> createMaterialPurchase(@RequestBody MaterialPurchaseDTO dto) {
-        log.info("[原材料采购] 创建 - 原料ID: {}, 批次: {}", dto.getMaterialId(), dto.getBatchNumber());
-        try {
-            MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[原材料采购] 创建失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PutMapping("/materials/{id}")
-    public ResponseEntity<?> updateMaterialPurchase(@PathVariable Long id, @RequestBody MaterialPurchaseDTO dto) {
-        log.info("[原材料采购] 更新 - ID: {}", id);
-        try {
-            MaterialPurchase updated = materialPurchaseService.updateMaterialPurchase(id, dto);
-            return ResponseEntity.ok(updated);
-        } catch (Exception e) {
-            log.error("[原材料采购] 更新失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @DeleteMapping("/materials/{id}")
-    public ResponseEntity<?> deleteMaterialPurchase(@PathVariable Long id) {
-        log.info("[原材料采购] 删除 - ID: {}", id);
-        try {
-            materialPurchaseService.deleteMaterialPurchase(id);
-            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
-        } catch (Exception e) {
-            log.error("[原材料采购] 删除失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
     @GetMapping("/materials")
     public ResponseEntity<?> listMaterialPurchases(@RequestParam(required = false) Long materialId) {
         if (materialId != null) {
             return ResponseEntity.ok(materialPurchaseService.getMaterialPurchasesByMaterialId(materialId));
         }
         return ResponseEntity.ok(materialPurchaseService.listAllMaterialPurchases());
-    }
-
-    @PostMapping("/batches")
-    public ResponseEntity<?> createBatch(@RequestBody ProductionBatchDTO dto) {
-        log.info("[生产批次管理] 创建批次");
-        try {
-            if (dto.getMaterialIds() == null || dto.getMaterialIds().isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "至少选择一个原料批次"));
-            }
-            ProductionBatch created = batchService.createBatch(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);  
-        } catch (Exception e) {
-            log.error("[生产批次管理] 创建批次失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
     }
 
     @GetMapping("/batches")
@@ -369,42 +265,6 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(batchService.getBatchByBatchNumber(batchNumber));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/batches/{id}/inspection")
-    public ResponseEntity<?> addInspection(@PathVariable Long id, @RequestBody InspectionDTO dto) {
-        log.info("[生产批次管理] 添加检测报告 - 批次ID: {}", id);
-        try {
-            InspectionDTO created = batchService.addInspection(id, dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[生产批次管理] 添加检测报告失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/batches/{id}/storage")
-    public ResponseEntity<?> addStorage(@PathVariable Long id, @RequestBody StorageDTO dto) {
-        log.info("[生产批次管理] 添加仓储信息 - 批次ID: {}", id);
-        try {
-            StorageDTO created = batchService.addStorage(id, dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[生产批次管理] 添加仓储信息失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/batches/{id}/transport-sale")
-    public ResponseEntity<?> addTransportSale(@PathVariable Long id, @RequestBody TransportSaleDTO dto) {
-        log.info("[生产批次管理] 添加运输销售信息 - 批次ID: {}", id);
-        try {
-            TransportSaleDTO created = batchService.addTransportSale(id, dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[生产批次管理] 添加运输销售信息失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }

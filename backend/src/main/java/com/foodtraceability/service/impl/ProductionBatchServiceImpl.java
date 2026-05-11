@@ -1,15 +1,17 @@
 package com.foodtraceability.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.dto.ProductionBatchDTO;
-import com.foodtraceability.dto.InspectionDTO;
 import com.foodtraceability.dto.StorageDTO;
 import com.foodtraceability.dto.TransportSaleDTO;
-import com.foodtraceability.entity.*;
-import com.foodtraceability.repository.*;
-import com.foodtraceability.service.BlockchainService;
+import com.foodtraceability.entity.Storage;
+import com.foodtraceability.entity.TransportSale;
+import com.foodtraceability.entity.Product;
+import com.foodtraceability.entity.ProductionBatch;
+import com.foodtraceability.repository.ProductRepository;
+import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.StorageRepository;
+import com.foodtraceability.repository.TransportSaleRepository;
 import com.foodtraceability.service.ProductionBatchService;
-import com.foodtraceability.validator.BatchMaterialValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -19,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductionBatchServiceImpl implements ProductionBatchService {
@@ -29,36 +29,18 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
 
     private final ProductionBatchRepository batchRepository;
     private final ProductRepository productRepository;
-    private final MaterialPurchaseRepository materialRepository;
-    private final BatchMaterialRelationRepository relationRepository;
-    private final InspectionRepository inspectionRepository;
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
-    private final BlockchainService blockchainService;
-    private final ObjectMapper objectMapper;
-
-    private final BatchMaterialValidator batchMaterialValidator;
 
     @Autowired
     public ProductionBatchServiceImpl(ProductionBatchRepository batchRepository,
                                       ProductRepository productRepository,
-                                      MaterialPurchaseRepository materialRepository,
-                                      BatchMaterialRelationRepository relationRepository,
-                                      InspectionRepository inspectionRepository,
                                       StorageRepository storageRepository,
-                                      TransportSaleRepository transportSaleRepository,
-                                      BlockchainService blockchainService,
-                                      BatchMaterialValidator batchMaterialValidator) {
+                                      TransportSaleRepository transportSaleRepository) {
         this.batchRepository = batchRepository;
         this.productRepository = productRepository;
-        this.materialRepository = materialRepository;
-        this.relationRepository = relationRepository;
-        this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
-        this.blockchainService = blockchainService;
-        this.objectMapper = new ObjectMapper();
-        this.batchMaterialValidator = batchMaterialValidator;
     }
 
     private long nextBatchSeq() {
@@ -69,85 +51,6 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(0) + 1;
-    }
-
-    @Override
-    @Transactional
-    public ProductionBatch createBatch(ProductionBatchDTO dto) {
-        Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new RuntimeException("产品不存在"));
-
-        ProductionBatch batch = createBatchEntity(dto, product);
-        batch = batchRepository.save(batch);
-
-        associateMaterials(batch, dto.getMaterialIds());
-        associateStorage(batch, dto.getStorage());
-        associateTransportSale(batch, dto.getTransportSale());
-
-        try {
-            Map<String, Object> snapshot = new LinkedHashMap<>();
-            snapshot.put("id", batch.getId());
-            snapshot.put("batchNumber", batch.getBatchNumber());
-            snapshot.put("productId", batch.getProductId());
-            snapshot.put("productionDate", batch.getProductionDate() != null ? batch.getProductionDate().toString() : null);
-            snapshot.put("shelfLife", batch.getShelfLife());
-            snapshot.put("quantity", batch.getQuantity());
-            snapshot.put("unit", batch.getUnit());
-            blockchainService.appendBatchChainBlock(batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
-                    objectMapper.writeValueAsString(snapshot), null);
-        } catch (Exception e) {
-            log.error("[Blockchain] Failed to append block for ProductionBatch CREATE (V1)", e);
-        }
-
-        return batch;
-    }
-
-    private ProductionBatch createBatchEntity(ProductionBatchDTO dto, Product product) {
-        ProductionBatch batch = new ProductionBatch();
-        batch.setBatchNumber(generateBatchNumber());
-        batch.setProductId(product.getId());
-        batch.setProductionDate(dto.getProductionDate());
-        batch.setShelfLife(dto.getShelfLife() != null ? dto.getShelfLife() : product.getShelfLife());
-        batch.setQuantity(dto.getQuantity());
-        batch.setUnit(dto.getUnit());
-        batch.setIsDeleted(false);
-        return batch;
-    }
-
-    private void associateMaterials(ProductionBatch batch, List<Long> materialPurchaseIds) {
-        if (materialPurchaseIds == null || materialPurchaseIds.isEmpty()) {
-            return;
-        }
-        for (Long mpId : materialPurchaseIds) {
-            MaterialPurchase materialPurchase = materialRepository.findById(mpId)
-                    .orElseThrow(() -> new RuntimeException("原材料采购记录不存在: " + mpId));
-            BatchMaterialRelation relation = BatchMaterialRelation.create(batch.getId(), mpId);
-            relationRepository.save(relation);
-        }
-    }
-
-    private void associateStorage(ProductionBatch batch, StorageDTO storageDto) {
-        if (storageDto == null) {
-            return;
-        }
-        Storage storage = new Storage();
-        BeanUtils.copyProperties(storageDto, storage);
-        storage.associateBatch(batch);
-        storage = storageRepository.save(storage);
-        batch.associateStorage(storage);
-        batchRepository.save(batch);
-    }
-
-    private void associateTransportSale(ProductionBatch batch, TransportSaleDTO transportSaleDto) {
-        if (transportSaleDto == null) {
-            return;
-        }
-        TransportSale transportSale = new TransportSale();
-        BeanUtils.copyProperties(transportSaleDto, transportSale);
-        transportSale.associateBatch(batch);
-        transportSale = transportSaleRepository.save(transportSale);
-        batch.associateTransportSale(transportSale);
-        batchRepository.save(batch);
     }
 
     @Override
@@ -244,107 +147,6 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
     public ProductionBatch getBatchByBatchNumber(String batchNumber) {
         return batchRepository.findByBatchNumberAndIsDeletedFalse(batchNumber)
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
-    }
-
-    @Override
-    @Transactional
-    public InspectionDTO addInspection(Long batchId, InspectionDTO dto) {
-        ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("生产批次不存在"));
-
-        Inspection inspection = new Inspection();
-        BeanUtils.copyProperties(dto, inspection);
-        inspection.setBatchId(batch.getId());
-        inspection = inspectionRepository.save(inspection);
-
-        try {
-            Map<String, Object> snapshot = new LinkedHashMap<>();
-            snapshot.put("id", inspection.getId());
-            snapshot.put("batchId", inspection.getBatchId());
-            snapshot.put("sampleName", inspection.getSampleName());
-            snapshot.put("sampleQuantity", inspection.getSampleQuantity());
-            snapshot.put("sampleSpecification", inspection.getSampleSpecification());
-            snapshot.put("resultStatus", inspection.getResultStatus());
-            snapshot.put("resultDetail", inspection.getResultDetail());
-            blockchainService.appendBatchChainBlock(batchId, "INSPECTION", inspection.getId(), "CREATE",
-                    objectMapper.writeValueAsString(snapshot), null);
-        } catch (Exception e) {
-            log.error("[Blockchain] Failed to append block for Inspection CREATE (V1)", e);
-        }
-
-        InspectionDTO result = new InspectionDTO();
-        BeanUtils.copyProperties(inspection, result);
-        return result;
-    }
-
-    @Override
-    @Transactional
-    public StorageDTO addStorage(Long batchId, StorageDTO dto) {
-        ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("生产批次不存在"));
-
-        Storage storage = new Storage();
-        BeanUtils.copyProperties(dto, storage);
-        storage.associateBatch(batch);
-        storage = storageRepository.save(storage);
-
-        batch.associateStorage(storage);
-        batchRepository.save(batch);
-
-        try {
-            Map<String, Object> snapshot = new LinkedHashMap<>();
-            snapshot.put("id", storage.getId());
-            snapshot.put("batchId", storage.getBatchId());
-            snapshot.put("storageTime", storage.getStorageTime() != null ? storage.getStorageTime().toString() : null);
-            snapshot.put("quantity", storage.getQuantity());
-            snapshot.put("unit", storage.getUnit());
-            snapshot.put("warehouseLocation", storage.getWarehouseLocation());
-            blockchainService.appendBatchChainBlock(batchId, "STORAGE", storage.getId(), "CREATE",
-                    objectMapper.writeValueAsString(snapshot), null);
-        } catch (Exception e) {
-            log.error("[Blockchain] Failed to append block for Storage CREATE (V1)", e);
-        }
-
-        StorageDTO result = new StorageDTO();
-        BeanUtils.copyProperties(storage, result);
-        return result;
-    }
-
-    @Override
-    @Transactional
-    public TransportSaleDTO addTransportSale(Long batchId, TransportSaleDTO dto) {
-        ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("生产批次不存在"));
-
-        TransportSale transportSale = new TransportSale();
-        BeanUtils.copyProperties(dto, transportSale);
-        transportSale.associateBatch(batch);
-        transportSale = transportSaleRepository.save(transportSale);
-
-        batch.associateTransportSale(transportSale);
-        batchRepository.save(batch);
-
-        try {
-            Map<String, Object> snapshot = new LinkedHashMap<>();
-            snapshot.put("id", transportSale.getId());
-            snapshot.put("batchId", transportSale.getBatchId());
-            snapshot.put("environmentTemperature", transportSale.getEnvironmentTemperature());
-            snapshot.put("productTemperature", transportSale.getProductTemperature());
-            snapshot.put("time", transportSale.getTime() != null ? transportSale.getTime().toString() : null);
-            snapshot.put("transportCompany", transportSale.getTransportCompany());
-            snapshot.put("vehicleNumber", transportSale.getVehicleNumber());
-            snapshot.put("salesRegion", transportSale.getSalesRegion());
-            snapshot.put("receiverName", transportSale.getReceiverName());
-            snapshot.put("receiverContact", transportSale.getReceiverContact());
-            blockchainService.appendBatchChainBlock(batchId, "TRANSPORT_SALE", transportSale.getId(), "CREATE",
-                    objectMapper.writeValueAsString(snapshot), null);
-        } catch (Exception e) {
-            log.error("[Blockchain] Failed to append block for TransportSale CREATE (V1)", e);
-        }
-
-        TransportSaleDTO result = new TransportSaleDTO();
-        BeanUtils.copyProperties(transportSale, result);
-        return result;
     }
 
     private String generateBatchNumber() {

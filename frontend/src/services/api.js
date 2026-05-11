@@ -50,6 +50,13 @@ export async function createBatchV2(payload) {
   return data
 }
 
+// ==================== v2 运输销售 ====================
+
+export async function recordTransportSale(payload) {
+  const { data } = await api.post('/v2/transport-sales', payload)
+  return data
+}
+
 // ==================== v2 仓储 ====================
 
 export async function recordStorage(payload) {
@@ -114,28 +121,49 @@ export async function listAllProducts() {
 }
 
 export async function createMaterialPurchase(data) {
-  const { data: responseData } = await api.post('/materials', data);
+  const { data: responseData } = await api.post('/v2/material-purchases', data);
   return responseData;
 }
 
 export async function updateMaterialPurchase(id, data) {
-  const { data: responseData } = await api.put(`/materials/${id}`, data);
+  const { data: responseData } = await api.put(`/v2/material-purchases/${id}`, data);
   return responseData;
 }
 
 export async function deleteMaterialPurchase(id) {
-  const { data: responseData } = await api.delete(`/materials/${id}`);
+  const { data: responseData } = await api.delete(`/v2/material-purchases/${id}`);
   return responseData;
 }
 
 export async function getMaterials(materialId) {
   const params = materialId ? `?materialId=${materialId}` : ''
-  const { data } = await api.get(`/materials${params}`);
+  const { data } = await api.get(`/v2/material-purchases${params}`);
+  return data;
+}
+
+export async function createMaterialVariety(data) {
+  const { data: responseData } = await api.post('/v2/material-varieties', data);
+  return responseData;
+}
+
+export async function updateMaterialVariety(id, data) {
+  const { data: responseData } = await api.put(`/v2/material-varieties/${id}`, data);
+  return responseData;
+}
+
+export async function deleteMaterialVariety(id) {
+  const { data: responseData } = await api.delete(`/v2/material-varieties/${id}`);
+  return responseData;
+}
+
+export async function getMaterialVarieties(activeOnly) {
+  const params = activeOnly !== undefined ? `?activeOnly=${activeOnly}` : ''
+  const { data } = await api.get(`/v2/material-varieties${params}`);
   return data;
 }
 
 export async function createBatch(data) {
-  const { data: responseData } = await api.post('/batches', data);
+  const { data: responseData } = await api.post('/v2/batches', data);
   return responseData;
 }
 
@@ -156,17 +184,17 @@ export async function getBatchByNumber(batchNumber) {
 }
 
 export async function addInspection(batchId, data) {
-  const { data: responseData } = await api.post(`/batches/${batchId}/inspection`, data);
+  const { data: responseData } = await api.post('/v2/inspections', { ...data, batchId });
   return responseData;
 }
 
 export async function addStorage(batchId, data) {
-  const { data: responseData } = await api.post(`/batches/${batchId}/storage`, data);
+  const { data: responseData } = await api.post('/v2/storage', { ...data, batchId });
   return responseData;
 }
 
 export async function addTransportSale(batchId, data) {
-  const { data: responseData } = await api.post(`/batches/${batchId}/transport-sale`, data);
+  const { data: responseData } = await api.post('/v2/transport-sales', { ...data, batchId });
   return responseData;
 }
 
