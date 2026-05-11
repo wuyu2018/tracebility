@@ -167,6 +167,8 @@ public class TraceabilityServiceImpl implements TraceabilityService {
         inspectionInfo.setSampleQuantity(inspection.getSampleQuantity());
         inspectionInfo.setSampleSpecification(inspection.getSampleSpecification());
         inspectionInfo.setImageUrl(inspection.getImageUrl());
+        inspectionInfo.setInspectorName(inspection.getInspectorName());
+        inspectionInfo.setInspectionTime(inspection.getInspectionTime());
         return inspectionInfo;
     }
 
@@ -193,6 +195,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
                 .map(ts -> {
                     TraceInfoDTO.TransportSaleInfo transportInfo = new TraceInfoDTO.TransportSaleInfo();
                     transportInfo.setTransportTime(ts.getTime());
+                    transportInfo.setRecorderName(ts.getRecorderName());
                     if (forAdmin) {
                         transportInfo.setTransportCompany(ts.getTransportCompany());
                         transportInfo.setVehicleNumber(ts.getVehicleNumber());

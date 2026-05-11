@@ -46,6 +46,7 @@
           <dt>样品名称</dt><dd>{{ traceData.inspection.sampleName || '-' }}</dd>
           <dt>抽样数量</dt><dd>{{ traceData.inspection.sampleQuantity || '-' }}</dd>
           <dt>规格</dt><dd>{{ traceData.inspection.sampleSpecification || '-' }}</dd>
+          <dt>检验时间</dt><dd>{{ formatDateTime(traceData.inspection.inspectionTime) }}</dd>
         </dl>
         <div v-if="traceData.inspection.imageUrl" class="inspection-image">
           <img :src="traceData.inspection.imageUrl" alt="检测报告" />

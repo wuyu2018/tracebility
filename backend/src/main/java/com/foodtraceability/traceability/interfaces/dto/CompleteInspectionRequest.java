@@ -8,6 +8,7 @@ public class CompleteInspectionRequest {
     private String imageUrl;
     private Boolean qualified;
     private String failReason;
+    private String inspectorName;
 
     public Long getBatchId() { return batchId; }
     public void setBatchId(Long batchId) { this.batchId = batchId; }
@@ -23,10 +24,12 @@ public class CompleteInspectionRequest {
     public void setQualified(Boolean qualified) { this.qualified = qualified; }
     public String getFailReason() { return failReason; }
     public void setFailReason(String failReason) { this.failReason = failReason; }
+    public String getInspectorName() { return inspectorName; }
+    public void setInspectorName(String inspectorName) { this.inspectorName = inspectorName; }
 
     public com.foodtraceability.traceability.application.dto.CompleteInspectionRequest toAppRequest() {
         return new com.foodtraceability.traceability.application.dto.CompleteInspectionRequest(
                 batchId, sampleName, sampleQuantity, sampleSpecification, imageUrl,
-                qualified != null && qualified, failReason);
+                qualified != null && qualified, failReason, inspectorName);
     }
 }

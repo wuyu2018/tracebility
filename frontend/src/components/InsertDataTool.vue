@@ -184,6 +184,9 @@
             <el-form-item label="运输公司">
               <el-input v-model="batchForm.transportCompany" placeholder="运输公司" />
             </el-form-item>
+            <el-form-item label="记录人">
+              <el-input v-model="batchForm.recorderName" placeholder="记录人姓名" />
+            </el-form-item>
             <el-form-item label="车牌号">
               <el-input v-model="batchForm.vehicleNumber" placeholder="车牌号" />
             </el-form-item>
@@ -279,6 +282,9 @@
           </el-form-item>
           <el-form-item label="检测报告图片">
             <el-input v-model="inspectionForm.imageUrl" placeholder="图片URL" />
+          </el-form-item>
+          <el-form-item label="质检员">
+            <el-input v-model="inspectionForm.inspectorName" placeholder="质检员姓名" />
           </el-form-item>
           <el-form-item label="检测结果" required>
             <el-radio-group v-model="inspectionForm.qualified">
@@ -422,7 +428,8 @@ const batchForm = reactive({
   vehicleNumber: '',
   salesRegion: '',
   receiverName: '',
-  receiverContact: ''
+  receiverContact: '',
+  recorderName: ''
 })
 
 const inspectionForm = reactive({
@@ -430,6 +437,7 @@ const inspectionForm = reactive({
   sampleQuantity: null,
   sampleSpecification: '',
   imageUrl: '',
+  inspectorName: '',
   qualified: null,
   failReason: ''
 })
@@ -612,7 +620,8 @@ async function submitBatch() {
           vehicleNumber: batchForm.vehicleNumber,
           salesRegion: batchForm.salesRegion,
           receiverName: batchForm.receiverName,
-          receiverContact: batchForm.receiverContact
+          receiverContact: batchForm.receiverContact,
+          recorderName: batchForm.recorderName || ''
         })
         ElMessage.success('运输销售信息已保存')
       } catch (e2) {
@@ -635,6 +644,7 @@ function resetBatchForm() {
     else if (typeof batchForm[k] === 'string') batchForm[k] = ''
     else batchForm[k] = null
   })
+  batchForm.recorderName = ''
 }
 
 function selectBatch(row) {
@@ -720,6 +730,7 @@ async function submitInspection() {
       sampleQuantity: inspectionForm.sampleQuantity,
       sampleSpecification: inspectionForm.sampleSpecification || '',
       imageUrl: inspectionForm.imageUrl || '',
+      inspectorName: inspectionForm.inspectorName || '',
       qualified: inspectionForm.qualified,
       failReason: inspectionForm.qualified === false ? inspectionForm.failReason : ''
     }

@@ -49,11 +49,19 @@ public class TransportSale {
     @Column(name = "receiver_contact", length = 50)
     private String receiverContact;
 
+    @Column(name = "recorder_name", length = 50)
+    private String recorderName;
+
     public Long getBatchId() {
         return batch != null ? batch.getId() : null;
     }
 
     public void associateBatch(ProductionBatch batch) {
         this.batch = batch;
+    }
+
+    public void record(String recorderName) {
+        this.time = LocalDateTime.now();
+        this.recorderName = recorderName;
     }
 }

@@ -471,6 +471,8 @@ public class DataManagementController {
                 dto.put("sampleQuantity", i.getSampleQuantity());
                 dto.put("sampleSpecification", i.getSampleSpecification());
                 dto.put("imageUrl", i.getImageUrl());
+                dto.put("inspectorName", i.getInspectorName());
+                dto.put("inspectionTime", i.getInspectionTime());
                 return dto;
             }).toList();
             return ResponseEntity.ok(result);
@@ -518,6 +520,7 @@ public class DataManagementController {
                 dto.put("environmentTemperature", t.getEnvironmentTemperature());
                 dto.put("productTemperature", t.getProductTemperature());
                 dto.put("time", t.getTime());
+                dto.put("recorderName", t.getRecorderName());
                 return dto;
             }).toList();
             return ResponseEntity.ok(result);

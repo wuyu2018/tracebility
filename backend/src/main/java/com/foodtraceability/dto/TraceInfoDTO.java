@@ -67,6 +67,8 @@ public class TraceInfoDTO {
         private Integer sampleQuantity;
         private String sampleSpecification;
         private String imageUrl;
+        private String inspectorName;
+        private LocalDateTime inspectionTime;
     }
 
     @Data
@@ -88,5 +90,6 @@ public class TraceInfoDTO {
         private String salesRegion;
         private String receiverName;
         private String receiverContact;
+        private String recorderName;
     }
 }

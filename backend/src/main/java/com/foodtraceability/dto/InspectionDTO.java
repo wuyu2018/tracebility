@@ -10,4 +10,6 @@ public class InspectionDTO {
     private Integer sampleQuantity;
     private String sampleSpecification;
     private String imageUrl;
+    private String inspectorName;
+    private String inspectionTime;
 }

@@ -74,7 +74,6 @@
               </template>
             </el-table-column>
             <el-table-column prop="shelfLife" label="保质期" />
-            <el-table-column prop="contactPhone" label="联系电话" />
             <el-table-column label="操作" width="80">
               <template #default="{ row }">
                 <el-button type="primary" size="small" @click="viewProductTrace(row)">溯源</el-button>
@@ -131,6 +130,8 @@
             <el-table-column prop="sampleQuantity" label="样品数量" width="100" />
             <el-table-column prop="sampleSpecification" label="样品规格" />
             <el-table-column prop="imageUrl" label="检测报告图片" />
+            <el-table-column prop="inspectorName" label="质检员" />
+            <el-table-column prop="inspectionTime" label="检验时间" :formatter="formatDateTime" />
           </el-table>
         </div>
       </el-tab-pane>
@@ -162,6 +163,7 @@
             <el-table-column prop="receiverName" label="收货人" />
             <el-table-column prop="receiverContact" label="联系方式" />
             <el-table-column prop="time" label="记录时间" :formatter="formatDateTime" width="160" />
+            <el-table-column prop="recorderName" label="记录人" />
           </el-table>
         </div>
       </el-tab-pane>
@@ -199,6 +201,8 @@
           <el-descriptions-item label="抽样数量">{{ currentTrace.inspection?.sampleQuantity }}</el-descriptions-item>
           <el-descriptions-item label="样品规格">{{ currentTrace.inspection?.sampleSpecification }}</el-descriptions-item>
           <el-descriptions-item label="检测报告">{{ currentTrace.inspection?.imageUrl ? '有' : '无' }}</el-descriptions-item>
+          <el-descriptions-item label="质检员">{{ currentTrace.inspection?.inspectorName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="检验时间">{{ currentTrace.inspection?.inspectionTime || '-' }}</el-descriptions-item>
         </el-descriptions>
         <p v-else class="no-data">无检验记录</p>
 
@@ -263,6 +267,7 @@
           <el-table-column prop="salesRegion" label="销售区域" />
           <el-table-column prop="receiverName" label="收货人" />
           <el-table-column prop="receiverContact" label="联系方式" />
+          <el-table-column prop="recorderName" label="记录人" />
         </el-table>
       </div>
     </el-dialog>
@@ -321,7 +326,7 @@ async function loadAllData() {
       axios.get(`${API_BASE}/insert/storages`),
       axios.get(`${API_BASE}/insert/transport-sales`)
     ])
-    
+
     productList.value = productsRes.data
     materialList.value = materialsRes.data
     batchList.value = batchesRes.data
@@ -337,10 +342,10 @@ async function loadAllData() {
 
 async function handleSearch() {
   if (!searchKeyword.value.trim()) return
-  
+
   searchResult.value = null
   loading.value = true
-  
+
   try {
     const res = await axios.get(`${API_BASE}/admin/product-detail?antiFakeCode=${encodeURIComponent(searchKeyword.value.trim())}`)
     if (res.data && !res.data.error) {
@@ -367,10 +372,10 @@ async function viewProductTrace(product) {
     ElMessage.warning('该产品暂无防伪码，无法查看溯源')
     return
   }
-  
+
   loading.value = true
   traceDialogVisible.value = true
-  
+
   try {
     const res = await axios.get(`${API_BASE}/admin/product-detail?antiFakeCode=${encodeURIComponent(product.antiFakeCode)}`)
     if (res.data && !res.data.error) {
@@ -395,7 +400,7 @@ function viewBatchDetail(batch) {
 const filteredMaterials = computed(() => {
   if (!searchKeyword.value) return materialList.value
   const kw = searchKeyword.value.toLowerCase()
-  return materialList.value.filter(m => 
+  return materialList.value.filter(m =>
     m.batchNumber?.toLowerCase().includes(kw) ||
     m.materialName?.toLowerCase().includes(kw) ||
     m.supplierName?.toLowerCase().includes(kw)
@@ -405,7 +410,7 @@ const filteredMaterials = computed(() => {
 const filteredBatches = computed(() => {
   if (!searchKeyword.value) return batchList.value
   const kw = searchKeyword.value.toLowerCase()
-  return batchList.value.filter(b => 
+  return batchList.value.filter(b =>
     b.batchNumber?.toLowerCase().includes(kw) ||
     b.productName?.toLowerCase().includes(kw)
   )
@@ -545,42 +550,42 @@ onMounted(() => {
   .product-detail {
     padding: 0.5rem 0;
   }
-  
+
   .info-card :deep(.el-card__header) {
     padding: 1rem 0.75rem;
   }
-  
+
   .stats-row {
     gap: 0.5rem;
   }
-  
+
   .stat-item {
     min-width: 40px;
     padding: 0.25rem;
   }
-  
+
   .stat-value {
     font-size: 1rem;
   }
-  
+
   .stat-label {
     font-size: 0.65rem;
   }
-  
+
   .tab-content :deep(.el-table) {
     font-size: 0.8rem;
   }
-  
+
   .tab-content :deep(.el-table__header th),
   .tab-content :deep(.el-table__body td) {
     padding: 0.5rem 0.25rem;
   }
-  
+
   .search-section {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-section :deep(.el-input) {
     width: 100% !important;
   }
@@ -591,15 +596,15 @@ onMounted(() => {
     min-width: 35px;
     padding: 0.2rem;
   }
-  
+
   .stat-value {
     font-size: 0.9rem;
   }
-  
+
   .stat-label {
     font-size: 0.6rem;
   }
-  
+
   .tab-content h3 {
     font-size: 0.9rem;
   }
@@ -611,17 +616,17 @@ onMounted(() => {
     max-width: 95%;
     margin: 1vh auto;
   }
-  
+
   .trace-detail :deep(.el-descriptions),
   .batch-detail :deep(.el-descriptions) {
     font-size: 0.85rem;
   }
-  
+
   .trace-detail :deep(.el-descriptions__cell),
   .batch-detail :deep(.el-descriptions__cell) {
     padding: 0.5rem;
   }
-  
+
   .trace-detail :deep(.el-table),
   .batch-detail :deep(.el-table) {
     font-size: 0.8rem;

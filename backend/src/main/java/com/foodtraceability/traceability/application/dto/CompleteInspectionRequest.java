@@ -8,10 +8,12 @@ public class CompleteInspectionRequest {
     private final String imageUrl;
     private final boolean qualified;
     private final String failReason;
+    private final String inspectorName;
 
     public CompleteInspectionRequest(Long batchId, String sampleName, Integer sampleQuantity,
                                       String sampleSpecification, String imageUrl,
-                                      boolean qualified, String failReason) {
+                                      boolean qualified, String failReason,
+                                      String inspectorName) {
         this.batchId = batchId;
         this.sampleName = sampleName;
         this.sampleQuantity = sampleQuantity;
@@ -19,6 +21,7 @@ public class CompleteInspectionRequest {
         this.imageUrl = imageUrl;
         this.qualified = qualified;
         this.failReason = failReason;
+        this.inspectorName = inspectorName;
     }
 
     public Long batchId() { return batchId; }
@@ -28,4 +31,5 @@ public class CompleteInspectionRequest {
     public String imageUrl() { return imageUrl; }
     public boolean qualified() { return qualified; }
     public String failReason() { return failReason; }
+    public String inspectorName() { return inspectorName; }
 }

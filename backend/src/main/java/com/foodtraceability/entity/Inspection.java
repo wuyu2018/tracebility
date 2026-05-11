@@ -6,16 +6,15 @@ import com.foodtraceability.traceability.domain.event.InspectionCompleted;
 import com.foodtraceability.traceability.domain.vo.InspectionResult;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "inspection")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class Inspection {
 
@@ -51,6 +50,12 @@ public class Inspection {
     @Column(name = "result_detail", length = 500)
     private String resultDetail;
 
+    @Column(name = "inspector_name", length = 50)
+    private String inspectorName;
+
+    @Column(name = "inspection_time")
+    private LocalDateTime inspectionTime;
+
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
@@ -63,9 +68,11 @@ public class Inspection {
         return i;
     }
 
-    public void complete(InspectionResult result) {
+    public void complete(InspectionResult result, String inspectorName) {
         this.resultStatus = result.displayStatus();
         this.resultDetail = result.detail();
+        this.inspectorName = inspectorName;
+        this.inspectionTime = LocalDateTime.now();
         domainEvents.add(new InspectionCompleted(id, batchId, result));
     }
 

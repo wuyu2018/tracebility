@@ -145,6 +145,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("sampleSpecification", insp.getSampleSpecification());
                 snapshot.put("resultStatus", insp.getResultStatus());
                 snapshot.put("resultDetail", insp.getResultDetail());
+                snapshot.put("inspectorName", insp.getInspectorName());
+                snapshot.put("inspectionTime", insp.getInspectionTime() != null ? insp.getInspectionTime().toString() : null);
                 blockchainService.appendBatchChainBlock(insp.getBatchId(), "INSPECTION", insp.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
@@ -163,6 +165,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("salesRegion", ts.getSalesRegion());
                 snapshot.put("receiverName", ts.getReceiverName());
                 snapshot.put("receiverContact", ts.getReceiverContact());
+                snapshot.put("recorderName", ts.getRecorderName());
+                snapshot.put("time", ts.getTime() != null ? ts.getTime().toString() : null);
                 blockchainService.appendBatchChainBlock(ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {

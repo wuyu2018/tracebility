@@ -49,7 +49,7 @@ public class InspectionApplicationService {
         InspectionResult result = req.qualified()
                 ? InspectionResult.pass()
                 : InspectionResult.fail(req.failReason());
-        inspection.complete(result);
+        inspection.complete(result, req.inspectorName());
 
         inspection = inspectionRepo.save(inspection);
 

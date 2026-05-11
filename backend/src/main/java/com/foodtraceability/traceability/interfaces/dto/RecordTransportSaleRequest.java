@@ -15,6 +15,7 @@ public class RecordTransportSaleRequest {
     private String salesRegion;
     private String receiverName;
     private String receiverContact;
+    private String recorderName;
 
     public Long getBatchId() { return batchId; }
     public void setBatchId(Long batchId) { this.batchId = batchId; }
@@ -34,10 +35,13 @@ public class RecordTransportSaleRequest {
     public void setReceiverName(String receiverName) { this.receiverName = receiverName; }
     public String getReceiverContact() { return receiverContact; }
     public void setReceiverContact(String receiverContact) { this.receiverContact = receiverContact; }
+    public String getRecorderName() { return recorderName; }
+    public void setRecorderName(String recorderName) { this.recorderName = recorderName; }
 
     public TransportSaleApplicationService.RecordTransportSaleRequest toAppRequest() {
         return new TransportSaleApplicationService.RecordTransportSaleRequest(
                 batchId, environmentTemperature, productTemperature, time,
-                transportCompany, vehicleNumber, salesRegion, receiverName, receiverContact);
+                transportCompany, vehicleNumber, salesRegion, receiverName, receiverContact,
+                recorderName);
     }
 }

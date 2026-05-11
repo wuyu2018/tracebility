@@ -38,7 +38,8 @@ public class TransportSaleRecordedEventListener {
                     ts.getVehicleNumber() != null ? ts.getVehicleNumber() : "",
                     ts.getSalesRegion() != null ? ts.getSalesRegion() : "",
                     ts.getReceiverName() != null ? ts.getReceiverName() : "",
-                    ts.getReceiverContact() != null ? ts.getReceiverContact() : "");
+                    ts.getReceiverContact() != null ? ts.getReceiverContact() : "",
+                    ts.getRecorderName() != null ? ts.getRecorderName() : "");
             blockchainService.appendBatchChainBlock(
                     ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
                     snapshot, null);

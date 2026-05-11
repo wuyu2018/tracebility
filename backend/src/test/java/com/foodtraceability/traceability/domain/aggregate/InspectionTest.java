@@ -27,10 +27,23 @@ class InspectionTest {
         Inspection i = Inspection.create(10L, "样本A", 5, "250ml/盒");
         i.setId(1L);
 
-        i.complete(InspectionResult.pass());
+        i.complete(InspectionResult.pass(), null);
 
         assertEquals("合格", i.getResultStatus());
         assertNull(i.getResultDetail());
+        assertTrue(i.isCompleted());
+    }
+
+    @Test
+    void complete_qualified_setsInspectorNameAndTime() {
+        Inspection i = Inspection.create(10L, "样本A", 5, "250ml/盒");
+        i.setId(1L);
+
+        i.complete(InspectionResult.pass(), "张三");
+
+        assertEquals("合格", i.getResultStatus());
+        assertEquals("张三", i.getInspectorName());
+        assertNotNull(i.getInspectionTime());
         assertTrue(i.isCompleted());
     }
 
@@ -39,7 +52,7 @@ class InspectionTest {
         Inspection i = Inspection.create(10L, "样本A", 5, "250ml/盒");
         i.setId(1L);
 
-        i.complete(InspectionResult.fail("微生物超标"));
+        i.complete(InspectionResult.fail("微生物超标"), null);
 
         assertEquals("不合格", i.getResultStatus());
         assertEquals("微生物超标", i.getResultDetail());
@@ -51,7 +64,7 @@ class InspectionTest {
         Inspection i = Inspection.create(10L, "样本A", 5, "250ml/盒");
         i.setId(1L);
 
-        i.complete(InspectionResult.pass());
+        i.complete(InspectionResult.pass(), null);
         List<DomainEvent> events = i.pullEvents();
 
         assertEquals(1, events.size());
@@ -72,7 +85,7 @@ class InspectionTest {
     void pullEvents_clearsList() {
         Inspection i = Inspection.create(10L, "样本A", 5, "250ml/盒");
         i.setId(1L);
-        i.complete(InspectionResult.pass());
+        i.complete(InspectionResult.pass(), null);
         i.pullEvents();
         assertTrue(i.pullEvents().isEmpty());
     }

@@ -38,7 +38,8 @@ public class TransportSaleApplicationService {
                                               Double productTemperature, LocalDateTime time,
                                               String transportCompany, String vehicleNumber,
                                               String salesRegion, String receiverName,
-                                              String receiverContact) {}
+                                              String receiverContact,
+                                              String recorderName) {}
 
     public record RecordTransportSaleResponse(Long id, Long batchId, String transportCompany, String salesRegion) {}
 
@@ -50,7 +51,8 @@ public class TransportSaleApplicationService {
         ts.associateBatch(batch);
         ts.setEnvironmentTemperature(req.environmentTemperature());
         ts.setProductTemperature(req.productTemperature());
-        ts.setTime(req.time());
+        ts.setTime(LocalDateTime.now());
+        ts.setRecorderName(req.recorderName());
         ts.setTransportCompany(req.transportCompany());
         ts.setVehicleNumber(req.vehicleNumber());
         ts.setSalesRegion(req.salesRegion());

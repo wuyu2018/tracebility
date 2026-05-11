@@ -39,13 +39,15 @@ public class InspectionCompletedEventListener {
 
         inspectionRepo.findById(event.inspectionId()).ifPresent(inspection -> {
             String snapshot = String.format(
-                    "{\"inspectionId\":%d,\"batchId\":%d,\"sampleName\":\"%s\",\"sampleQuantity\":%d,\"sampleSpecification\":\"%s\",\"resultStatus\":\"%s\",\"resultDetail\":\"%s\"}",
+                    "{\"inspectionId\":%d,\"batchId\":%d,\"sampleName\":\"%s\",\"sampleQuantity\":%d,\"sampleSpecification\":\"%s\",\"resultStatus\":\"%s\",\"resultDetail\":\"%s\",\"inspectorName\":\"%s\",\"inspectionTime\":\"%s\"}",
                     inspection.getId(), inspection.getBatchId(),
                     inspection.getSampleName() != null ? inspection.getSampleName() : "",
                     inspection.getSampleQuantity() != null ? inspection.getSampleQuantity() : 0,
                     inspection.getSampleSpecification() != null ? inspection.getSampleSpecification() : "",
                     inspection.getResultStatus() != null ? inspection.getResultStatus() : "",
-                    inspection.getResultDetail() != null ? inspection.getResultDetail() : "");
+                    inspection.getResultDetail() != null ? inspection.getResultDetail() : "",
+                    inspection.getInspectorName() != null ? inspection.getInspectorName() : "",
+                    inspection.getInspectionTime() != null ? inspection.getInspectionTime().toString() : "");
             blockchainService.appendBatchChainBlock(
                     inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
                     snapshot, null);

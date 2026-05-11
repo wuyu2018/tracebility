@@ -121,18 +121,25 @@ public class TraceabilityQueryResponse {
         private final Integer sampleQuantity;
         private final String sampleSpecification;
         private final String imageUrl;
+        private final String inspectorName;
+        private final String inspectionTime;
 
-        public InspectionInfo(String sampleName, Integer sampleQuantity, String sampleSpecification, String imageUrl) {
+        public InspectionInfo(String sampleName, Integer sampleQuantity, String sampleSpecification,
+                              String imageUrl, String inspectorName, String inspectionTime) {
             this.sampleName = sampleName;
             this.sampleQuantity = sampleQuantity;
             this.sampleSpecification = sampleSpecification;
             this.imageUrl = imageUrl;
+            this.inspectorName = inspectorName;
+            this.inspectionTime = inspectionTime;
         }
 
         public String getSampleName() { return sampleName; }
         public Integer getSampleQuantity() { return sampleQuantity; }
         public String getSampleSpecification() { return sampleSpecification; }
         public String getImageUrl() { return imageUrl; }
+        public String getInspectorName() { return inspectorName; }
+        public String getInspectionTime() { return inspectionTime; }
     }
 
     public static class StorageInfo {
@@ -158,15 +165,18 @@ public class TraceabilityQueryResponse {
         private final String salesRegion;
         private final String receiverName;
         private final String receiverContact;
+        private final String recorderName;
 
         public TransportSaleInfo(LocalDateTime transportTime, String transportCompany, String vehicleNumber,
-                                 String salesRegion, String receiverName, String receiverContact) {
+                                 String salesRegion, String receiverName, String receiverContact,
+                                 String recorderName) {
             this.transportTime = transportTime;
             this.transportCompany = transportCompany;
             this.vehicleNumber = vehicleNumber;
             this.salesRegion = salesRegion;
             this.receiverName = receiverName;
             this.receiverContact = receiverContact;
+            this.recorderName = recorderName;
         }
 
         public LocalDateTime getTransportTime() { return transportTime; }
@@ -175,5 +185,6 @@ public class TraceabilityQueryResponse {
         public String getSalesRegion() { return salesRegion; }
         public String getReceiverName() { return receiverName; }
         public String getReceiverContact() { return receiverContact; }
+        public String getRecorderName() { return recorderName; }
     }
 }
