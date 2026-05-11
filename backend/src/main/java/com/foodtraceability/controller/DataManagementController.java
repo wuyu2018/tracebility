@@ -308,8 +308,8 @@ public class DataManagementController {
                 return ResponseEntity.badRequest().body(Map.of("error", "产品不存在"));
             }
             ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
-            SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 100);
-            
+            SecurityCodeGenerateResponse response = securityCodeService.generateCodes(batch.getId(), 1);
+
             ProductDTO dto = new ProductDTO();
             dto.setId(product.getId());
             dto.setQrCodeUrl("/qrcode/" + product.getId());
@@ -333,8 +333,8 @@ public class DataManagementController {
                     Product product = productService.getProductById(productId);
                     if (product != null) {
                         ProductionBatch batch = batchService.createQuickBatchForProduct(productId);
-                        securityCodeService.generateCodes(batch.getId(), 100);
-                        
+                        securityCodeService.generateCodes(batch.getId(), 1);
+
                         ProductDTO dto = new ProductDTO();
                         dto.setId(product.getId());
                         dto.setQrCodeUrl("/qrcode/" + product.getId());
