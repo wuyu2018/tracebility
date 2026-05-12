@@ -115,6 +115,7 @@ function startQrScan() {
 }
 
 async function queryByCode(code) {
+  sessionStorage.setItem('scannedCode', code)
   loading.value = true
   try {
     const result = await verifyAntiFakeCodeGet(code)
@@ -154,7 +155,9 @@ const handleSubmit = async () => {
   }
   loading.value = true
   try {
-    const result = await verifyAntiFakeCodeGet(antiFakeCode.value.trim())
+    const code = antiFakeCode.value.trim()
+    sessionStorage.setItem('scannedCode', code)
+    const result = await verifyAntiFakeCodeGet(code)
     if (result.valid && result.data) {
       emit('verified', result.data)
     } else {

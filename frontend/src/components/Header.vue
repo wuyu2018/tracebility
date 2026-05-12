@@ -36,11 +36,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { isAuthenticated, removeToken } from '../utils/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const isOpen = ref(false)
 const dropdownRef = ref(null)
 
@@ -63,8 +64,13 @@ const goToIntro = () => {
 }
 
 const goToComplaint = () => {
-    isOpen.value =false
-    router.push('/complaint')
+    isOpen.value = false
+    const code = route.query.code
+    if (code) {
+      router.push({ path: '/complaint', query: { code } })
+    } else {
+      router.push('/complaint')
+    }
 }
 
 const handleClickOutside = (e) => {

@@ -65,6 +65,9 @@ onMounted(() => {
 })
 
 async function queryByCode(code) {
+  // 保存扫码记录，供投诉页面自动填充
+  sessionStorage.setItem('scannedCode', code)
+
   try {
     const result = await verifyAntiFakeCodeV2(code)
     if (result.valid) {

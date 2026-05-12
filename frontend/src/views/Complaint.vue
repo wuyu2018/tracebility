@@ -66,6 +66,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from '../utils/axios'
 
@@ -85,6 +86,13 @@ const complaintRules = {
 const submitting = ref(false)
 const errorMessage = ref('')
 const COMPLAINT_API = '/complaint'
+
+// 自动填充用户已扫码的防伪码
+const route = useRoute()
+const scannedCode = route.query.code || sessionStorage.getItem('scannedCode')
+if (scannedCode) {
+  complaintForm.antiFakeCode = scannedCode
+}
 
 const submitComplaint = async () => {
   try {
