@@ -4,6 +4,7 @@ import com.foodtraceability.entity.Inspection;
 import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.InspectionRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.InspectionCompleted;
 import org.slf4j.Logger;
@@ -19,13 +20,16 @@ public class InspectionCompletedEventListener {
     private final SecurityCodeRepository securityCodeRepo;
     private final InspectionRepository inspectionRepo;
     private final BlockchainService blockchainService;
+    private final BlockchainRetryService blockchainRetryService;
 
     public InspectionCompletedEventListener(SecurityCodeRepository securityCodeRepo,
                                              InspectionRepository inspectionRepo,
-                                             BlockchainService blockchainService) {
+                                             BlockchainService blockchainService,
+                                             BlockchainRetryService blockchainRetryService) {
         this.securityCodeRepo = securityCodeRepo;
         this.inspectionRepo = inspectionRepo;
         this.blockchainService = blockchainService;
+        this.blockchainRetryService = blockchainRetryService;
     }
 
     @TransactionalEventListener
@@ -48,11 +52,19 @@ public class InspectionCompletedEventListener {
                     inspection.getResultDetail() != null ? inspection.getResultDetail() : "",
                     inspection.getInspectorName() != null ? inspection.getInspectorName() : "",
                     inspection.getInspectionTime() != null ? inspection.getInspectionTime().toString() : "");
-            blockchainService.appendBatchChainBlock(
-                    inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
-                    snapshot, null);
-            log.info("[Blockchain] Inspection block appended for batchId={}, inspectionId={}",
-                    inspection.getBatchId(), inspection.getId());
+            try {
+                blockchainService.appendBatchChainBlock(
+                        inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
+                        snapshot, null);
+                log.info("[Blockchain] Inspection block appended for batchId={}, inspectionId={}",
+                        inspection.getBatchId(), inspection.getId());
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to append block for batchId={}, inspectionId={}",
+                        inspection.getBatchId(), inspection.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
+                        snapshot, null, "InspectionCompleted", e.getMessage());
+            }
         });
     }
 

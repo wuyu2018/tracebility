@@ -2,6 +2,7 @@ package com.foodtraceability.traceability.application.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.BatchCreated;
 import org.slf4j.Logger;
@@ -19,12 +20,15 @@ public class BatchCreatedEventListener {
 
     private final ProductionBatchRepository batchRepo;
     private final BlockchainService blockchainService;
+    private final BlockchainRetryService blockchainRetryService;
     private final ObjectMapper objectMapper;
 
     public BatchCreatedEventListener(ProductionBatchRepository batchRepo,
-                                      BlockchainService blockchainService) {
+                                      BlockchainService blockchainService,
+                                      BlockchainRetryService blockchainRetryService) {
         this.batchRepo = batchRepo;
         this.blockchainService = blockchainService;
+        this.blockchainRetryService = blockchainRetryService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -34,6 +38,7 @@ public class BatchCreatedEventListener {
                 event.batchId(), event.batchNumber(), event.productId(), event.materialPurchaseIds());
 
         batchRepo.findById(event.batchId()).ifPresent(batch -> {
+            String snapshotJson;
             try {
                 Map<String, Object> snapshot = new LinkedHashMap<>();
                 snapshot.put("id", batch.getId());
@@ -47,13 +52,22 @@ public class BatchCreatedEventListener {
                 snapshot.put("transportSaleId", batch.getTransportSaleId());
                 snapshot.put("isDeleted", batch.isDeleted());
                 snapshot.put("createdAt", batch.getCreatedAt() != null ? batch.getCreatedAt().toString() : null);
+                snapshotJson = objectMapper.writeValueAsString(snapshot);
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to build snapshot for batchId={}", batch.getId(), e);
+                return;
+            }
 
+            try {
                 blockchainService.appendBatchChainBlock(
                         batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
-                        objectMapper.writeValueAsString(snapshot), null);
+                        snapshotJson, null);
                 log.info("[Blockchain] Batch chain genesis block created for batchId={}", batch.getId());
             } catch (Exception e) {
                 log.error("[Blockchain] Failed to append block for batchId={}", batch.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
+                        snapshotJson, null, "BatchCreated", e.getMessage());
             }
         });
     }

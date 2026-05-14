@@ -2,6 +2,7 @@ package com.foodtraceability.traceability.application.event;
 
 import com.foodtraceability.entity.TransportSale;
 import com.foodtraceability.repository.TransportSaleRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.TransportSaleRecorded;
 import org.slf4j.Logger;
@@ -16,11 +17,14 @@ public class TransportSaleRecordedEventListener {
 
     private final TransportSaleRepository transportSaleRepo;
     private final BlockchainService blockchainService;
+    private final BlockchainRetryService blockchainRetryService;
 
     public TransportSaleRecordedEventListener(TransportSaleRepository transportSaleRepo,
-                                               BlockchainService blockchainService) {
+                                               BlockchainService blockchainService,
+                                               BlockchainRetryService blockchainRetryService) {
         this.transportSaleRepo = transportSaleRepo;
         this.blockchainService = blockchainService;
+        this.blockchainRetryService = blockchainRetryService;
     }
 
     @TransactionalEventListener
@@ -40,11 +44,19 @@ public class TransportSaleRecordedEventListener {
                     ts.getReceiverName() != null ? ts.getReceiverName() : "",
                     ts.getReceiverContact() != null ? ts.getReceiverContact() : "",
                     ts.getRecorderName() != null ? ts.getRecorderName() : "");
-            blockchainService.appendBatchChainBlock(
-                    ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
-                    snapshot, null);
-            log.info("[Blockchain] TransportSale block appended for batchId={}, transportSaleId={}",
-                    ts.getBatchId(), ts.getId());
+            try {
+                blockchainService.appendBatchChainBlock(
+                        ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
+                        snapshot, null);
+                log.info("[Blockchain] TransportSale block appended for batchId={}, transportSaleId={}",
+                        ts.getBatchId(), ts.getId());
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to append block for batchId={}, transportSaleId={}",
+                        ts.getBatchId(), ts.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
+                        snapshot, null, "TransportSaleRecorded", e.getMessage());
+            }
         });
     }
 }

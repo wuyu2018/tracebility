@@ -4,6 +4,7 @@ import com.foodtraceability.entity.ProductionBatch;
 import com.foodtraceability.entity.Storage;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.GoodsReceived;
 import org.slf4j.Logger;
@@ -19,13 +20,16 @@ public class GoodsReceivedEventListener {
     private final ProductionBatchRepository batchRepo;
     private final StorageRepository storageRepo;
     private final BlockchainService blockchainService;
+    private final BlockchainRetryService blockchainRetryService;
 
     public GoodsReceivedEventListener(ProductionBatchRepository batchRepo,
                                        StorageRepository storageRepo,
-                                       BlockchainService blockchainService) {
+                                       BlockchainService blockchainService,
+                                       BlockchainRetryService blockchainRetryService) {
         this.batchRepo = batchRepo;
         this.storageRepo = storageRepo;
         this.blockchainService = blockchainService;
+        this.blockchainRetryService = blockchainRetryService;
     }
 
     @TransactionalEventListener
@@ -47,11 +51,19 @@ public class GoodsReceivedEventListener {
                     storage.getQuantity() != null ? storage.getQuantity() : 0.0,
                     storage.getUnit() != null ? storage.getUnit() : "",
                     storage.getWarehouseLocation() != null ? storage.getWarehouseLocation() : "");
-            blockchainService.appendBatchChainBlock(
-                    storage.getBatchId(), "STORAGE", storage.getId(), "CREATE",
-                    snapshot, null);
-            log.info("[Blockchain] Storage block appended for batchId={}, storageId={}",
-                    storage.getBatchId(), storage.getId());
+            try {
+                blockchainService.appendBatchChainBlock(
+                        storage.getBatchId(), "STORAGE", storage.getId(), "CREATE",
+                        snapshot, null);
+                log.info("[Blockchain] Storage block appended for batchId={}, storageId={}",
+                        storage.getBatchId(), storage.getId());
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to append block for batchId={}, storageId={}",
+                        storage.getBatchId(), storage.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", storage.getBatchId(), "STORAGE", storage.getId(), "CREATE",
+                        snapshot, null, "GoodsReceived", e.getMessage());
+            }
         });
     }
 }

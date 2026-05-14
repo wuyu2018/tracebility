@@ -8,7 +8,8 @@
       "Bash(JAVA_HOME=/d/softs/JavaSDK/jdk-21.0.11 mvn -f /d/project/tracebility/backend/pom.xml compile -Denforcer.skip=true -q)",
       "Bash(python3 *)",
       "Bash(python *)",
-      "Bash(xxd)"
+      "Bash(xxd)",
+      "Bash(mvn test *)"
     ]
   }
 }
