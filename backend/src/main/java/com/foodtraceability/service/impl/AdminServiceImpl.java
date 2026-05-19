@@ -88,13 +88,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private LoginResponseDTO buildLoginResponse(Admin admin) {
-        String token = jwtTokenProvider.generateTokenByUsername(admin.getUsername());
+        String token = jwtTokenProvider.generateToken(admin.getUsername(), admin.getRole());
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setUsername(admin.getUsername());
         response.setToken(token);
         response.setTokenType("Bearer");
         response.setExpiresIn(jwtTokenProvider.getExpirationTime() / 1000);
+        response.setRole(admin.getRole());
 
         return response;
     }
@@ -105,13 +106,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Admin createAdmin(String username, String password) {
+    public Admin createAdmin(String username, String password, String role) {
         adminRepository.findByUsername(username)
             .ifPresent(existing -> {
                 throw new BusinessException("管理员已存在");
             });
 
         Admin admin = Admin.create(username, passwordEncoder.encode(password));
+        admin.setRole(role != null ? role : "ADMIN");
         return adminRepository.save(admin);
     }
 

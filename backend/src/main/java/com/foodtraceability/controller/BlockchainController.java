@@ -1,9 +1,11 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.BlockchainMonitorSummary;
 import com.foodtraceability.service.BlockchainMonitorService;
 import com.foodtraceability.service.BlockchainService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,6 +22,8 @@ public class BlockchainController {
         this.monitorService = monitorService;
     }
 
+    @OperationLog(entityType = "BLOCKCHAIN", action = "VERIFY_MATERIAL")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/verify/material")
     public ResponseEntity<?> verifyMaterialChain() {
         var report = blockchainService.verifyMaterialChain();
@@ -30,6 +34,8 @@ public class BlockchainController {
                 "blocks", report.blockResults()));
     }
 
+    @OperationLog(entityType = "BLOCKCHAIN", action = "VERIFY_BATCH")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/verify/batch")
     public ResponseEntity<?> verifyBatchChain(@RequestParam Long batchId) {
         var report = blockchainService.verifyBatchChain(batchId);
@@ -41,6 +47,8 @@ public class BlockchainController {
                 "blocks", report.blockResults()));
     }
 
+    @OperationLog(entityType = "BLOCKCHAIN", action = "VERIFY_ALL")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/verify/all")
     public ResponseEntity<?> verifyAllBatchChains() {
         var reports = blockchainService.verifyAllBatchChains();
@@ -52,6 +60,8 @@ public class BlockchainController {
                 "reports", reports));
     }
 
+    @OperationLog(entityType = "BLOCKCHAIN", action = "GET_PUBLIC_KEY")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/public-key")
     public ResponseEntity<?> getPublicKey() {
         return ResponseEntity.ok(Map.of("publicKey", blockchainService.getPublicKeyBase64()));

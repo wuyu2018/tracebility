@@ -73,7 +73,7 @@
 import { ref, reactive, onMounted ,nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminLogin, storeCaptcha } from '../services/api'
-import { setToken, setUsername } from '../utils/auth'
+import { setToken, setUsername, setRole } from '../utils/auth'
 
 const router = useRouter()
 const isOpen = ref(false)
@@ -142,6 +142,7 @@ const handleLogin = async () => {
     // 保存 Token 和用户信息
     setToken(response.token, response.tokenType)
     setUsername(response.username)
+    setRole(response.role)
     
     loginSuccess.value = true
     errorMsg.value = ''

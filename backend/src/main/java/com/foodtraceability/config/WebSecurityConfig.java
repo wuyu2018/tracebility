@@ -1,6 +1,8 @@
 package com.foodtraceability.config;
 
 import com.foodtraceability.security.JwtAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +25,13 @@ import java.util.Arrays;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(WebSecurityConfig.class);
+
     @Value("${cors.allowed-origins:*}")
     private String allowedOrigins;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -45,7 +52,7 @@ public class WebSecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                .requestMatchers("/api/captcha", "/api/login", "/api/admin/register").permitAll()
+                .requestMatchers("/api/captcha", "/api/login").permitAll()
                 .requestMatchers("/api/verify", "/api/trace/**", "/api/complaint", "/api/products/select", "/api/product-detail").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
@@ -63,7 +70,12 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         if ("*".equals(allowedOrigins)) {
-            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            if (activeProfile != null && activeProfile.contains("prod")) {
+                log.warn("Production CORS allows all origins! Set cors.allowed-origins to a specific domain.");
+                configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            } else {
+                configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            }
         } else {
             configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         }

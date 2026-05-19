@@ -3,6 +3,7 @@
 const TOKEN_KEY = 'jwt_token'
 const TOKEN_TYPE_KEY = 'token_type'
 const USERNAME_KEY = 'admin_username'
+const ROLE_KEY = 'admin_role'
 const LOGIN_TIME_KEY = 'login_time'
 
 /**
@@ -54,6 +55,7 @@ export function removeToken() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(TOKEN_TYPE_KEY)
   localStorage.removeItem(USERNAME_KEY)
+  localStorage.removeItem(ROLE_KEY)
   localStorage.removeItem(LOGIN_TIME_KEY)
 }
 
@@ -69,6 +71,20 @@ export function setUsername(username) {
  */
 export function getUsername() {
   return localStorage.getItem(USERNAME_KEY)
+}
+
+/**
+ * 保存角色
+ */
+export function setRole(role) {
+  localStorage.setItem(ROLE_KEY, role)
+}
+
+/**
+ * 获取角色
+ */
+export function getRole() {
+  return localStorage.getItem(ROLE_KEY) || 'ADMIN'
 }
 
 /**

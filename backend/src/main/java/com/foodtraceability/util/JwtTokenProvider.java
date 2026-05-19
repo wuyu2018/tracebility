@@ -44,11 +44,16 @@ public class JwtTokenProvider {
     }
 
     public String generateTokenByUsername(String username) {
+        return generateToken(username, "ADMIN");
+    }
+
+    public String generateToken(String username, String role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
                 .subject(username)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -62,6 +67,20 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public String getRoleFromToken(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("role", String.class);
+        } catch (Exception e) {
+            log.warn("[JWT] 无法从 token 中提取 role: {}", e.getMessage());
+            return null;
+        }
     }
 
     public boolean validateToken(String token) {

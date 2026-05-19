@@ -24,6 +24,9 @@ public class Admin {
     @Column(name = "password", length = 100, nullable = false)
     private String password;
 
+    @Column(name = "role", length = 20, nullable = false)
+    private String role = "ADMIN";
+
     public boolean validatePassword(String rawPassword, PasswordEncoder encoder) {
         return encoder.matches(rawPassword, this.password);
     }

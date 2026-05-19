@@ -49,6 +49,15 @@
           />
         </div>
 
+        <div class="input-group" v-if="isSuperAdmin">
+          <label>管理员角色</label>
+          <select class="input-field" v-model="adminForm.role">
+            <option value="ADMIN">普通管理员 (ADMIN)</option>
+            <option value="SUPER_ADMIN">超级管理员 (SUPER_ADMIN)</option>
+          </select>
+          <span class="field-hint">超级管理员可以创建新的管理员账户</span>
+        </div>
+
         <div class="security-notice">
           <div class="notice-icon">🔒</div>
           <div class="notice-content">
@@ -98,13 +107,14 @@
 import { ref, reactive, computed } from 'vue'
 import axios from '../utils/axios'
 import { ElMessage } from 'element-plus'
-import { getUsername } from '../utils/auth'
+import { getUsername, getRole } from '../utils/auth'
 
 const adminForm = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  currentPassword: ''
+  currentPassword: '',
+  role: 'ADMIN'
 })
 
 const errorMsg = ref('')
@@ -112,6 +122,10 @@ const successMsg = ref('')
 const loading = ref(false)
 const usernameError = ref('')
 const passwordError = ref('')
+
+const isSuperAdmin = computed(() => {
+  return getRole() === 'SUPER_ADMIN'
+})
 
 const isFormValid = computed(() => {
   return (
@@ -208,6 +222,7 @@ const handleAddAdmin = async () => {
     const response = await axios.post('/admin/register', {
       username: adminForm.username,
       password: adminForm.password,
+      role: adminForm.role,
       currentPassword: adminForm.currentPassword,
       currentAdminUsername: currentAdminUsername
     })
@@ -219,6 +234,7 @@ const handleAddAdmin = async () => {
     adminForm.password = ''
     adminForm.confirmPassword = ''
     adminForm.currentPassword = ''
+    adminForm.role = 'ADMIN'
 
   } catch (error) {
     console.error('创建管理员失败:', error)

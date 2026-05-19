@@ -40,8 +40,8 @@ public class AdminInitializer implements CommandLineRunner {
                 return;
             }
 
-            adminService.createAdmin(defaultAdminUsername, defaultAdminPassword);
-            log.info("Default admin [{}] created successfully", defaultAdminUsername);
+            adminService.createAdmin(defaultAdminUsername, defaultAdminPassword, "SUPER_ADMIN");
+            log.info("Default admin [{}] created successfully with role SUPER_ADMIN", defaultAdminUsername);
         } catch (Exception e) {
             log.error("Failed to initialize default admin: {}", e.getMessage());
         }

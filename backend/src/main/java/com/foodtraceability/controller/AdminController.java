@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -66,10 +67,12 @@ public class AdminController {
     }
 
     @PostMapping("/admin/register")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @OperationLog(entityType = "ADMIN", action = "REGISTER")
     public ResponseEntity<?> registerAdmin(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String password = request.get("password");
+        String role = request.get("role");
         String currentPassword = request.get("currentPassword");
         String currentAdminUsername = request.get("currentAdminUsername");
 
@@ -84,8 +87,8 @@ public class AdminController {
             }
 
             adminService.verifyCurrentPassword(currentAdminUsername, currentPassword);
-            
-            Admin admin = adminService.createAdmin(username, password);
+
+            Admin admin = adminService.createAdmin(username, password, role);
             log.info("[管理员注册] 创建成功 - 操作管理员: {}, 新管理员: {}", currentAdminUsername, username);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "管理员创建成功", "username", admin.getUsername()));

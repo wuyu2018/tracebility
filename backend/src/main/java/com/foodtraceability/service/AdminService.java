@@ -10,7 +10,7 @@ public interface AdminService {
     
     Admin findByUsername(String username);
     
-    Admin createAdmin(String username, String password);
+    Admin createAdmin(String username, String password, String role);
     
     void verifyCurrentPassword(String username, String currentPassword);
 }
