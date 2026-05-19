@@ -90,6 +90,11 @@
       <el-tab-pane label="管理员管理" name="admin">
         <AddAdmin />
       </el-tab-pane>
+
+      <!--区块链监控标签页 -->
+      <el-tab-pane label="区块链监控" name="blockchain">
+        <BlockchainMonitor />
+      </el-tab-pane>
     </el-tabs>
 
     <!-- 产品详情弹窗 -->
@@ -114,6 +119,7 @@ import AddAdmin from '/src/views/AddAdmin.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
+import BlockchainMonitor from '../components/BlockchainMonitor.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
 import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
 import { useRouter } from 'vue-router'

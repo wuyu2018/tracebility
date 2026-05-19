@@ -71,6 +71,13 @@ export async function completeInspection(payload) {
   return data
 }
 
+// ==================== 区块链监控 ====================
+
+export async function getBlockchainMonitorSummary() {
+  const { data } = await api.get('/blockchain/monitor/summary')
+  return data
+}
+
 // ==================== 旧 API（保留兼容） ====================
 
 export async function selectProducts(keyword, role = 'consumer') {

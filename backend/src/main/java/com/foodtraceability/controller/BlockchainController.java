@@ -1,5 +1,7 @@
 package com.foodtraceability.controller;
 
+import com.foodtraceability.dto.BlockchainMonitorSummary;
+import com.foodtraceability.service.BlockchainMonitorService;
 import com.foodtraceability.service.BlockchainService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +13,11 @@ import java.util.Map;
 public class BlockchainController {
 
     private final BlockchainService blockchainService;
+    private final BlockchainMonitorService monitorService;
 
-    public BlockchainController(BlockchainService blockchainService) {
+    public BlockchainController(BlockchainService blockchainService, BlockchainMonitorService monitorService) {
         this.blockchainService = blockchainService;
+        this.monitorService = monitorService;
     }
 
     @GetMapping("/verify/material")
@@ -51,5 +55,10 @@ public class BlockchainController {
     @GetMapping("/public-key")
     public ResponseEntity<?> getPublicKey() {
         return ResponseEntity.ok(Map.of("publicKey", blockchainService.getPublicKeyBase64()));
+    }
+
+    @GetMapping("/monitor/summary")
+    public ResponseEntity<BlockchainMonitorSummary> getMonitorSummary() {
+        return ResponseEntity.ok(monitorService.getSummary());
     }
 }
