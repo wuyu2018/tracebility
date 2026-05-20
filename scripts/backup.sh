@@ -12,9 +12,9 @@ echo "======================================"
 mkdir -p "$BACKUP_DIR"
 
 echo "Creating backup..."
-docker exec food-traceability-mysql mysqldump \
+# 使用 MYSQL_PWD 环境变量避免密码在进程列表中明文暴露
+docker exec -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" food-traceability-mysql mysqldump \
     -u root \
-    -p$MYSQL_ROOT_PASSWORD \
     --single-transaction \
     --quick \
     --lock-tables=false \

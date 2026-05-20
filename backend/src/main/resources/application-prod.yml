@@ -38,6 +38,13 @@ spring:
       platform: mysql
       continue-on-error: false
 
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      timeout: 3000ms
+
 server:
   port: 8080
   servlet:
@@ -106,3 +113,10 @@ management:
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+# ===================== 区块链配置 =====================
+blockchain:
+  rsa:
+    private-key-path: ${BLOCKCHAIN_RSA_PRIVATE_KEY:}
+    public-key-path: ${BLOCKCHAIN_RSA_PUBLIC_KEY:}
+  genesis-hash: ${BLOCKCHAIN_GENESIS_HASH:0000000000000000000000000000000000000000000000000000000000000000}
