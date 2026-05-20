@@ -9,7 +9,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "blockchain_log", indexes = {
     @Index(name = "idx_bl_batch_id", columnList = "batch_id"),
-    @Index(name = "idx_bl_timestamp", columnList = "timestamp")
+    @Index(name = "idx_bl_timestamp", columnList = "timestamp"),
+    @Index(name = "idx_bl_chain_type", columnList = "chain_type"),
+    @Index(name = "idx_bl_entity", columnList = "entity_type, entity_id"),
+    @Index(name = "idx_bl_data_hash", columnList = "data_hash")
 })
 @Getter
 @Setter
@@ -41,8 +44,21 @@ public class BlockchainLog {
     @Column(name = "current_hash", nullable = false, length = 128)
     private String currentHash;
 
+    @Deprecated
     @Column(name = "data_snapshot", columnDefinition = "TEXT")
     private String dataSnapshot;
+
+    @Column(name = "data_hash", length = 64)
+    private String dataHash;
+
+    @Column(name = "offchain_ref", length = 200)
+    private String offchainReference;
+
+    @Column(name = "bloom_filter", columnDefinition = "BLOB")
+    private byte[] bloomFilter;
+
+    @Column(name = "metadata_index", columnDefinition = "JSON")
+    private String metadataIndex;
 
     @Column(name = "signature", nullable = false, length = 512)
     private String signature;
@@ -55,6 +71,13 @@ public class BlockchainLog {
 
     @Column(name = "ref_master_chain_hash", length = 128)
     private String refMasterChainHash;
+
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
+    }
 
     public static BlockchainLog createMaterialChainBlock(String entityType, Long entityId, String action,
                                                           String previousHash, String currentHash,
@@ -94,6 +117,27 @@ public class BlockchainLog {
         block.timestamp = timestamp;
         block.operatorId = operatorId;
         block.refMasterChainHash = refMasterChainHash;
+        return block;
+    }
+
+    public static BlockchainLog createOptimizedBlock(String chainType, Long batchId, String entityType, Long entityId, 
+                                                      String action, String previousHash, String currentHash,
+                                                      String signature, LocalDateTime timestamp, Long operatorId,
+                                                      String dataHash, String offchainRef, byte[] bloomFilter) {
+        BlockchainLog block = new BlockchainLog();
+        block.chainType = chainType;
+        block.batchId = batchId;
+        block.entityType = entityType;
+        block.entityId = entityId;
+        block.action = action;
+        block.previousHash = previousHash;
+        block.currentHash = currentHash;
+        block.signature = signature;
+        block.timestamp = timestamp;
+        block.operatorId = operatorId;
+        block.dataHash = dataHash;
+        block.offchainReference = offchainRef;
+        block.bloomFilter = bloomFilter;
         return block;
     }
 }
