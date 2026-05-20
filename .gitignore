@@ -88,6 +88,13 @@ deploy-local.*
 
 
 # ==============================================
+# ==============================================
+# 📁 AI / IDE / 文档（不提交）
+# ==============================================
+.claude/
+docs/
+.agent/
+
 # 🪟 操作系统垃圾文件
 # ==============================================
 .DS_Store
@@ -119,8 +126,6 @@ test-output/
 *.lck
 
 .env.example
-docker-compose.prod.yml
-edge-nginx.conf
 CONTEXT.md
 CLAUDE.md
 skills-lock.json
