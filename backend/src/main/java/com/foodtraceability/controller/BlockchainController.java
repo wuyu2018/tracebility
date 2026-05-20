@@ -3,6 +3,7 @@ package com.foodtraceability.controller;
 import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.BlockchainMonitorSummary;
 import com.foodtraceability.service.BlockchainMonitorService;
+import com.foodtraceability.service.BlockchainRepairService;
 import com.foodtraceability.service.BlockchainService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,10 +17,13 @@ public class BlockchainController {
 
     private final BlockchainService blockchainService;
     private final BlockchainMonitorService monitorService;
+    private final BlockchainRepairService repairService;
 
-    public BlockchainController(BlockchainService blockchainService, BlockchainMonitorService monitorService) {
+    public BlockchainController(BlockchainService blockchainService, BlockchainMonitorService monitorService,
+                                BlockchainRepairService repairService) {
         this.blockchainService = blockchainService;
         this.monitorService = monitorService;
+        this.repairService = repairService;
     }
 
     @OperationLog(entityType = "BLOCKCHAIN", action = "VERIFY_MATERIAL")
@@ -70,5 +74,13 @@ public class BlockchainController {
     @GetMapping("/monitor/summary")
     public ResponseEntity<BlockchainMonitorSummary> getMonitorSummary() {
         return ResponseEntity.ok(monitorService.getSummary());
+    }
+
+    @OperationLog(entityType = "BLOCKCHAIN", action = "REPAIR")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PostMapping("/repair")
+    public ResponseEntity<?> repairBlockchain() {
+        var result = repairService.repairAll();
+        return ResponseEntity.ok(result);
     }
 }

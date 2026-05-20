@@ -263,3 +263,121 @@ String previousHash = blockchainLogRepo
 
 - 业务数据写入成功 → 区块链日志写入成功（同一事务）
 - 业务数据回滚 → 区块链日志不回滚（AFTER_COMMIT 阶段，仅在事务成功后触发）
+
+---
+
+## 七、完整性监控
+
+### 整体流程
+
+```
+[前端 BlockchainMonitor.vue]
+  ↓ GET /api/blockchain/monitor/summary  (30s 自动刷新)
+[后端 BlockchainMonitorController]
+  ↓
+[BlockchainMonitorService.getSummary()]
+  ├── blockchainService.verifyMaterialChain()  → 验证物料链
+  └── blockchainService.verifyAllBatchChains() → 验证所有批次链
+       ↓
+  collect BrokenBlockDetail  ← 所有 !passed() 的区块
+       ↓
+  返回 BlockchainMonitorSummary
+```
+
+### BlockchainMonitorSummary 结构
+
+```
+BlockchainMonitorSummary
+  ├── overallHealthy: boolean          ← materialReport.intact() && brokenCount == 0
+  ├── materialChain: MaterialChainInfo
+  │     ├── intact: boolean
+  │     ├── blockCount: int
+  │     └── lastAnchorDate: LocalDate  ← 来自 blockchain_anchor 表
+  ├── batchChains: BatchChainSummary
+  │     ├── totalBatches: long
+  │     ├── intactCount: long
+  │     ├── brokenCount: long
+  │     ├── totalBlockCount: long
+  │     ├── lastAnchorDate: LocalDate
+  │     └── brokenBatchIds: List<Long>   ← 异常批次ID列表
+  ├── brokenBlocks: List<BrokenBlockDetail>
+  │     └── { blockId, batchId, entityType, entityId, action, errors }
+  └── lastUpdated: LocalDateTime
+```
+
+### 异常原因分类（前端 errorLabel 映射）
+
+| 数据库错误消息 | 前端展示 |
+|---|---|
+| `previous_hash mismatch` | 链断裂：前序哈希不匹配（数据链路被篡改） |
+| `current_hash mismatch` | 数据被篡改：当前哈希与计算值不一致 |
+| `signature verification failed` | 签名验证失败：区块签名无效（私钥不匹配或数据被篡改） |
+
+### 前端监控面板
+
+组件：`frontend/src/components/BlockchainMonitor.vue`
+
+- 30 秒自动轮询 `GET /api/blockchain/monitor/summary`
+- 顶部横幅：绿色（全部正常）/ 红色（存在异常）
+- 两张状态卡：物料链摘要 + 批次链摘要（各统计字段）
+- 异常详情区（仅在有异常时显示）：
+  - **物料链异常**：el-table 列出所有异常区块（区块ID、操作、关联单据、错误原因）
+  - **批次链异常**：el-collapse 按 batchId 分组折叠，每组一个 el-table
+- 修复按钮：仅 SUPER_ADMIN 可见，调用确认对话框后执行修复
+
+---
+
+## 八、区块链修复
+
+### 触发入口
+
+1. **前端按钮**：监控面板中出现异常时显示"修复区块链"按钮
+2. **API 直接调用**：`POST /api/blockchain/repair`（需 SUPER_ADMIN 角色）
+
+### 修复流程（BlockchainRepairService.repairAll()）
+
+```
+repairAll()
+  ├── repairMaterialChain()
+  │     └── repairBlocks(materialChainBlocks)   ← 按 timestamp ASC 排序
+  └── repairBatchChains()
+        └── 按 batchId 分组
+              └── repairBlocks(batchChainBlocks)  ← 每批次独立修复
+
+repairBlocks(chainBlocks):
+  for i = 0 to blocks.size():
+    1. 修正 previousHash
+       newPrevHash = (i > 0) ? blocks[i-1].currentHash : genesisHash
+       block.setPreviousHash(newPrevHash)
+
+    2. 用当前所有字段值重新计算 SHA-256
+       newHash = calculateHash(
+           entityType, entityId, action,
+           newPrevHash, dataSnapshot, timestamp,
+           batchId, operatorId, refMasterChainHash)
+
+    3. 用当前 RSA 私钥重新签名
+       newSignature = sign(newHash)
+
+    4. block.setCurrentHash(newHash)
+       block.setSignature(newSignature)
+       blockchainLogRepo.save(block)
+```
+
+### 修复结果
+
+```json
+{
+  "repaired": true,
+  "materialBlocksFixed": 2,
+  "batchBlocksFixed": 4,
+  "totalFixed": 6
+}
+```
+
+### 修复前提
+
+- 修复的前提是 **data_snapshot 和 timestamp 等原始数据未被篡改**，否则重算的哈希值会与创建时不同（在创建时哈希正确的前提下修复才有意义）
+- 首次部署后如遇哈希不匹配（如 LocalDateTime 精度丢失导致），运行一次修复即可恢复正常
+- RSA 密钥变更后，所有现有区块签名失效，必须运行修复重新签名
+- **持久化建议**：将 RSA 密钥文件（`backend/keys/private.pem`、`backend/keys/public.pem`）纳入版本管理或备份策略，避免重启后密钥变更导致签名集体失效

@@ -9,7 +9,14 @@
       "Bash(python3 *)",
       "Bash(python *)",
       "Bash(xxd)",
-      "Bash(mvn test *)"
+      "Bash(mvn test *)",
+      "Bash(docker-compose -f docker-compose.prod.yml build --no-cache backend)",
+      "Bash(docker-compose -f docker-compose.prod.yml up -d backend)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec food-traceability-backend java -cp /app/resources -Dloader.main=org.springframework.boot.loader.launch.JarLauncher)",
+      "Bash(docker exec *)",
+      "Bash(iconv -f UTF-8 -t GBK)",
+      "Bash(docker run *)",
+      "Bash(docker compose *)"
     ]
   }
 }

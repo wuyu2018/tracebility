@@ -178,7 +178,7 @@ public class BlockchainService {
                     block.getBatchId(), block.getOperatorId(), block.getRefMasterChainHash());
 
             if (!expectedHash.equals(block.getCurrentHash())) {
-                errors.add("current_hash mismatch: expected " + expectedHash
+errors.add("current_hash mismatch: expected " + expectedHash
                         + ", got " + block.getCurrentHash());
                 chainBroken = true;
             }
