@@ -44,7 +44,7 @@ services:
       ANCHOR_MYSQL_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     volumes:
       - anchor_mysql_data:/var/lib/mysql
-      - ./anchor-init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+      - ../scripts/anchor-init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
     networks:
       - traceability-network
     healthcheck:
