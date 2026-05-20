@@ -1,9 +1,6 @@
 package com.foodtraceability.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,9 +8,6 @@ import java.time.LocalDateTime;
     @Index(name = "idx_brt_status_next_retry", columnList = "status, next_retry_time"),
     @Index(name = "idx_brt_created_at", columnList = "created_at")
 })
-@Getter
-@Setter
-@NoArgsConstructor
 public class BlockchainRetryTask {
 
     @Id
@@ -71,4 +65,52 @@ public class BlockchainRetryTask {
         if (status == null) status = "PENDING";
         if (nextRetryTime == null) nextRetryTime = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getChainType() { return chainType; }
+    public void setChainType(String chainType) { this.chainType = chainType; }
+    
+    public Long getBatchId() { return batchId; }
+    public void setBatchId(Long batchId) { this.batchId = batchId; }
+    
+    public String getEntityType() { return entityType; }
+    public void setEntityType(String entityType) { this.entityType = entityType; }
+    
+    public Long getEntityId() { return entityId; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
+    
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
+    
+    public String getDataSnapshot() { return dataSnapshot; }
+    public void setDataSnapshot(String dataSnapshot) { this.dataSnapshot = dataSnapshot; }
+    
+    public Long getOperatorId() { return operatorId; }
+    public void setOperatorId(Long operatorId) { this.operatorId = operatorId; }
+    
+    public String getEventType() { return eventType; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
+    
+    public String getLastError() { return lastErrorMessage; }
+    public void setLastErrorMessage(String lastErrorMessage) { this.lastErrorMessage = lastErrorMessage; }
+    
+    public int getRetryCount() { return retryCount; }
+    public void setRetryCount(int retryCount) { this.retryCount = retryCount; }
+    
+    public int getMaxRetries() { return maxRetries; }
+    public void setMaxRetries(int maxRetries) { this.maxRetries = maxRetries; }
+    
+    public LocalDateTime getNextRetryTime() { return nextRetryTime; }
+    public void setNextRetryTime(LocalDateTime nextRetryTime) { this.nextRetryTime = nextRetryTime; }
+    
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public LocalDateTime getLastRetriedAt() { return lastRetriedAt; }
+    public void setLastRetriedAt(LocalDateTime lastRetriedAt) { this.lastRetriedAt = lastRetriedAt; }
 }
