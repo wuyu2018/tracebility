@@ -1,6 +1,6 @@
-package com.foodtraceability.repository;
+package com.foodtraceability.anchor.repository;
 
-import com.foodtraceability.entity.BlockchainAnchor;
+import com.foodtraceability.anchor.entity.BlockchainAnchor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,6 +1,6 @@
-package com.foodtraceability.repository;
+package com.foodtraceability.anchor.repository;
 
-import com.foodtraceability.entity.OperationLog;
+import com.foodtraceability.anchor.entity.OperationLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

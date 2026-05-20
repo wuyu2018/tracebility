@@ -1,7 +1,9 @@
 package com.foodtraceability.service;
 
+import com.foodtraceability.anchor.repository.BlockchainAnchorRepository;
 import com.foodtraceability.dto.BlockchainMonitorSummary;
-import com.foodtraceability.repository.BlockchainAnchorRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,6 +14,8 @@ import java.util.Map;
 
 @Service
 public class BlockchainMonitorService {
+
+    private static final Logger log = LoggerFactory.getLogger(BlockchainMonitorService.class);
 
     private final BlockchainService blockchainService;
     private final BlockchainAnchorRepository anchorRepo;
@@ -56,8 +60,16 @@ public class BlockchainMonitorService {
             }
         }
 
-        LocalDate materialAnchorDate = anchorRepo.findLatestAnchorDateByChainType("MATERIAL").orElse(null);
-        LocalDate batchAnchorDate = anchorRepo.findLatestAnchorDateByChainType("BATCH").orElse(null);
+        LocalDate materialAnchorDate;
+        LocalDate batchAnchorDate;
+        try {
+            materialAnchorDate = anchorRepo.findLatestAnchorDateByChainType("MATERIAL").orElse(null);
+            batchAnchorDate = anchorRepo.findLatestAnchorDateByChainType("BATCH").orElse(null);
+        } catch (Exception e) {
+            log.warn("Anchor DB unavailable, anchor dates will be null", e);
+            materialAnchorDate = null;
+            batchAnchorDate = null;
+        }
 
         boolean overallHealthy = materialReport.intact() && brokenCount == 0;
 

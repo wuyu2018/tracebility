@@ -1,6 +1,6 @@
 package com.foodtraceability.aop;
 
-import com.foodtraceability.repository.OperationLogRepository;
+import com.foodtraceability.anchor.repository.OperationLogRepository;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -40,13 +40,18 @@ public class OperationLogAspect {
         Long entityId = extractEntityId(joinPoint, result);
         String summary = buildSummary(operationLog.entityType(), operationLog.action(), entityId);
 
-        com.foodtraceability.entity.OperationLog entity = new com.foodtraceability.entity.OperationLog();
+        com.foodtraceability.anchor.entity.OperationLog entity =
+                new com.foodtraceability.anchor.entity.OperationLog();
         entity.setOperator(operator);
         entity.setEntityType(operationLog.entityType());
         entity.setEntityId(entityId);
         entity.setAction(operationLog.action());
         entity.setSummary(summary);
-        repository.save(entity);
+        try {
+            repository.save(entity);
+        } catch (Exception e) {
+            log.error("[操作日志] 写入失败: {} {} {} - {}", operator, operationLog.action(), summary, e.getMessage());
+        }
 
         log.debug("[操作日志] {} {} {} - 耗时: {}ms", operator, operationLog.action(), summary, duration);
         return result;

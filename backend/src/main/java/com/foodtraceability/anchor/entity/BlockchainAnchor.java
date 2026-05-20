@@ -1,4 +1,4 @@
-package com.foodtraceability.entity;
+package com.foodtraceability.anchor.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

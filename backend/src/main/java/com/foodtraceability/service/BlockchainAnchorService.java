@@ -1,14 +1,13 @@
 package com.foodtraceability.service;
 
-import com.foodtraceability.entity.BlockchainAnchor;
+import com.foodtraceability.anchor.entity.BlockchainAnchor;
+import com.foodtraceability.anchor.repository.BlockchainAnchorRepository;
 import com.foodtraceability.entity.BlockchainLog;
-import com.foodtraceability.repository.BlockchainAnchorRepository;
 import com.foodtraceability.repository.BlockchainLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,7 +36,6 @@ public class BlockchainAnchorService {
     }
 
     @Scheduled(cron = "0 0 3 * * ?")
-    @Transactional
     public void dailyAnchor() {
         log.info("[BlockchainAnchor] Starting daily anchoring at {}", LocalDateTime.now());
         LocalDate today = LocalDate.now();
@@ -45,16 +43,25 @@ public class BlockchainAnchorService {
 
         anchorChain("MATERIAL", null, today, anchorLines);
 
-        List<Long> batchIds = blockchainLogRepo.findByChainTypeOrderByTimestampAsc("BATCH")
-                .stream()
-                .map(BlockchainLog::getBatchId)
-                .distinct()
-                .toList();
+        List<Long> batchIds;
+        try {
+            batchIds = blockchainLogRepo.findByChainTypeOrderByTimestampAsc("BATCH")
+                    .stream()
+                    .map(BlockchainLog::getBatchId)
+                    .distinct()
+                    .toList();
+        } catch (Exception e) {
+            log.error("[BlockchainAnchor] Failed to query batch IDs, aborting BATCH anchoring", e);
+            batchIds = List.of();
+        }
+
         for (Long batchId : batchIds) {
             anchorChain("BATCH", batchId, today, anchorLines);
         }
 
-        writeAnchorLogFile(today, anchorLines);
+        if (!anchorLines.isEmpty()) {
+            writeAnchorLogFile(today, anchorLines);
+        }
         log.info("[BlockchainAnchor] Daily anchoring completed: {} chains anchored", anchorLines.size());
     }
 
@@ -69,7 +76,13 @@ public class BlockchainAnchorService {
 
         String hash = latest.get().getCurrentHash();
         BlockchainAnchor anchor = BlockchainAnchor.create(chainType, batchId, hash, today);
-        anchorRepo.save(anchor);
+        try {
+            anchorRepo.save(anchor);
+        } catch (Exception e) {
+            log.error("[BlockchainAnchor] Failed to save anchor for chainType={}, batchId={}: {}",
+                    chainType, batchId, e.getMessage());
+            return;
+        }
 
         String line = batchId != null
                 ? String.format("%s | %s | %s | %s", chainType, batchId, hash, today)

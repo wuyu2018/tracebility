@@ -381,3 +381,19 @@ repairBlocks(chainBlocks):
 - 首次部署后如遇哈希不匹配（如 LocalDateTime 精度丢失导致），运行一次修复即可恢复正常
 - RSA 密钥变更后，所有现有区块签名失效，必须运行修复重新签名
 - **持久化建议**：将 RSA 密钥文件（`backend/keys/private.pem`、`backend/keys/public.pem`）纳入版本管理或备份策略，避免重启后密钥变更导致签名集体失效
+
+---
+
+## 九、待完善
+
+### 1. 锚定表应与业务库分离
+
+当前 `blockchain_anchor` 表与 `blockchain_log` 表在同一 MySQL 实例（`food_traceability`）中，攻击者攻破数据库后可同时篡改两者，锚定作为独立验证层的意义被削弱。
+
+**建议**：
+- 将 `blockchain_anchor` 迁至独立 MySQL 实例（或 SQLite / 便宜的云数据库）
+- 业务应用的 DB 账号对锚定库仅授予 `INSERT` + `SELECT` 权限，禁止 `UPDATE` / `DELETE`
+- 定时任务每日凌晨写入锚定记录时通过独立数据源写入
+- 攻击者需同时攻破两个数据库才能掩盖痕迹
+
+当前已有文件系统锚定日志（`logs/blockchain-anchor-*.log`）+ RSA 签名作为兜底，但日志文件查询不便，独立数据库可兼顾安全性和可查询性。

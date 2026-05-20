@@ -16,7 +16,8 @@
       "Bash(docker exec *)",
       "Bash(iconv -f UTF-8 -t GBK)",
       "Bash(docker run *)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Bash(mvn clean *)"
     ]
   }
 }
