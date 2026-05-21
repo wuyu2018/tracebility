@@ -18,8 +18,8 @@
 
 <style scoped>
 .footer {
-  background: var(--color-bg-card);
-  border-top: 1px solid var(--color-border);
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f6fc 100%);
+  border-top: 1px solid #dbe5ef;
   padding: var(--spacing-lg) var(--spacing-md);
   margin-top: auto;
 }
@@ -39,16 +39,16 @@
 }
 
 .footer-links a {
-  color: var(--color-text-muted);
+  color: #4b5563;
   font-size: 0.9rem;
 }
 
 .footer-links a:hover {
-  color: var(--color-primary);
+  color: #1d4ed8;
 }
 
 .footer-text {
-  color: var(--color-text-light);
+  color: #64748b;
   font-size: 0.85rem;
 }
 
