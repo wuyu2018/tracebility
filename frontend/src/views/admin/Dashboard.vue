@@ -20,10 +20,14 @@
       <el-col :md="12" :sm="24">
         <el-card header="区块链状态" shadow="hover" v-loading="blockchainLoading">
           <el-descriptions :column="1" border size="small">
-            <el-descriptions-item label="链类型">{{ blockchainData.chainType || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="最新区块哈希">{{ truncate(blockchainData.latestBlockHash) || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="总交易数">{{ blockchainData.totalTransactions ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="锚定记录数">{{ blockchainData.anchorCount ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="总体健康">
+              <el-tag :type="blockchainData.overallHealthy ? 'success' : 'danger'" size="small">
+                {{ blockchainData.overallHealthy ? '正常' : '异常' }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="原料链区块">{{ blockchainData.materialBlocks ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="批次链总区块">{{ blockchainData.batchBlocks ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="损坏区块">{{ blockchainData.brokenCount ?? '-' }}</el-descriptions-item>
           </el-descriptions>
         </el-card>
       </el-col>
@@ -56,10 +60,10 @@ const agentLoading = ref(true)
 const blockchainLoading = ref(true)
 
 const blockchainData = reactive({
-  chainType: '',
-  latestBlockHash: '',
-  totalTransactions: null,
-  anchorCount: null
+  overallHealthy: false,
+  materialBlocks: 0,
+  batchBlocks: 0,
+  brokenCount: 0
 })
 
 const agentData = reactive({
@@ -74,56 +78,49 @@ const cards = [
   { label: '溯源智能体', value: agentCount, icon: Monitor, color: '#e6a23c', loading: agentLoading }
 ]
 
-function truncate(str) {
-  if (!str) return ''
-  return str.length > 20 ? str.slice(0, 10) + '...' + str.slice(-10) : str
-}
-
 onMounted(async () => {
-  try {
-    const [prods, batches, complaints, agents] = await Promise.allSettled([
-      getProducts({ keyword: '' }),
-      getBatches({}),
-      getComplaints(),
-      getAgents()
-    ])
-    if (prods.status === 'fulfilled') {
-      const data = prods.value
-      productCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
+  const [prods, batches, complaints, agents, blockchain] = await Promise.allSettled([
+    getProducts({ keyword: '' }),
+    getBatches({}),
+    getComplaints(),
+    getAgents(),
+    getBlockchainSummary()
+  ])
+
+  if (prods.status === 'fulfilled') {
+    const data = prods.value
+    productCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
+  }
+  if (batches.status === 'fulfilled') {
+    const data = batches.value
+    batchCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
+  }
+  if (complaints.status === 'fulfilled') {
+    const data = complaints.value
+    complaintCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
+  }
+  if (agents.status === 'fulfilled') {
+    const data = agents.value
+    const list = data?.agents || (Array.isArray(data) ? data : [])
+    agentCount.value = list.length
+    agentData.total = list.length
+    agentData.active = list.filter(a => a.state === 'ACTIVE').length
+  }
+  if (blockchain.status === 'fulfilled') {
+    const data = blockchain.value
+    if (data) {
+      blockchainData.overallHealthy = data.overallHealthy || false
+      blockchainData.materialBlocks = data.materialChain?.blockCount ?? 0
+      blockchainData.batchBlocks = data.batchChains?.totalBlockCount ?? 0
+      blockchainData.brokenCount = data.batchChains?.brokenCount ?? 0
     }
-    if (batches.status === 'fulfilled') {
-      const data = batches.value
-      batchCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
-    }
-    if (complaints.status === 'fulfilled') {
-      const data = complaints.value
-      complaintCount.value = Array.isArray(data) ? data.length : data?.data?.length || data?.total || 0
-    }
-    if (agents.status === 'fulfilled') {
-      const data = agents.value
-      const list = Array.isArray(data) ? data : data?.data || []
-      agentCount.value = list.length
-      agentData.total = list.length
-      agentData.active = list.filter(a => a.status === 'ACTIVE').length
-    }
-  } finally {
-    productLoading.value = false
-    batchLoading.value = false
-    complaintLoading.value = false
-    agentLoading.value = false
   }
 
-  try {
-    const summary = await getBlockchainSummary()
-    if (summary) {
-      blockchainData.chainType = summary.chainType || summary.chain_type
-      blockchainData.latestBlockHash = summary.latestBlockHash || summary.latest_block_hash
-      blockchainData.totalTransactions = summary.totalTransactions || summary.total_transactions
-      blockchainData.anchorCount = summary.anchorCount || summary.anchor_count
-    }
-  } finally {
-    blockchainLoading.value = false
-  }
+  productLoading.value = false
+  batchLoading.value = false
+  complaintLoading.value = false
+  agentLoading.value = false
+  blockchainLoading.value = false
 })
 </script>
 
