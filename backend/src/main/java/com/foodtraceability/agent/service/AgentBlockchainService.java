@@ -4,12 +4,13 @@ import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.consensus.PbftConsensus;
 import com.foodtraceability.agent.contract.DataOnChainContract;
 import com.foodtraceability.agent.contract.PermissionControlContract;
+import com.foodtraceability.entity.BlockHeader;
 import com.foodtraceability.entity.BlockchainLog;
 import com.foodtraceability.entity.OffchainStorage;
+import com.foodtraceability.repository.BlockHeaderRepository;
 import com.foodtraceability.repository.OffchainStorageRepository;
 import com.foodtraceability.security.DataEncryptionService;
 import com.foodtraceability.security.FoodBloomFilter;
-import com.foodtraceability.service.BlockchainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.util.Base64;
 
 @Service
 public class AgentBlockchainService {
@@ -31,6 +31,7 @@ public class AgentBlockchainService {
     private final OffchainStorageRepository offchainStorageRepo;
     private final DataEncryptionService encryptionService;
     private final FoodBloomFilter bloomFilter;
+    private final BlockHeaderRepository blockHeaderRepo;
 
     public AgentBlockchainService(
             MultiAgentCoordinator agentCoordinator,
@@ -38,13 +39,15 @@ public class AgentBlockchainService {
             PermissionControlContract permissionControlContract,
             OffchainStorageRepository offchainStorageRepo,
             DataEncryptionService encryptionService,
-            FoodBloomFilter bloomFilter) {
+            FoodBloomFilter bloomFilter,
+            BlockHeaderRepository blockHeaderRepo) {
         this.agentCoordinator = agentCoordinator;
         this.dataOnChainContract = dataOnChainContract;
         this.permissionControlContract = permissionControlContract;
         this.offchainStorageRepo = offchainStorageRepo;
         this.encryptionService = encryptionService;
         this.bloomFilter = bloomFilter;
+        this.blockHeaderRepo = blockHeaderRepo;
     }
 
     @Transactional
@@ -109,8 +112,18 @@ public class AgentBlockchainService {
         offchainStorage.setOwnerAgentId(Long.parseLong(currentAgent.getAgentId().split("-")[1]));
         offchainStorageRepo.save(offchainStorage);
 
-        String previousHash = getPreviousHash(chainType, entityId);
+        // Step 1: Create BlockHeader with merged Bloom Filter
+        String previousHash = getPreviousBlockHash(chainType);
+        String merkleRoot = dataHash;
+        String metadataIndex = String.format(
+                "{\"entityType\":\"%s\",\"entityId\":%d,\"action\":\"%s\"}", entityType, entityId, action);
         LocalDateTime now = LocalDateTime.now();
+
+        BlockHeader header = BlockHeader.create(chainType, previousHash, merkleRoot,
+                bloomFilter.toBytes(), metadataIndex, 1);
+        blockHeaderRepo.save(header);
+
+        // Step 2: Create BlockchainLog linked to the header
         String currentHash = calculateBlockHash(
             chainType, entityType, entityId, action, previousHash, dataHash, now);
         String signature = sign(currentHash);
@@ -127,20 +140,22 @@ public class AgentBlockchainService {
             now,
             operatorId,
             dataHash,
-            offchainStorage.getFoodId(),
-            bloomFilter.toBytes()
+            offchainStorage.getFoodId()
         );
+        block.setBlockHeader(header);
 
         currentAgent.updateCreditScore(1);
 
-        log.info("Block appended successfully after consensus: hash={}, foodId={}", currentHash, foodId);
+        log.info("Block appended successfully after consensus: blockHash={}, logHash={}, foodId={}",
+                header.getBlockHash(), currentHash, foodId);
 
         return block;
     }
 
-    private String getPreviousHash(String chainType, Long entityId) {
-        // Simplified previous hash lookup
-        return "GENESIS";
+    private String getPreviousBlockHash(String chainType) {
+        return blockHeaderRepo.findTopByChainTypeOrderByIdDesc(chainType)
+                .map(BlockHeader::getBlockHash)
+                .orElse("GENESIS");
     }
 
     private String calculateBlockHash(String chainType, String entityType, Long entityId,
@@ -195,7 +210,6 @@ public class AgentBlockchainService {
     }
 
     private String sign(String hash) {
-        // Delegated signing via the current agent's implicit authority
         return Integer.toHexString(hash.hashCode());
     }
 }

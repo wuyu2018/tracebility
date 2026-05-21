@@ -23,6 +23,10 @@ public class BlockchainLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "block_header_id")
+    private BlockHeader blockHeader;
+
     @Column(name = "batch_id")
     private Long batchId;
 
@@ -54,12 +58,6 @@ public class BlockchainLog {
     @Column(name = "offchain_ref", length = 200)
     private String offchainReference;
 
-    @Column(name = "bloom_filter", columnDefinition = "BLOB")
-    private byte[] bloomFilter;
-
-    @Column(name = "metadata_index", columnDefinition = "JSON")
-    private String metadataIndex;
-
     @Column(name = "signature", nullable = false, length = 512)
     private String signature;
 
@@ -79,10 +77,10 @@ public class BlockchainLog {
         }
     }
 
-    public static BlockchainLog createOptimizedBlock(String chainType, Long batchId, String entityType, Long entityId, 
+    public static BlockchainLog createOptimizedBlock(String chainType, Long batchId, String entityType, Long entityId,
                                                       String action, String previousHash, String currentHash,
                                                       String signature, LocalDateTime timestamp, Long operatorId,
-                                                      String dataHash, String offchainRef, byte[] bloomFilter) {
+                                                      String dataHash, String offchainRef) {
         BlockchainLog block = new BlockchainLog();
         block.chainType = chainType;
         block.batchId = batchId;
@@ -96,7 +94,6 @@ public class BlockchainLog {
         block.operatorId = operatorId;
         block.dataHash = dataHash;
         block.offchainReference = offchainRef;
-        block.bloomFilter = bloomFilter;
         return block;
     }
 }

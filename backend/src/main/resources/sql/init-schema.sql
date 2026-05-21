@@ -26,13 +26,13 @@ CREATE TABLE IF NOT EXISTS blockchain_log (
     operator_id BIGINT,
     ref_master_chain_hash VARCHAR(128),
     batch_id BIGINT,
-    bloom_filter BLOB COMMENT 'Bloom Filter 数据',
-    metadata_index JSON COMMENT '元数据索引',
+    block_header_id BIGINT COMMENT '关联区块头 ID',
     INDEX idx_bl_chain_type (chain_type),
     INDEX idx_bl_entity (entity_type, entity_id),
     INDEX idx_bl_timestamp (timestamp),
     INDEX idx_bl_batch_id (batch_id),
-    INDEX idx_bl_data_hash (data_hash)
+    INDEX idx_bl_data_hash (data_hash),
+    INDEX idx_bl_block_header (block_header_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区块链日志表 (链上数据摘要)';
 
 -- 按时间分区 (可选)
@@ -99,3 +99,21 @@ CREATE TABLE IF NOT EXISTS agent_identity (
     INDEX idx_agent_type (agent_type),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 身份表';
+
+-- ----------------------------
+-- 5. 区块头表 (链式结构主体)
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS block_header (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    chain_type VARCHAR(30) NOT NULL COMMENT 'MATERIAL/BATCH/TRANSPORT/SALES',
+    block_hash VARCHAR(128) NOT NULL COMMENT '本区块哈希',
+    previous_hash VARCHAR(128) COMMENT '上一区块哈希',
+    merkle_root VARCHAR(128) COMMENT 'Merkle 根哈希',
+    timestamp DATETIME NOT NULL COMMENT '区块生成时间',
+    bloom_filter BLOB COMMENT '合并 Bloom Filter',
+    metadata_index JSON COMMENT '本块元数据索引',
+    tx_count INT COMMENT '本块交易数',
+    INDEX idx_bh_chain_type (chain_type),
+    INDEX idx_bh_timestamp (timestamp),
+    INDEX idx_bh_block_hash (block_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区块头表';
