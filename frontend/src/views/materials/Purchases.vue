@@ -1,7 +1,12 @@
 <template>
-  <section class="page-card">
-    <h2 class="title">原料采购录入</h2>
-    <el-form :model="form" label-position="top">
+  <section class="page-card manage-page">
+    <div class="panel-header">
+      <div>
+        <h2 class="title">原料采购录入</h2>
+        <p class="panel-desc">按后端字段提交采购记录到 `/api/v2/material-purchases`。</p>
+      </div>
+    </div>
+    <el-form :model="form" label-position="top" class="form-grid">
       <el-row :gutter="12">
         <el-col :md="12"><el-form-item label="materialId"><el-input-number v-model="form.materialId" :min="1" /></el-form-item></el-col>
         <el-col :md="12"><el-form-item label="batchNumber"><el-input v-model="form.batchNumber" /></el-form-item></el-col>
@@ -12,7 +17,9 @@
         <el-col :md="12"><el-form-item label="quantity"><el-input-number v-model="form.quantity" :min="0" /></el-form-item></el-col>
         <el-col :md="12"><el-form-item label="unit"><el-input v-model="form.unit" /></el-form-item></el-col>
       </el-row>
-      <el-button type="primary" @click="submit">提交采购记录</el-button>
+      <div class="form-actions">
+        <el-button type="primary" @click="submit">提交采购记录</el-button>
+      </div>
     </el-form>
   </section>
 </template>

@@ -34,10 +34,10 @@ const routes = [
     component: () => import('../views/Admin.vue'),
   },
   {
-    path: '/',
+    path: '/manage',
     name: 'AdminLayout',
     component: () => import('../views/AdminLayout.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, hidePublicChrome: true },
     children: [
       {
         path: 'dashboard',

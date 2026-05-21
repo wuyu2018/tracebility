@@ -67,16 +67,16 @@ export function getDefaultHomeByRole() {
   const role = getRole()
   const agentType = getAgentType() || ''
 
-  if (role === 'SUPER_ADMIN') return '/dashboard'
-  if (role === 'ADMIN' && !agentType) return '/dashboard'
+  if (role === 'SUPER_ADMIN') return '/manage/dashboard'
+  if (role === 'ADMIN' && !agentType) return '/manage/dashboard'
 
   const routeMap = {
-    PRODUCTION: '/production/batches',
-    CIRCULATION: '/circulation/transport',
-    SALES: '/sales/records',
+    PRODUCTION: '/manage/production/batches',
+    CIRCULATION: '/manage/circulation/transport',
+    SALES: '/manage/sales/records',
   }
 
-  return routeMap[agentType] || '/dashboard'
+  return routeMap[agentType] || '/manage/dashboard'
 }
 
 export function hasRoutePermission(allowedAgentTypes = [], options = {}) {
