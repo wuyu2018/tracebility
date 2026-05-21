@@ -72,6 +72,7 @@ public class AdminController {
         String username = request.get("username");
         String password = request.get("password");
         String role = request.get("role");
+        String agentType = request.get("agentType");
         String currentPassword = request.get("currentPassword");
         String currentAdminUsername = request.get("currentAdminUsername");
 
@@ -87,7 +88,7 @@ public class AdminController {
 
             adminService.verifyCurrentPassword(currentAdminUsername, currentPassword);
 
-            Admin admin = adminService.createAdmin(username, password, role);
+            Admin admin = adminService.createAdmin(username, password, role, agentType);
             log.info("[管理员注册] 创建成功 - 操作管理员: {}, 新管理员: {}", currentAdminUsername, username);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "管理员创建成功", "username", admin.getUsername()));

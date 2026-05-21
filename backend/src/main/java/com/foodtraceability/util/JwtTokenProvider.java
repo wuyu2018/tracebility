@@ -47,17 +47,22 @@ public class JwtTokenProvider {
         return generateToken(username, "ADMIN");
     }
 
-    public String generateToken(String username, String role) {
+    public String generateToken(String username, String role, String agentType) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
                 .subject(username)
                 .claim("role", role)
+                .claim("agent_type", agentType)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateToken(String username, String role) {
+        return generateToken(username, role, null);
     }
 
     public String getUsernameFromToken(String token) {
@@ -79,6 +84,19 @@ public class JwtTokenProvider {
                     .get("role", String.class);
         } catch (Exception e) {
             log.warn("[JWT] 无法从 token 中提取 role: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public String getAgentTypeFromToken(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("agent_type", String.class);
+        } catch (Exception e) {
             return null;
         }
     }

@@ -88,7 +88,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private LoginResponseDTO buildLoginResponse(Admin admin) {
-        String token = jwtTokenProvider.generateToken(admin.getUsername(), admin.getRole());
+        String token = jwtTokenProvider.generateToken(admin.getUsername(), admin.getRole(), admin.getAgentType());
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setUsername(admin.getUsername());
@@ -96,6 +96,7 @@ public class AdminServiceImpl implements AdminService {
         response.setTokenType("Bearer");
         response.setExpiresIn(jwtTokenProvider.getExpirationTime() / 1000);
         response.setRole(admin.getRole());
+        response.setAgentType(admin.getAgentType());
 
         return response;
     }
@@ -106,7 +107,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Admin createAdmin(String username, String password, String role) {
+    public Admin createAdmin(String username, String password, String role, String agentType) {
         adminRepository.findByUsername(username)
             .ifPresent(existing -> {
                 throw new BusinessException("管理员已存在");
@@ -114,6 +115,7 @@ public class AdminServiceImpl implements AdminService {
 
         Admin admin = Admin.create(username, passwordEncoder.encode(password));
         admin.setRole(role != null ? role : "ADMIN");
+        admin.setAgentType(agentType);
         return adminRepository.save(admin);
     }
 

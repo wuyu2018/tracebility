@@ -78,11 +78,6 @@ export async function getBlockchainMonitorSummary() {
   return data
 }
 
-export async function repairBlockchain() {
-  const { data } = await api.post('/blockchain/repair')
-  return data
-}
-
 // ==================== 旧 API（保留兼容） ====================
 
 export async function selectProducts(keyword, role = 'consumer') {

@@ -5,6 +5,7 @@ const TOKEN_TYPE_KEY = 'token_type'
 const USERNAME_KEY = 'admin_username'
 const ROLE_KEY = 'admin_role'
 const LOGIN_TIME_KEY = 'login_time'
+const AGENT_TYPE_KEY = 'agent_type'
 
 /**
  * 保存 Token 到本地存储
@@ -57,6 +58,7 @@ export function removeToken() {
   localStorage.removeItem(USERNAME_KEY)
   localStorage.removeItem(ROLE_KEY)
   localStorage.removeItem(LOGIN_TIME_KEY)
+  localStorage.removeItem(AGENT_TYPE_KEY)
 }
 
 /**
@@ -85,6 +87,22 @@ export function setRole(role) {
  */
 export function getRole() {
   return localStorage.getItem(ROLE_KEY) || 'ADMIN'
+}
+
+/**
+ * 保存 agentType
+ */
+export function setAgentType(agentType) {
+  if (agentType) {
+    localStorage.setItem(AGENT_TYPE_KEY, agentType)
+  }
+}
+
+/**
+ * 获取 agentType (PRODUCTION/CIRCULATION/SALES/null)
+ */
+export function getAgentType() {
+  return localStorage.getItem(AGENT_TYPE_KEY) || null
 }
 
 /**

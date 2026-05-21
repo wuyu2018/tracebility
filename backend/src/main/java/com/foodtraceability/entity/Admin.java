@@ -27,6 +27,9 @@ public class Admin {
     @Column(name = "role", length = 20)
     private String role = "ADMIN";
 
+    @Column(name = "agent_type", length = 20)
+    private String agentType;  // PRODUCTION / CIRCULATION / SALES / null(全权限)
+
     public boolean validatePassword(String rawPassword, PasswordEncoder encoder) {
         return encoder.matches(rawPassword, this.password);
     }

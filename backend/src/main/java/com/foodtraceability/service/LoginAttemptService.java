@@ -1,7 +1,7 @@
 package com.foodtraceability.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -14,17 +14,14 @@ import java.util.concurrent.TimeUnit;
 public class LoginAttemptService {
 
     @Autowired
-    private RedisTemplate<String, Integer> failedAttemptsTemplate;
-
-    @Autowired
-    private RedisTemplate<String, Long> lockedAccountsTemplate;
+    private StringRedisTemplate redisTemplate;
 
     private static final String FAILED_ATTEMPTS_PREFIX = "login_failed:";
     private static final String LOCKED_ACCOUNT_PREFIX = "locked:";
-    
+
     /** 最大失败尝试次数 */
     private static final int MAX_ATTEMPTS = 5;
-    
+
     /** 账号锁定时间（30 分钟） */
     private static final long LOCK_TIME_MS = 30 * 60 * 1000;
 
@@ -34,11 +31,11 @@ public class LoginAttemptService {
      */
     public void loginFailed(String username) {
         String key = FAILED_ATTEMPTS_PREFIX + username;
-        Long attemptsLong = failedAttemptsTemplate.opsForValue().increment(key);
+        Long attemptsLong = redisTemplate.opsForValue().increment(key);
         int attempts = attemptsLong != null ? attemptsLong.intValue() : 1;
         // 设置 1 小时过期
-        failedAttemptsTemplate.expire(key, 1, TimeUnit.HOURS);
-        
+        redisTemplate.expire(key, 1, TimeUnit.HOURS);
+
         // 如果达到最大尝试次数，锁定账号
         if (attempts >= MAX_ATTEMPTS) {
             lockAccount(username);
@@ -52,9 +49,10 @@ public class LoginAttemptService {
      */
     public boolean isLocked(String username) {
         String key = LOCKED_ACCOUNT_PREFIX + username;
-        Long lockTime = lockedAccountsTemplate.opsForValue().get(key);
-        
-        if (lockTime != null) {
+        String lockTimeStr = redisTemplate.opsForValue().get(key);
+
+        if (lockTimeStr != null) {
+            long lockTime = Long.parseLong(lockTimeStr);
             long elapsed = System.currentTimeMillis() - lockTime;
             if (elapsed > LOCK_TIME_MS) {
                 // 锁定期已过，自动解锁
@@ -73,9 +71,10 @@ public class LoginAttemptService {
      */
     public long getRemainingLockTime(String username) {
         String key = LOCKED_ACCOUNT_PREFIX + username;
-        Long lockTime = lockedAccountsTemplate.opsForValue().get(key);
-        
-        if (lockTime != null) {
+        String lockTimeStr = redisTemplate.opsForValue().get(key);
+
+        if (lockTimeStr != null) {
+            long lockTime = Long.parseLong(lockTimeStr);
             long elapsed = System.currentTimeMillis() - lockTime;
             long remaining = LOCK_TIME_MS - elapsed;
             return Math.max(0, remaining / 1000);
@@ -90,9 +89,9 @@ public class LoginAttemptService {
     public void loginSucceeded(String username) {
         String failedKey = FAILED_ATTEMPTS_PREFIX + username;
         String lockedKey = LOCKED_ACCOUNT_PREFIX + username;
-        
-        failedAttemptsTemplate.delete(failedKey);
-        lockedAccountsTemplate.delete(lockedKey);
+
+        redisTemplate.delete(failedKey);
+        redisTemplate.delete(lockedKey);
     }
 
     /**
@@ -101,7 +100,7 @@ public class LoginAttemptService {
      */
     private void lockAccount(String username) {
         String key = LOCKED_ACCOUNT_PREFIX + username;
-        lockedAccountsTemplate.opsForValue().set(key, System.currentTimeMillis());
+        redisTemplate.opsForValue().set(key, String.valueOf(System.currentTimeMillis()));
     }
 
     /**
@@ -111,9 +110,9 @@ public class LoginAttemptService {
     private void unlockAccount(String username) {
         String failedKey = FAILED_ATTEMPTS_PREFIX + username;
         String lockedKey = LOCKED_ACCOUNT_PREFIX + username;
-        
-        failedAttemptsTemplate.delete(failedKey);
-        lockedAccountsTemplate.delete(lockedKey);
+
+        redisTemplate.delete(failedKey);
+        redisTemplate.delete(lockedKey);
     }
 
     /**
@@ -123,8 +122,8 @@ public class LoginAttemptService {
      */
     public int getFailedAttempts(String username) {
         String key = FAILED_ATTEMPTS_PREFIX + username;
-        Integer attempts = failedAttemptsTemplate.opsForValue().get(key);
-        return attempts != null ? attempts : 0;
+        String val = redisTemplate.opsForValue().get(key);
+        return val != null ? Integer.parseInt(val) : 0;
     }
 
     /**

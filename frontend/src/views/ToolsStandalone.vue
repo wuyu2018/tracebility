@@ -9,7 +9,7 @@
     <!-- 添加标签页切换 -->
     <el-tabs v-model="activeTab" class="tools-tabs">
       <!-- 防伪码生成管理标签页 -->
-      <el-tab-pane label="防伪码生成" name="qrcode">
+      <el-tab-pane v-if="canShow('qrcode')" label="防伪码生成" name="qrcode">
         <div class="tools-page">
           <h1>防伪码管理</h1>
           <p class="tools-desc">为已录入的产品生成防伪二维码，下载后贴到对应产品包装上</p>
@@ -27,8 +27,8 @@
                 批量删除 ({{ selectedProducts.length }})
               </el-button>
             </div>
-            <el-table 
-              :data="productsWithQrCode" 
+            <el-table
+              :data="productsWithQrCode"
               style="width: 100%"
               @selection-change="handleSelectionChange"
               ref="productTable"
@@ -37,11 +37,11 @@
               <el-table-column prop="name" label="产品名称" />
                 <el-table-column prop="antiFakeCode" label="防伪码" />
             </el-table>
-            
+
             <div class="overview-actions" style="margin-top: 1rem;">
               <el-button type="primary" @click="viewProductDetail">数据总览</el-button>
             </div>
-            
+
             <div v-if="productsWithoutQrCode.length > 0" class="pending-section">
               <h3>待生成二维码的产品 ({{ productsWithoutQrCode.length }})</h3>
               <div class="batch-actions">
@@ -55,8 +55,8 @@
                   取消选择
                 </el-button>
               </div>
-              <el-table 
-                :data="productsWithoutQrCode" 
+              <el-table
+                :data="productsWithoutQrCode"
                 style="width: 100%"
                 @selection-change="handlePendingSelectionChange"
                 ref="pendingTable"
@@ -77,22 +77,32 @@
       </el-tab-pane>
 
       <!--投诉管理工具标签页 -->
-      <el-tab-pane label="投诉管理" name="complaint">
+      <el-tab-pane v-if="canShow('complaint')" label="投诉管理" name="complaint">
         <ComplaintAdminTool />
       </el-tab-pane>
 
-      <!--数据录入标签页 -->
-      <el-tab-pane label="数据录入" name="insert">
-        <InsertDataTool />
+      <!--生产数据录入标签页 -->
+      <el-tab-pane v-if="canShow('production')" label="生产数据录入" name="production">
+        <ProductionDataEntry />
+      </el-tab-pane>
+
+      <!--运输数据录入标签页 -->
+      <el-tab-pane v-if="canShow('circulation')" label="运输数据录入" name="circulation">
+        <CirculationDataEntry />
+      </el-tab-pane>
+
+      <!--销售数据录入标签页 -->
+      <el-tab-pane v-if="canShow('sales')" label="销售数据录入" name="sales">
+        <SalesDataEntry />
       </el-tab-pane>
 
       <!--管理员管理标签页 -->
-      <el-tab-pane label="管理员管理" name="admin">
+      <el-tab-pane v-if="canShow('admin')" label="管理员管理" name="admin">
         <AddAdmin />
       </el-tab-pane>
 
       <!--区块链监控标签页 -->
-      <el-tab-pane label="区块链监控" name="blockchain">
+      <el-tab-pane v-if="canShow('blockchain')" label="区块链监控" name="blockchain">
         <BlockchainMonitor />
       </el-tab-pane>
     </el-tabs>
@@ -119,10 +129,12 @@ import AddAdmin from '/src/views/AddAdmin.vue'
 import ProductDetail from '../components/ProductDetail.vue'
 import { User } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
-import InsertDataTool from '../components/InsertDataTool.vue';
+import ProductionDataEntry from '../components/ProductionDataEntry.vue';
+import CirculationDataEntry from '../components/CirculationDataEntry.vue';
+import SalesDataEntry from '../components/SalesDataEntry.vue';
 import BlockchainMonitor from '../components/BlockchainMonitor.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
-import { isAuthenticated, removeToken, getUsername } from '../utils/auth'
+import { isAuthenticated, removeToken, getUsername, getRole, getAgentType } from '../utils/auth'
 import { useRouter } from 'vue-router'
 import axios from '../utils/axios'
 
@@ -137,6 +149,28 @@ const handleLogout = () => {
   removeToken()
   ElMessage.success('已退出登录')
   router.push('/admin')
+}
+
+// 角色 → 标签页可见性映射
+const tabPermissions = {
+  qrcode:       ['SUPER_ADMIN', 'ADMIN', 'PRODUCTION'],
+  complaint:    ['SUPER_ADMIN', 'ADMIN'],
+  production:   ['SUPER_ADMIN', 'ADMIN', 'PRODUCTION'],
+  circulation:  ['SUPER_ADMIN', 'ADMIN', 'CIRCULATION'],
+  sales:        ['SUPER_ADMIN', 'ADMIN', 'SALES'],
+  admin:        ['SUPER_ADMIN'],
+  blockchain:   ['SUPER_ADMIN', 'ADMIN'],
+}
+
+function canShow(tabName) {
+  const role = getRole()
+  const agentType = getAgentType()
+  const allowed = tabPermissions[tabName] || []
+  // agent_type 非空时用 agentType 判断，否则用 role 判断
+  if (agentType) {
+    return allowed.includes(agentType)
+  }
+  return allowed.includes(role)
 }
 
 // 二维码生成相关

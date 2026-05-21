@@ -15,6 +15,7 @@ public class LoginResponseDTO {
     private String tokenType;
     private long expiresIn;
     private String role;
+    private String agentType;
 
     public void setUsername(String username) {
         this.username = username;

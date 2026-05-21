@@ -12,9 +12,6 @@
         <el-button size="small" type="primary" @click="refreshData" :loading="loading" :icon="Refresh">
           刷新
         </el-button>
-        <el-button v-if="summary && !summary.overallHealthy" size="small" type="danger" @click="repairChain" :loading="repairing">
-          修复区块链
-        </el-button>
       </div>
     </div>
 
@@ -166,14 +163,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Refresh, SuccessFilled, WarningFilled } from '@element-plus/icons-vue'
-import { getBlockchainMonitorSummary, repairBlockchain } from '../services/api'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { getBlockchainMonitorSummary } from '../services/api'
+import { ElMessage } from 'element-plus'
 
 const summary = ref(null)
 const loading = ref(false)
 const error = ref(false)
 const autoRefresh = ref(true)
-const repairing = ref(false)
 let refreshTimer = null
 
 // 展开所有有异常的批次
@@ -233,29 +229,6 @@ async function refreshData() {
     error.value = true
   } finally {
     loading.value = false
-  }
-}
-
-async function repairChain() {
-  try {
-    await ElMessageBox.confirm('区块链修复将重新计算所有区块的哈希值并重新签名，确定继续？', '确认修复', {
-      confirmButtonText: '确定修复',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-  } catch {
-    return
-  }
-  repairing.value = true
-  try {
-    const result = await repairBlockchain()
-    ElMessage.success(`修复完成: 原材料链 ${result.materialBlocksFixed} 个区块, 批次链 ${result.batchBlocksFixed} 个区块`)
-    await refreshData()
-  } catch (e) {
-    console.error('Repair failed:', e)
-    ElMessage.error('区块链修复失败，请查看服务端日志')
-  } finally {
-    repairing.value = false
   }
 }
 

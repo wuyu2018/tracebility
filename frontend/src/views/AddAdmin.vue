@@ -58,6 +58,17 @@
           <span class="field-hint">超级管理员可以创建新的管理员账户</span>
         </div>
 
+        <div class="input-group" v-if="isSuperAdmin">
+          <label>业务类型</label>
+          <select class="input-field" v-model="adminForm.agentType">
+            <option value="">全权限管理员（不限制）</option>
+            <option value="PRODUCTION">生产方 (PRODUCTION)</option>
+            <option value="CIRCULATION">流通方 (CIRCULATION)</option>
+            <option value="SALES">销售方 (SALES)</option>
+          </select>
+          <span class="field-hint">限制管理员只能操作对应业务类型的数据</span>
+        </div>
+
         <div class="security-notice">
           <div class="notice-icon">🔒</div>
           <div class="notice-content">
@@ -114,7 +125,8 @@ const adminForm = reactive({
   password: '',
   confirmPassword: '',
   currentPassword: '',
-  role: 'ADMIN'
+  role: 'ADMIN',
+  agentType: ''
 })
 
 const errorMsg = ref('')
@@ -223,18 +235,20 @@ const handleAddAdmin = async () => {
       username: adminForm.username,
       password: adminForm.password,
       role: adminForm.role,
+      agentType: adminForm.agentType || null,
       currentPassword: adminForm.currentPassword,
       currentAdminUsername: currentAdminUsername
     })
 
     successMsg.value = response.data.message || '管理员创建成功'
     ElMessage.success(successMsg.value)
-    
+
     adminForm.username = ''
     adminForm.password = ''
     adminForm.confirmPassword = ''
     adminForm.currentPassword = ''
     adminForm.role = 'ADMIN'
+    adminForm.agentType = ''
 
   } catch (error) {
     console.error('创建管理员失败:', error)

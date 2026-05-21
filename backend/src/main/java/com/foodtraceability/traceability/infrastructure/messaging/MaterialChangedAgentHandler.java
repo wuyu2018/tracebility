@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
-public class MaterialChangedEventListener {
-    
-    private static final Logger log = LoggerFactory.getLogger(MaterialChangedEventListener.class);
-    
+public class MaterialChangedAgentHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(MaterialChangedAgentHandler.class);
+
     private final MultiAgentCoordinator agentCoordinator;
-    
+
     @Autowired
-    public MaterialChangedEventListener(MultiAgentCoordinator agentCoordinator) {
+    public MaterialChangedAgentHandler(MultiAgentCoordinator agentCoordinator) {
         this.agentCoordinator = agentCoordinator;
     }
     

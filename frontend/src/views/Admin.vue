@@ -77,8 +77,7 @@ import { ref, reactive, onMounted ,nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Lock, User, Key, PictureFilled, SuccessFilled, WarningFilled, Loading, Pointer } from '@element-plus/icons-vue'
 import { adminLogin, storeCaptcha } from '../services/api'
-import { setToken, setUsername, setRole } from '../utils/auth'
-import { setToken, setUsername, setRole } from '../utils/auth'
+import { setToken, setUsername, setRole, setAgentType } from '../utils/auth'
 
 const router = useRouter()
 const isOpen = ref(false)
@@ -148,7 +147,8 @@ const handleLogin = async () => {
     setToken(response.token, response.tokenType)
     setUsername(response.username)
     setRole(response.role)
-    
+    setAgentType(response.agentType)
+
     loginSuccess.value = true
     errorMsg.value = ''
     
