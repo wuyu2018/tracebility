@@ -1,5 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated } from '../utils/auth'
+import { hasRoutePermission, getDefaultHomeByRole } from '../utils/auth'
+
+function hasValidToken() {
+  if (!isAuthenticated()) return false
+
+  const expiresIn = Number(localStorage.getItem('expiresIn') || '0')
+  const loginAt = Number(localStorage.getItem('loginAt') || '0')
+  if (!expiresIn || !loginAt) return true
+
+  return Date.now() < loginAt + expiresIn
+}
 
 const routes = [
   {
@@ -37,46 +48,55 @@ const routes = [
         path: 'products',
         name: 'Products',
         component: () => import('../views/Products.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'materials/varieties',
         name: 'MaterialVarieties',
         component: () => import('../views/materials/Varieties.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'materials/purchases',
         name: 'MaterialPurchases',
         component: () => import('../views/materials/Purchases.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'production/batches',
         name: 'ProductionBatches',
         component: () => import('../views/production/Batches.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'production/inspections',
         name: 'ProductionInspections',
         component: () => import('../views/production/Inspections.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'circulation/storage',
         name: 'CirculationStorage',
         component: () => import('../views/circulation/Storage.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'circulation/transport',
         name: 'CirculationTransport',
         component: () => import('../views/circulation/Transport.vue'),
+        meta: { agentTypes: ['CIRCULATION', 'SALES'] },
       },
       {
         path: 'sales/records',
         name: 'SalesRecords',
         component: () => import('../views/sales/Records.vue'),
+        meta: { agentTypes: ['CIRCULATION', 'SALES'] },
       },
       {
         path: 'qrcodes',
         name: 'Qrcodes',
         component: () => import('../views/Qrcodes.vue'),
+        meta: { agentTypes: ['PRODUCTION'] },
       },
       {
         path: 'complaints',
@@ -118,7 +138,14 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.meta.requiresAuth || false
   
   if (requiresAuth) {
-    if (!isAuthenticated()) {
+    if (!hasValidToken()) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('tokenType')
+      localStorage.removeItem('username')
+      localStorage.removeItem('role')
+      localStorage.removeItem('agentType')
+      localStorage.removeItem('expiresIn')
+      localStorage.removeItem('loginAt')
       next({
         path: '/admin',
         query: { redirect: to.fullPath },
@@ -127,9 +154,17 @@ router.beforeEach((to, from, next) => {
     }
   }
   
-  if (to.path === '/admin' && isAuthenticated()) {
-    next({ path: '/dashboard' })
+  if (to.path === '/admin' && hasValidToken()) {
+    next({ path: getDefaultHomeByRole() })
     return
+  }
+
+  if (requiresAuth) {
+    const allowedAgentTypes = to.meta.agentTypes || []
+    if (!hasRoutePermission(allowedAgentTypes)) {
+      next({ path: getDefaultHomeByRole() })
+      return
+    }
   }
   
   next()

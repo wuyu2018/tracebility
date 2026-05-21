@@ -62,3 +62,32 @@ export function clearAuth() {
   localStorage.removeItem('role')
   localStorage.removeItem('agentType')
 }
+
+export function getDefaultHomeByRole() {
+  const role = getRole()
+  const agentType = getAgentType() || ''
+
+  if (role === 'SUPER_ADMIN') return '/dashboard'
+  if (role === 'ADMIN' && !agentType) return '/dashboard'
+
+  const routeMap = {
+    PRODUCTION: '/production/batches',
+    CIRCULATION: '/circulation/transport',
+    SALES: '/sales/records',
+  }
+
+  return routeMap[agentType] || '/dashboard'
+}
+
+export function hasRoutePermission(allowedAgentTypes = [], options = {}) {
+  const role = getRole()
+  const agentType = getAgentType() || ''
+  const allowSuperAdmin = options.allowSuperAdmin !== false
+  const allowFullAdmin = options.allowFullAdmin !== false
+
+  if (allowSuperAdmin && role === 'SUPER_ADMIN') return true
+  if (allowFullAdmin && role === 'ADMIN' && !agentType) return true
+  if (!allowedAgentTypes.length) return role === 'ADMIN' || role === 'SUPER_ADMIN'
+
+  return allowedAgentTypes.includes(agentType)
+}

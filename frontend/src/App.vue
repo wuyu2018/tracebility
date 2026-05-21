@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <Header />
+    <HeaderBar />
     <main class="main-content">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -8,13 +8,13 @@
         </transition>
       </router-view>
     </main>
-    <Footer />
+    <FooterBar />
   </div>
 </template>
 
 <script setup>
-import Header from './components/Header.vue'
-import Footer from './components/Footer.vue'
+import HeaderBar from './components/HeaderBar.vue'
+import FooterBar from './components/FooterBar.vue'
 </script>
 
 <style>

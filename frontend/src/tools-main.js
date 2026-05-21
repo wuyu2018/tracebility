@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import ToolsPage from './views/Admin.vue'
-import './assets/css/main.css'
+import './styles/main.css'
 import router from './router'
 
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'

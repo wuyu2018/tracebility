@@ -42,8 +42,8 @@ api.interceptors.response.use(
           localStorage.removeItem('role')
           localStorage.removeItem('agentType')
           
-          if (window.location.pathname !== '/Admin') {
-            window.location.href = '/Admin'
+          if (window.location.pathname !== '/admin') {
+            window.location.href = '/admin'
           }
           break
           
