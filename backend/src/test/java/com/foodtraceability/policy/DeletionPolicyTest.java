@@ -1,6 +1,5 @@
 package com.foodtraceability.policy;
 
-import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.Product;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.*;
@@ -108,29 +107,11 @@ class DeletionPolicyTest {
         verify(productRepository, never()).delete(any());
     }
 
-    @Test
-    void deleteMaterial_deactivatesMaterial() {
-        Material material = createMaterial(1L, "有机生牛乳");
-
-        deletionPolicy.deleteMaterial(material);
-
-        assertFalse(material.isActive());
-        verify(productRepository, never()).delete(any());
-    }
-
     private Product createProduct(Long id, String name) {
         Product p = new Product();
         p.setId(id);
         p.setName(name);
         p.setIsDeleted(false);
         return p;
-    }
-
-    private Material createMaterial(Long id, String name) {
-        Material m = new Material();
-        m.setId(id);
-        m.setName(name);
-        m.setIsActive(true);
-        return m;
     }
 }

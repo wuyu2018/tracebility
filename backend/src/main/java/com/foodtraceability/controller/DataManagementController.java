@@ -26,7 +26,6 @@ public class DataManagementController {
     private final ProductMaterialRelationService productMaterialRelationService;
     private final ProductionBatchService batchService;
     private final SecurityCodeService securityCodeService;
-    private final TraceabilityService traceabilityService;
     private final InspectionRepository inspectionRepository;
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
@@ -37,7 +36,6 @@ public class DataManagementController {
                                    ProductMaterialRelationService productMaterialRelationService,
                                    ProductionBatchService batchService,
                                    SecurityCodeService securityCodeService,
-                                   TraceabilityService traceabilityService,
                                    InspectionRepository inspectionRepository,
                                    StorageRepository storageRepository,
                                    TransportSaleRepository transportSaleRepository) {
@@ -47,7 +45,6 @@ public class DataManagementController {
         this.productMaterialRelationService = productMaterialRelationService;
         this.batchService = batchService;
         this.securityCodeService = securityCodeService;
-        this.traceabilityService = traceabilityService;
         this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
@@ -144,30 +141,6 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(productService.getProductById(id));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @GetMapping("/product-detail")
-    public ResponseEntity<?> getProductDetail(@RequestParam String antiFakeCode) {
-        try {
-            return traceabilityService.getTraceInfoByCode(antiFakeCode)
-                    .map(result -> ResponseEntity.ok((Object) result))
-                    .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
-        } catch (Exception e) {
-            log.error("[产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @GetMapping("/admin/product-detail")
-    public ResponseEntity<?> getProductDetailForAdmin(@RequestParam String antiFakeCode) {
-        try {
-            return traceabilityService.getTraceInfoByCodeForAdmin(antiFakeCode)
-                    .map(result -> ResponseEntity.ok((Object) result))
-                    .orElse(ResponseEntity.ok(Map.of("error", "未找到该防伪码对应的产品信息")));
-        } catch (Exception e) {
-            log.error("[管理员产品详情] 获取失败 - 防伪码: {}, 错误: {}", SecurityCode.maskCode(antiFakeCode), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
@@ -403,45 +376,6 @@ public class DataManagementController {
             ));
         } catch (Exception e) {
             log.error("[产品管理] 清除二维码失败 - 错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @PostMapping("/insert/material-purchase")
-    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "CREATE")
-    public ResponseEntity<?> insertMaterialPurchase(@RequestBody Map<String, Object> request) {
-        try {
-            Object materialIdObj = request.get("materialId");
-            if (materialIdObj == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "原料品种ID不能为空"));
-            }
-            Long materialId = materialIdObj instanceof Number
-                    ? ((Number) materialIdObj).longValue()
-                    : Long.parseLong(materialIdObj.toString());
-
-            MaterialPurchaseDTO dto = new MaterialPurchaseDTO();
-            dto.setMaterialId(materialId);
-            dto.setBatchNumber((String) request.get("batchNumber"));
-            dto.setProducerName((String) request.get("producerName"));
-            dto.setProducerAddress((String) request.get("producerAddress"));
-            dto.setSupplierName((String) request.get("supplierName"));
-
-            MaterialPurchase created = materialPurchaseService.createMaterialPurchase(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (Exception e) {
-            log.error("[原材料管理] 插入原材料失败 - {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
-        }
-    }
-
-    @DeleteMapping("/insert/material-purchase/{id}")
-    @OperationLog(entityType = "MATERIAL_PURCHASE", action = "DELETE")
-    public ResponseEntity<?> deleteInsertMaterialPurchase(@PathVariable Long id) {
-        try {
-            materialPurchaseService.deleteMaterialPurchase(id);
-            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
-        } catch (Exception e) {
-            log.error("[原材料管理] 删除原材料失败 - {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }

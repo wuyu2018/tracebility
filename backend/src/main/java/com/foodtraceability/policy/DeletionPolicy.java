@@ -1,17 +1,12 @@
 package com.foodtraceability.policy;
 
-import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.Product;
-import com.foodtraceability.entity.ProductionBatch;
-import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Component
 public class DeletionPolicy {
@@ -58,19 +53,6 @@ public class DeletionPolicy {
                     String.format("产品 ID:%d 有关联的生产批次或防伪码，禁止物理删除", productId));
         }
         physicallyDeleteProduct(product);
-    }
-
-    @Transactional
-    public void deleteMaterial(Material material) {
-        Long materialId = material.getId();
-        log.info("[DeletionPolicy] 删除原料品种 - ID: {}, 名称: {}", materialId, material.getName());
-
-        pmrRepository.findByProductId(materialId).stream()
-                .filter(r -> r.getMaterial().getId().equals(materialId))
-                .forEach(r -> pmrRepository.delete(r));
-
-        material.deactivate();
-        log.info("[DeletionPolicy] 原料品种已停用 - ID: {}", materialId);
     }
 
     private void physicallyDeleteProduct(Product product) {
