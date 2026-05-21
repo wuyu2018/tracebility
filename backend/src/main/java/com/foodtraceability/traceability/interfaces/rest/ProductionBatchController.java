@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.interfaces.rest;
 import com.foodtraceability.traceability.application.service.ProductionBatchApplicationService;
 import com.foodtraceability.traceability.interfaces.dto.BatchResponse;
 import com.foodtraceability.traceability.interfaces.dto.CreateBatchRequest;
+import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,19 @@ public class ProductionBatchController {
     private static final Logger log = LoggerFactory.getLogger(ProductionBatchController.class);
 
     private final ProductionBatchApplicationService appService;
+    private final SecurityUtils securityUtils;
 
-    public ProductionBatchController(ProductionBatchApplicationService appService) {
+    public ProductionBatchController(ProductionBatchApplicationService appService, SecurityUtils securityUtils) {
         this.appService = appService;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping("/batches")
     public ResponseEntity<?> createBatch(@RequestBody CreateBatchRequest req) {
         log.info("[v2] 创建批次 productId={}", req.getProductId());
         try {
-            var result = appService.createBatch(req.toAppRequest());
+            Long companyId = securityUtils.getCurrentCompanyId();
+            var result = appService.createBatch(req.toAppRequest(companyId));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new BatchResponse(result.id(), result.batchNumber(), result.productName()));
         } catch (Exception e) {

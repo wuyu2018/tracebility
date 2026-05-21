@@ -9,6 +9,7 @@ import com.foodtraceability.repository.MaterialRepository;
 import com.foodtraceability.repository.ProductMaterialRelationRepository;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.service.ProductMaterialRelationService;
+import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,27 @@ public class ProductMaterialRelationServiceImpl implements ProductMaterialRelati
     private final ProductMaterialRelationRepository repository;
     private final ProductRepository productRepository;
     private final MaterialRepository materialRepository;
+    private final SecurityUtils securityUtils;
 
     public ProductMaterialRelationServiceImpl(ProductMaterialRelationRepository repository,
                                               ProductRepository productRepository,
-                                              MaterialRepository materialRepository) {
+                                              MaterialRepository materialRepository,
+                                              SecurityUtils securityUtils) {
         this.repository = repository;
         this.productRepository = productRepository;
         this.materialRepository = materialRepository;
+        this.securityUtils = securityUtils;
     }
 
     @Override
     @Transactional
     public ProductMaterialRelation bindMaterialToProduct(Long productId, Long materialId) {
-        if (repository.existsByProductIdAndMaterialId(productId, materialId)) {
+        Long companyId = securityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            if (repository.existsByProductIdAndMaterialIdAndCompanyId(productId, materialId, companyId)) {
+                throw new BusinessException("该产品已绑定此原料品种");
+            }
+        } else if (repository.existsByProductIdAndMaterialId(productId, materialId)) {
             throw new BusinessException("该产品已绑定此原料品种");
         }
         Product product = productRepository.findById(productId)
@@ -44,6 +53,9 @@ public class ProductMaterialRelationServiceImpl implements ProductMaterialRelati
         Material material = materialRepository.findById(materialId)
                 .orElseThrow(() -> new BusinessException("原料品种不存在: " + materialId));
         ProductMaterialRelation relation = ProductMaterialRelation.create(product, material);
+        if (companyId != null) {
+            relation.setCompanyId(companyId);
+        }
         ProductMaterialRelation saved = repository.save(relation);
         log.info("[产品-原料关联] 绑定 - 产品ID: {}, 原料ID: {}", productId, materialId);
         return saved;
@@ -75,6 +87,21 @@ public class ProductMaterialRelationServiceImpl implements ProductMaterialRelati
     @Override
     public List<ProductMaterialRelationDTO> getRelationsByProductId(Long productId) {
         return repository.findByProductId(productId).stream()
+                .map(r -> {
+                    ProductMaterialRelationDTO dto = new ProductMaterialRelationDTO();
+                    dto.setId(r.getId());
+                    dto.setProductId(r.getProduct().getId());
+                    dto.setMaterialId(r.getMaterial().getId());
+                    dto.setMaterialName(r.getMaterial().getName());
+                    dto.setIsHidden(r.getIsHidden());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductMaterialRelationDTO> listAllRelations() {
+        return repository.findAll().stream()
                 .map(r -> {
                     ProductMaterialRelationDTO dto = new ProductMaterialRelationDTO();
                     dto.setId(r.getId());

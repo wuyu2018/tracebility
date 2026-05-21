@@ -15,5 +15,9 @@ public interface ProductMaterialRelationRepository extends JpaRepository<Product
 
     boolean existsByProductIdAndMaterialId(Long productId, Long materialId);
 
+    boolean existsByProductIdAndMaterialIdAndCompanyId(Long productId, Long materialId, Long companyId);
+
     void deleteByProductId(Long productId);
+
+    List<ProductMaterialRelation> findByCompanyId(Long companyId);
 }

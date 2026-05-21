@@ -29,6 +29,12 @@ public class DataManagementController {
     private final InspectionRepository inspectionRepository;
     private final StorageRepository storageRepository;
     private final TransportSaleRepository transportSaleRepository;
+    private final com.foodtraceability.util.SecurityUtils securityUtils;
+    private final ProductRepository productRepository;
+    private final MaterialRepository materialRepository;
+    private final ProductionBatchRepository batchRepository;
+    private final ProductMaterialRelationRepository productMaterialRelationRepository;
+    private final MaterialPurchaseRepository materialPurchaseRepository;
 
     public DataManagementController(ProductService productService,
                                    MaterialService materialService,
@@ -38,7 +44,13 @@ public class DataManagementController {
                                    SecurityCodeService securityCodeService,
                                    InspectionRepository inspectionRepository,
                                    StorageRepository storageRepository,
-                                   TransportSaleRepository transportSaleRepository) {
+                                   TransportSaleRepository transportSaleRepository,
+                                   com.foodtraceability.util.SecurityUtils securityUtils,
+                                   ProductRepository productRepository,
+                                   MaterialRepository materialRepository,
+                                   ProductionBatchRepository batchRepository,
+                                   ProductMaterialRelationRepository productMaterialRelationRepository,
+                                   MaterialPurchaseRepository materialPurchaseRepository) {
         this.productService = productService;
         this.materialService = materialService;
         this.materialPurchaseService = materialPurchaseService;
@@ -48,6 +60,12 @@ public class DataManagementController {
         this.inspectionRepository = inspectionRepository;
         this.storageRepository = storageRepository;
         this.transportSaleRepository = transportSaleRepository;
+        this.securityUtils = securityUtils;
+        this.productRepository = productRepository;
+        this.materialRepository = materialRepository;
+        this.batchRepository = batchRepository;
+        this.productMaterialRelationRepository = productMaterialRelationRepository;
+        this.materialPurchaseRepository = materialPurchaseRepository;
     }
 
     @PostMapping("/products")
@@ -55,6 +73,10 @@ public class DataManagementController {
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO dto) {
         log.info("[产品管理] 创建产品 - 名称: {}", dto.getName());
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                dto.setCompanyId(companyId);
+            }
             Product created = productService.createProduct(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
@@ -104,8 +126,15 @@ public class DataManagementController {
 
     @GetMapping("/products")
     public ResponseEntity<?> listProducts(@RequestParam(required = false) String keyword) {
+        Long companyId = securityUtils.getCurrentCompanyId();
         if (keyword != null && !keyword.trim().isEmpty()) {
+            if (companyId != null) {
+                return ResponseEntity.ok(productRepository.findByNameContainingAndCompanyIdAndIsDeletedFalse(keyword.trim(), companyId));
+            }
             return ResponseEntity.ok(productService.searchProducts(keyword.trim()));
+        }
+        if (companyId != null) {
+            return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
         }
         return ResponseEntity.ok(productService.listAllProducts());
     }
@@ -115,6 +144,13 @@ public class DataManagementController {
                                              @RequestParam(required = false, defaultValue = "consumer") String role) {
         log.info("[产品选择] 查询产品 - 关键词: {}, 角色: {}", keyword, role);
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    return ResponseEntity.ok(productRepository.findByNameContainingAndCompanyIdAndIsDeletedFalse(keyword.trim(), companyId));
+                }
+                return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+            }
             if (keyword != null && !keyword.trim().isEmpty()) {
                 return ResponseEntity.ok(productService.searchProducts(keyword.trim()));
             }
@@ -129,6 +165,10 @@ public class DataManagementController {
     public ResponseEntity<?> getProductsForInsert() {
         log.info("[数据导入] 获取产品列表");
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+            }
             return ResponseEntity.ok(productService.listAllProducts());
         } catch (Exception e) {
             log.error("[数据导入] 获取产品列表失败 - {}", e.getMessage());
@@ -150,6 +190,13 @@ public class DataManagementController {
     @GetMapping("/material-varieties")
     public ResponseEntity<?> listMaterialVarieties(@RequestParam(required = false, defaultValue = "true") Boolean activeOnly) {
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                if (Boolean.TRUE.equals(activeOnly)) {
+                    return ResponseEntity.ok(materialRepository.findByCompanyIdAndIsActiveTrue(companyId));
+                }
+                return ResponseEntity.ok(materialRepository.findByCompanyId(companyId));
+            }
             if (Boolean.TRUE.equals(activeOnly)) {
                 return ResponseEntity.ok(materialService.listAllActiveMaterials());
             }
@@ -179,16 +226,32 @@ public class DataManagementController {
             var relation = productMaterialRelationService.bindMaterialToProduct(productId, materialId);
             return ResponseEntity.status(HttpStatus.CREATED).body(relation);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/product-materials")
-    public ResponseEntity<?> getProductMaterialRelations(@RequestParam Long productId) {
+    public ResponseEntity<?> getProductMaterialRelations(@RequestParam(required = false) Long productId) {
         try {
-            return ResponseEntity.ok(productMaterialRelationService.getRelationsByProductId(productId));
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (productId != null) {
+                return ResponseEntity.ok(productMaterialRelationService.getRelationsByProductId(productId));
+            }
+            if (companyId != null) {
+                var relations = productMaterialRelationRepository.findByCompanyId(companyId);
+                return ResponseEntity.ok(relations.stream().map(r -> {
+                    var dto = new com.foodtraceability.dto.ProductMaterialRelationDTO();
+                    dto.setId(r.getId());
+                    dto.setProductId(r.getProduct().getId());
+                    dto.setMaterialId(r.getMaterial().getId());
+                    dto.setMaterialName(r.getMaterial().getName());
+                    dto.setIsHidden(r.getIsHidden());
+                    return dto;
+                }).toList());
+            }
+            return ResponseEntity.ok(productMaterialRelationService.listAllRelations());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -198,7 +261,7 @@ public class DataManagementController {
             productMaterialRelationService.unbindMaterialFromProduct(productId, materialId);
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -209,7 +272,7 @@ public class DataManagementController {
             productMaterialRelationService.toggleVisibility(id, body.get("isHidden"));
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -217,6 +280,13 @@ public class DataManagementController {
 
     @GetMapping("/materials")
     public ResponseEntity<?> listMaterialPurchases(@RequestParam(required = false) Long materialId) {
+        Long companyId = securityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            if (materialId != null) {
+                return ResponseEntity.ok(materialPurchaseRepository.findByMaterialIdAndCompanyIdAndIsDeletedFalse(materialId, companyId));
+            }
+            return ResponseEntity.ok(materialPurchaseRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+        }
         if (materialId != null) {
             return ResponseEntity.ok(materialPurchaseService.getMaterialPurchasesByMaterialId(materialId));
         }
@@ -225,6 +295,13 @@ public class DataManagementController {
 
     @GetMapping("/batches")
     public ResponseEntity<?> listBatches(@RequestParam(required = false) Long productId) {
+        Long companyId = securityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            if (productId != null) {
+                return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
+            }
+            return ResponseEntity.ok(batchRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+        }
         if (productId != null) {
             return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
         }
@@ -236,6 +313,18 @@ public class DataManagementController {
         try {
             return ResponseEntity.ok(batchService.getBatchById(id));
         } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
+        }
+    }
+
+    @DeleteMapping("/batches/{id}")
+    @OperationLog(entityType = "BATCH", action = "DELETE")
+    public ResponseEntity<?> deleteBatch(@PathVariable Long id) {
+        try {
+            batchService.deleteBatch(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[批次管理] 删除批次失败 - ID: {}, {}", id, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "操作失败"));
         }
     }
@@ -383,6 +472,13 @@ public class DataManagementController {
     @GetMapping("/insert/material-purchase")
     public ResponseEntity<?> listInsertMaterialPurchases(@RequestParam(required = false) Long materialId) {
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                if (materialId != null) {
+                    return ResponseEntity.ok(materialPurchaseRepository.findByMaterialIdAndCompanyIdAndIsDeletedFalse(materialId, companyId));
+                }
+                return ResponseEntity.ok(materialPurchaseRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+            }
             if (materialId != null) {
                 return ResponseEntity.ok(materialPurchaseService.getMaterialPurchasesByMaterialId(materialId));
             }
@@ -400,6 +496,13 @@ public class DataManagementController {
 
     @GetMapping("/insert/batches")
     public ResponseEntity<?> listInsertBatches(@RequestParam(required = false) Long productId) {
+        Long companyId = securityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            if (productId != null) {
+                return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
+            }
+            return ResponseEntity.ok(batchRepository.findByCompanyIdAndIsDeletedFalse(companyId));
+        }
         if (productId != null) {
             return ResponseEntity.ok(batchService.getBatchesByProductId(productId));
         }
@@ -409,7 +512,13 @@ public class DataManagementController {
     @GetMapping("/insert/inspections")
     public ResponseEntity<?> listAllInspections() {
         try {
-            var inspections = inspectionRepository.findAll();
+            Long companyId = securityUtils.getCurrentCompanyId();
+            List<Inspection> inspections;
+            if (companyId != null) {
+                inspections = inspectionRepository.findByCompanyId(companyId);
+            } else {
+                inspections = inspectionRepository.findAll();
+            }
             var result = inspections.stream().map(i -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", i.getId());
@@ -432,7 +541,13 @@ public class DataManagementController {
     @GetMapping("/insert/storages")
     public ResponseEntity<?> listAllStorages() {
         try {
-            var storages = storageRepository.findAll();
+            Long companyId = securityUtils.getCurrentCompanyId();
+            List<Storage> storages;
+            if (companyId != null) {
+                storages = storageRepository.findByCompanyId(companyId);
+            } else {
+                storages = storageRepository.findAll();
+            }
             var result = storages.stream().map(s -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", s.getId());
@@ -454,7 +569,13 @@ public class DataManagementController {
     @GetMapping("/insert/transport-sales")
     public ResponseEntity<?> listAllTransportSales() {
         try {
-            var transportSales = transportSaleRepository.findAll();
+            Long companyId = securityUtils.getCurrentCompanyId();
+            List<TransportSale> transportSales;
+            if (companyId != null) {
+                transportSales = transportSaleRepository.findByCompanyId(companyId);
+            } else {
+                transportSales = transportSaleRepository.findAll();
+            }
             var result = transportSales.stream().map(t -> {
                 var dto = new java.util.HashMap<String, Object>();
                 dto.put("id", t.getId());

@@ -43,6 +43,9 @@ public class Product {
     @Column(name = "qr_code_url", length = 500)
     private String qrCodeUrl;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     public boolean isDeleted() {
         return Boolean.TRUE.equals(this.isDeleted);
     }

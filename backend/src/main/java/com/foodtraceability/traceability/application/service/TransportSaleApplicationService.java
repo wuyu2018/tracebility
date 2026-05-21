@@ -39,7 +39,7 @@ public class TransportSaleApplicationService {
                                               String transportCompany, String vehicleNumber,
                                               String salesRegion, String receiverName,
                                               String receiverContact,
-                                              String recorderName) {}
+                                              String recorderName, Long companyId) {}
 
     public record RecordTransportSaleResponse(Long id, Long batchId, String transportCompany, String salesRegion) {}
 
@@ -58,6 +58,9 @@ public class TransportSaleApplicationService {
         ts.setSalesRegion(req.salesRegion());
         ts.setReceiverName(req.receiverName());
         ts.setReceiverContact(req.receiverContact());
+        if (req.companyId() != null) {
+            ts.setCompanyId(req.companyId());
+        }
         ts = transportSaleRepo.save(ts);
 
         Long tsId = ts.getId();

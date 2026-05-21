@@ -5,6 +5,7 @@ import com.foodtraceability.traceability.application.service.MaterialApplication
 import com.foodtraceability.traceability.interfaces.dto.CreateMaterialVarietyRequest;
 import com.foodtraceability.traceability.interfaces.dto.MaterialVarietyResponse;
 import com.foodtraceability.traceability.interfaces.dto.UpdateMaterialVarietyRequest;
+import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,11 @@ public class MaterialVarietyController {
     private static final Logger log = LoggerFactory.getLogger(MaterialVarietyController.class);
 
     private final MaterialApplicationService appService;
+    private final SecurityUtils securityUtils;
 
-    public MaterialVarietyController(MaterialApplicationService appService) {
+    public MaterialVarietyController(MaterialApplicationService appService, SecurityUtils securityUtils) {
         this.appService = appService;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping
@@ -30,7 +33,8 @@ public class MaterialVarietyController {
     public ResponseEntity<?> createMaterialVariety(@RequestBody CreateMaterialVarietyRequest req) {
         log.info("[V2] 创建物料品种: {}", req.getName());
         try {
-            var result = appService.createMaterial(req.toAppRequest());
+            Long companyId = securityUtils.getCurrentCompanyId();
+            var result = appService.createMaterial(req.toAppRequest(companyId));
             return ResponseEntity.status(HttpStatus.CREATED).body(MaterialVarietyResponse.from(result));
         } catch (Exception e) {
             log.error("[V2] 创建物料品种失败 - {}", e.getMessage());
@@ -42,8 +46,9 @@ public class MaterialVarietyController {
     public ResponseEntity<?> listMaterialVarieties(
             @RequestParam(required = false) Boolean activeOnly) {
         try {
+            Long companyId = securityUtils.getCurrentCompanyId();
             return ResponseEntity.ok(
-                    appService.listMaterials(activeOnly).stream()
+                    appService.listMaterials(activeOnly, companyId).stream()
                             .map(MaterialVarietyResponse::from).toList());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

@@ -10,8 +10,8 @@ import java.util.Optional;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByIsActiveTrue();
-
+    List<Material> findByCompanyId(Long companyId);
+    List<Material> findByCompanyIdAndIsActiveTrue(Long companyId);
     Optional<Material> findByName(String name);
-
     boolean existsByName(String name);
 }

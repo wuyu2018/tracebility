@@ -56,8 +56,9 @@ public class MultiAgentCoordinator {
         this.caAgent = caAgent;
     }
     
-    @PostConstruct
     public void initialize() {
+        consensusReplicas.clear();
+        agents.clear();
         log.info("Initializing Multi-Agent System...");
         
         caAgent.initialize();

@@ -10,15 +10,18 @@ public class CreateBatchRequest {
     private final Double quantity;
     private final String unit;
     private final List<Long> materialPurchaseIds;
+    private final Long companyId;
 
     public CreateBatchRequest(Long productId, LocalDate productionDate, String shelfLife,
-                              Double quantity, String unit, List<Long> materialPurchaseIds) {
+                              Double quantity, String unit, List<Long> materialPurchaseIds,
+                              Long companyId) {
         this.productId = productId;
         this.productionDate = productionDate;
         this.shelfLife = shelfLife;
         this.quantity = quantity;
         this.unit = unit;
         this.materialPurchaseIds = materialPurchaseIds;
+        this.companyId = companyId;
     }
 
     public Long productId() { return productId; }
@@ -27,4 +30,5 @@ public class CreateBatchRequest {
     public Double quantity() { return quantity; }
     public String unit() { return unit; }
     public List<Long> materialPurchaseIds() { return materialPurchaseIds; }
+    public Long companyId() { return companyId; }
 }

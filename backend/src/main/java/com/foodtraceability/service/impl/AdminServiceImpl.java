@@ -88,7 +88,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private LoginResponseDTO buildLoginResponse(Admin admin) {
-        String token = jwtTokenProvider.generateToken(admin.getUsername(), admin.getRole(), admin.getAgentType());
+        String token = jwtTokenProvider.generateToken(admin.getUsername(), admin.getRole(),
+                admin.getAgentType(), admin.getCompanyId());
 
         LoginResponseDTO response = new LoginResponseDTO();
         response.setUsername(admin.getUsername());
@@ -97,6 +98,7 @@ public class AdminServiceImpl implements AdminService {
         response.setExpiresIn(jwtTokenProvider.getExpirationTime() / 1000);
         response.setRole(admin.getRole());
         response.setAgentType(admin.getAgentType());
+        response.setCompanyId(admin.getCompanyId());
 
         return response;
     }
@@ -107,7 +109,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Admin createAdmin(String username, String password, String role, String agentType) {
+    public Admin createAdmin(String username, String password, String role, String agentType, Long companyId) {
         adminRepository.findByUsername(username)
             .ifPresent(existing -> {
                 throw new BusinessException("管理员已存在");
@@ -116,7 +118,13 @@ public class AdminServiceImpl implements AdminService {
         Admin admin = Admin.create(username, passwordEncoder.encode(password));
         admin.setRole(role != null ? role : "ADMIN");
         admin.setAgentType(agentType);
+        admin.setCompanyId(companyId);
         return adminRepository.save(admin);
+    }
+
+    @Override
+    public java.util.List<Admin> listAllAdmins() {
+        return adminRepository.findAll();
     }
 
     @Override
@@ -129,6 +137,16 @@ public class AdminServiceImpl implements AdminService {
         if (!admin.validatePassword(currentPassword, passwordEncoder)) {
             throw new BusinessException("当前密码验证失败");
         }
+    }
+
+    @Override
+    public void deleteAdmin(Long id, String currentUsername) {
+        Admin admin = adminRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("管理员不存在"));
+        if (admin.getUsername().equals(currentUsername)) {
+            throw new BusinessException("不能删除自己");
+        }
+        adminRepository.delete(admin);
     }
 
     private void validateUsernameAndPassword(String username, String currentPassword) {

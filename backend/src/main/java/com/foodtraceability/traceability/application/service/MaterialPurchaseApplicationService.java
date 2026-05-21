@@ -45,6 +45,9 @@ public class MaterialPurchaseApplicationService {
                 material, req.batchNumber(), req.supplierName(),
                 req.producerName(), req.producerAddress(),
                 req.purchaseDate(), req.quantity(), req.unit());
+        if (req.companyId() != null) {
+            entity.setCompanyId(req.companyId());
+        }
         entity = repository.save(entity);
 
         publishAfterCommit(new MaterialPurchaseChanged(entity.getId(), "CREATE"));
@@ -81,9 +84,16 @@ public class MaterialPurchaseApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaterialPurchaseResponse> listMaterialPurchases(Long materialId) {
+    public List<MaterialPurchaseResponse> listMaterialPurchases(Long materialId, Long companyId) {
         List<MaterialPurchase> purchases;
-        if (materialId != null) {
+        if (companyId != null) {
+            purchases = repository.findByCompanyIdAndIsDeletedFalse(companyId);
+            if (materialId != null) {
+                purchases = purchases.stream()
+                        .filter(p -> p.getMaterial().getId().equals(materialId))
+                        .toList();
+            }
+        } else if (materialId != null) {
             purchases = repository.findByMaterialIdAndIsDeletedFalse(materialId);
         } else {
             purchases = repository.findByIsDeletedFalse();

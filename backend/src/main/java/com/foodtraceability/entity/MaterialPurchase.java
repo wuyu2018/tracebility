@@ -49,6 +49,9 @@ public class MaterialPurchase {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     public String getMaterialName() {
         return material != null ? material.getName() : null;
     }

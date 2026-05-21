@@ -52,6 +52,9 @@ public class TransportSale {
     @Column(name = "recorder_name", length = 50)
     private String recorderName;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     public Long getBatchId() {
         return batch != null ? batch.getId() : null;
     }

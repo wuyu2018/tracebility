@@ -43,6 +43,31 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/admins")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> listAdmins() {
+        var admins = adminService.listAllAdmins();
+        var result = admins.stream().map(a -> {
+            var map = new java.util.HashMap<String, Object>();
+            map.put("id", a.getId());
+            map.put("username", a.getUsername());
+            map.put("role", a.getRole() != null ? a.getRole() : "ADMIN");
+            map.put("agentType", a.getAgentType() != null ? a.getAgentType() : "");
+            map.put("companyId", a.getCompanyId());
+            return map;
+        }).toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/admins/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> deleteAdmin(@PathVariable Long id) {
+        String currentUser = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        adminService.deleteAdmin(id, currentUser);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
     @PostMapping("/login")
     @OperationLog(entityType = "ADMIN", action = "LOGIN")
     public ResponseEntity<?> login(@Valid @RequestBody AdminLoginDTO loginDTO) {
@@ -73,6 +98,8 @@ public class AdminController {
         String password = request.get("password");
         String role = request.get("role");
         String agentType = request.get("agentType");
+        Long companyId = request.get("companyId") != null ?
+                Long.parseLong(request.get("companyId")) : null;
         String currentPassword = request.get("currentPassword");
         String currentAdminUsername = request.get("currentAdminUsername");
 
@@ -88,7 +115,7 @@ public class AdminController {
 
             adminService.verifyCurrentPassword(currentAdminUsername, currentPassword);
 
-            Admin admin = adminService.createAdmin(username, password, role, agentType);
+            Admin admin = adminService.createAdmin(username, password, role, agentType, companyId);
             log.info("[管理员注册] 创建成功 - 操作管理员: {}, 新管理员: {}", currentAdminUsername, username);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "管理员创建成功", "username", admin.getUsername()));

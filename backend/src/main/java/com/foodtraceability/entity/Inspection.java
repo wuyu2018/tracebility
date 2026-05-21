@@ -56,6 +56,9 @@ public class Inspection {
     @Column(name = "inspection_time")
     private LocalDateTime inspectionTime;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 

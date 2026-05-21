@@ -38,6 +38,9 @@ public class MaterialApplicationService {
         Material entity = new Material();
         entity.setName(req.name());
         entity.setIsActive(true);
+        if (req.companyId() != null) {
+            entity.setCompanyId(req.companyId());
+        }
         entity = repository.save(entity);
 
         publishAfterCommit(new MaterialChanged(entity.getId(), "CREATE"));
@@ -90,10 +93,17 @@ public class MaterialApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaterialResponse> listMaterials(Boolean activeOnly) {
-        List<Material> materials = Boolean.TRUE.equals(activeOnly)
-                ? repository.findByIsActiveTrue()
-                : repository.findAll();
+    public List<MaterialResponse> listMaterials(Boolean activeOnly, Long companyId) {
+        List<Material> materials;
+        if (companyId != null) {
+            materials = Boolean.TRUE.equals(activeOnly)
+                    ? repository.findByCompanyIdAndIsActiveTrue(companyId)
+                    : repository.findByCompanyId(companyId);
+        } else {
+            materials = Boolean.TRUE.equals(activeOnly)
+                    ? repository.findByIsActiveTrue()
+                    : repository.findAll();
+        }
         return materials.stream().map(this::toResponse).toList();
     }
 

@@ -38,10 +38,10 @@ public class RecordTransportSaleRequest {
     public String getRecorderName() { return recorderName; }
     public void setRecorderName(String recorderName) { this.recorderName = recorderName; }
 
-    public TransportSaleApplicationService.RecordTransportSaleRequest toAppRequest() {
+    public TransportSaleApplicationService.RecordTransportSaleRequest toAppRequest(Long companyId) {
         return new TransportSaleApplicationService.RecordTransportSaleRequest(
                 batchId, environmentTemperature, productTemperature, time,
                 transportCompany, vehicleNumber, salesRegion, receiverName, receiverContact,
-                recorderName);
+                recorderName, companyId);
     }
 }

@@ -8,4 +8,5 @@ import java.util.List;
 
 @Repository
 public interface StorageRepository extends JpaRepository<Storage, Long> {
+    List<Storage> findByCompanyId(Long companyId);
 }

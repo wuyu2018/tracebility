@@ -14,5 +14,7 @@ public interface ProductMaterialRelationService {
 
     List<ProductMaterialRelationDTO> getRelationsByProductId(Long productId);
 
+    List<ProductMaterialRelationDTO> listAllRelations();
+
     boolean isMaterialVisibleToProduct(Long productId, Long materialId);
 }

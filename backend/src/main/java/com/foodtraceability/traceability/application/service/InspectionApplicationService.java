@@ -42,6 +42,9 @@ public class InspectionApplicationService {
         Inspection inspection = Inspection.create(
                 req.batchId(), req.sampleName(), req.sampleQuantity(),
                 req.sampleSpecification());
+        if (req.companyId() != null) {
+            inspection.setCompanyId(req.companyId());
+        }
         if (req.imageUrl() != null) {
             inspection.setImageUrl(req.imageUrl());
         }

@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "product_material_relation", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"product_id", "material_id"})
+    @UniqueConstraint(columnNames = {"product_id", "material_id", "company_id"})
 })
 @Data
 @NoArgsConstructor
@@ -32,6 +32,9 @@ public class ProductMaterialRelation {
 
     @Column(name = "is_hidden", nullable = false)
     private Boolean isHidden = false;
+
+    @Column(name = "company_id")
+    private Long companyId;
 
     public static ProductMaterialRelation create(Product product, Material material) {
         ProductMaterialRelation relation = new ProductMaterialRelation();

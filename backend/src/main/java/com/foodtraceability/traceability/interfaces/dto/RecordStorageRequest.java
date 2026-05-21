@@ -23,8 +23,8 @@ public class RecordStorageRequest {
     public String getWarehouseLocation() { return warehouseLocation; }
     public void setWarehouseLocation(String warehouseLocation) { this.warehouseLocation = warehouseLocation; }
 
-    public com.foodtraceability.traceability.application.dto.RecordStorageRequest toAppRequest() {
+    public com.foodtraceability.traceability.application.dto.RecordStorageRequest toAppRequest(Long companyId) {
         return new com.foodtraceability.traceability.application.dto.RecordStorageRequest(
-                batchId, storageTime, quantity, unit, warehouseLocation);
+                batchId, storageTime, quantity, unit, warehouseLocation, companyId);
     }
 }

@@ -16,6 +16,8 @@ public class LoginResponseDTO {
     private long expiresIn;
     private String role;
     private String agentType;
+    private Long companyId;
+    private String companyName;
 
     public void setUsername(String username) {
         this.username = username;

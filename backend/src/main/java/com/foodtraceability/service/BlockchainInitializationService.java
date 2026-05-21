@@ -5,7 +5,9 @@ import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class BlockchainInitializationService implements CommandLineRunner {
+public class BlockchainInitializationService {
 
     private static final Logger log = LoggerFactory.getLogger(BlockchainInitializationService.class);
 
@@ -45,9 +47,10 @@ public class BlockchainInitializationService implements CommandLineRunner {
         this.transportSaleRepo = transportSaleRepo;
     }
 
-    @Override
+    @Async
+    @EventListener(ApplicationReadyEvent.class)
     @Transactional
-    public void run(String... args) {
+    public void initializeBlockchain() {
         if (blockchainLogRepo.existsByChainType("MATERIAL") || blockchainLogRepo.existsByChainType("BATCH")) {
             log.info("[BlockchainInit] Blockchain data already exists, skipping initialization");
             return;

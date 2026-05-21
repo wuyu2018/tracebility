@@ -10,7 +10,9 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByIsDeletedFalse();
+    List<Product> findByCompanyIdAndIsDeletedFalse(Long companyId);
     List<Product> findByNameContainingAndIsDeletedFalse(String name);
+    List<Product> findByNameContainingAndCompanyIdAndIsDeletedFalse(String name, Long companyId);
     Optional<Product> findByNameAndIsDeletedFalse(String name);
     Optional<Product> findByAntiFakeCode(String antiFakeCode);
 }

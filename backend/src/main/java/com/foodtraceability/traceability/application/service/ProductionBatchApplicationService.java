@@ -73,6 +73,9 @@ public class ProductionBatchApplicationService {
 
         ProductionBatch batch = ProductionBatch.create(
                 batchNo, req.productId(), req.productionDate(), shelfLife, qty);
+        if (req.companyId() != null) {
+            batch.setCompanyId(req.companyId());
+        }
         batch = batchRepo.save(batch);
 
         Long batchId = batch.getId();

@@ -4,13 +4,14 @@ import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
 @Configuration
+@EnableAsync
 public class AgentSystemConfig {
     
     private static final Logger log = LoggerFactory.getLogger(AgentSystemConfig.class);

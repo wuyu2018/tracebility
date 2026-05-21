@@ -5,6 +5,7 @@ import com.foodtraceability.traceability.application.service.MaterialPurchaseApp
 import com.foodtraceability.traceability.interfaces.dto.CreateMaterialPurchaseRequest;
 import com.foodtraceability.traceability.interfaces.dto.MaterialPurchaseResponse;
 import com.foodtraceability.traceability.interfaces.dto.UpdateMaterialPurchaseRequest;
+import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,11 @@ public class MaterialPurchaseController {
     private static final Logger log = LoggerFactory.getLogger(MaterialPurchaseController.class);
 
     private final MaterialPurchaseApplicationService appService;
+    private final SecurityUtils securityUtils;
 
-    public MaterialPurchaseController(MaterialPurchaseApplicationService appService) {
+    public MaterialPurchaseController(MaterialPurchaseApplicationService appService, SecurityUtils securityUtils) {
         this.appService = appService;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping
@@ -30,7 +33,8 @@ public class MaterialPurchaseController {
     public ResponseEntity<?> createMaterialPurchase(@RequestBody CreateMaterialPurchaseRequest req) {
         log.info("[V2] 创建采购单: materialId={}", req.getMaterialId());
         try {
-            var result = appService.createMaterialPurchase(req.toAppRequest());
+            Long companyId = securityUtils.getCurrentCompanyId();
+            var result = appService.createMaterialPurchase(req.toAppRequest(companyId));
             return ResponseEntity.status(HttpStatus.CREATED).body(MaterialPurchaseResponse.from(result));
         } catch (Exception e) {
             log.error("[V2] 创建采购单失败 - {}", e.getMessage());
@@ -42,7 +46,8 @@ public class MaterialPurchaseController {
     public ResponseEntity<?> listMaterialPurchases(
             @RequestParam(required = false) Long materialId) {
         try {
-            var results = appService.listMaterialPurchases(materialId);
+            Long companyId = securityUtils.getCurrentCompanyId();
+            var results = appService.listMaterialPurchases(materialId, companyId);
             return ResponseEntity.ok(results.stream().map(MaterialPurchaseResponse::from).toList());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

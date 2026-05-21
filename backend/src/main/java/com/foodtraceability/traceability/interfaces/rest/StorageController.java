@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.interfaces.rest;
 import com.foodtraceability.traceability.application.service.StorageApplicationService;
 import com.foodtraceability.traceability.interfaces.dto.RecordStorageRequest;
 import com.foodtraceability.traceability.interfaces.dto.StorageResponse;
+import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,19 @@ public class StorageController {
     private static final Logger log = LoggerFactory.getLogger(StorageController.class);
 
     private final StorageApplicationService appService;
+    private final SecurityUtils securityUtils;
 
-    public StorageController(StorageApplicationService appService) {
+    public StorageController(StorageApplicationService appService, SecurityUtils securityUtils) {
         this.appService = appService;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping("/storage")
     public ResponseEntity<?> recordStorage(@RequestBody RecordStorageRequest req) {
         log.info("[v2] 录入仓储 batchId={}", req.getBatchId());
         try {
-            var result = appService.recordStorage(req.toAppRequest());
+            Long companyId = securityUtils.getCurrentCompanyId();
+            var result = appService.recordStorage(req.toAppRequest(companyId));
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     new StorageResponse(result.id(), result.batchId(), null, null,
                             null, null, result.warehouseLocation()));

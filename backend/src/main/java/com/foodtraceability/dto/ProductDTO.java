@@ -12,4 +12,5 @@ public class ProductDTO {
     private String contactPhone;
     private String contactEmail;
     private String qrCodeUrl;
+    private Long companyId;
 }

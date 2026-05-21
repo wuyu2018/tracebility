@@ -10,7 +10,11 @@ public interface AdminService {
     
     Admin findByUsername(String username);
     
-    Admin createAdmin(String username, String password, String role, String agentType);
+    Admin createAdmin(String username, String password, String role, String agentType, Long companyId);
     
     void verifyCurrentPassword(String username, String currentPassword);
+    
+    java.util.List<Admin> listAllAdmins();
+    
+    void deleteAdmin(Long id, String currentUsername);
 }

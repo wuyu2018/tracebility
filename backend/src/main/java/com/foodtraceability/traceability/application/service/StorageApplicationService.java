@@ -40,6 +40,9 @@ public class StorageApplicationService {
 
         Storage storage = Storage.create(
                 req.batchId(), req.storageTime(), req.quantity(), req.unit(), req.warehouseLocation());
+        if (req.companyId() != null) {
+            storage.setCompanyId(req.companyId());
+        }
         storage = storageRepo.save(storage);
 
         Long storageId = storage.getId();
