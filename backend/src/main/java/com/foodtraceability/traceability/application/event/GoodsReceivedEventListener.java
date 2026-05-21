@@ -1,11 +1,9 @@
 package com.foodtraceability.traceability.application.event;
 
-import com.foodtraceability.entity.ProductionBatch;
-import com.foodtraceability.entity.Storage;
+import com.foodtraceability.agent.core.MultiAgentCoordinator;
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
-import com.foodtraceability.service.BlockchainRetryService;
-import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.GoodsReceived;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,17 +17,17 @@ public class GoodsReceivedEventListener {
 
     private final ProductionBatchRepository batchRepo;
     private final StorageRepository storageRepo;
-    private final BlockchainService blockchainService;
-    private final BlockchainRetryService blockchainRetryService;
+    private final MultiAgentCoordinator agentCoordinator;
+    private final AgentBlockchainService agentBlockchainService;
 
     public GoodsReceivedEventListener(ProductionBatchRepository batchRepo,
                                        StorageRepository storageRepo,
-                                       BlockchainService blockchainService,
-                                       BlockchainRetryService blockchainRetryService) {
+                                       MultiAgentCoordinator agentCoordinator,
+                                       AgentBlockchainService agentBlockchainService) {
         this.batchRepo = batchRepo;
         this.storageRepo = storageRepo;
-        this.blockchainService = blockchainService;
-        this.blockchainRetryService = blockchainRetryService;
+        this.agentCoordinator = agentCoordinator;
+        this.agentBlockchainService = agentBlockchainService;
     }
 
     @TransactionalEventListener
@@ -52,18 +50,26 @@ public class GoodsReceivedEventListener {
                     storage.getUnit() != null ? storage.getUnit() : "",
                     storage.getWarehouseLocation() != null ? storage.getWarehouseLocation() : "");
             try {
-                blockchainService.appendBatchChainBlock(
-                        storage.getBatchId(), "STORAGE", storage.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "STORAGE", storage.getId(), "CREATE",
                         snapshot, null);
-                log.info("[Blockchain] Storage block appended for batchId={}, storageId={}",
+                log.info("[Blockchain] Storage block appended via agent for batchId={}, storageId={}",
                         storage.getBatchId(), storage.getId());
             } catch (Exception e) {
                 log.error("[Blockchain] Failed to append block for batchId={}, storageId={}",
                         storage.getBatchId(), storage.getId(), e);
-                blockchainRetryService.scheduleRetry(
-                        "BATCH", storage.getBatchId(), "STORAGE", storage.getId(), "CREATE",
-                        snapshot, null, "GoodsReceived", e.getMessage());
             }
         });
+
+        try {
+            var circulationAgent = agentCoordinator.getCirculationAgent();
+            if (circulationAgent.isAuthorized()) {
+                circulationAgent.recordStorage(event.batchId().toString(), event.storageId().toString());
+                circulationAgent.updateCreditForTimeliness(true);
+                log.info("[Agent] CirculationAgent updated for storage batchId={}", event.batchId());
+            }
+        } catch (Exception e) {
+            log.error("[Agent] Failed to notify CirculationAgent", e);
+        }
     }
 }

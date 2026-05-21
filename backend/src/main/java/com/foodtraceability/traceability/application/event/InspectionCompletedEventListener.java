@@ -1,11 +1,10 @@
 package com.foodtraceability.traceability.application.event;
 
-import com.foodtraceability.entity.Inspection;
+import com.foodtraceability.agent.core.MultiAgentCoordinator;
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.InspectionRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
-import com.foodtraceability.service.BlockchainRetryService;
-import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.InspectionCompleted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,17 +18,17 @@ public class InspectionCompletedEventListener {
 
     private final SecurityCodeRepository securityCodeRepo;
     private final InspectionRepository inspectionRepo;
-    private final BlockchainService blockchainService;
-    private final BlockchainRetryService blockchainRetryService;
+    private final MultiAgentCoordinator agentCoordinator;
+    private final AgentBlockchainService agentBlockchainService;
 
     public InspectionCompletedEventListener(SecurityCodeRepository securityCodeRepo,
                                              InspectionRepository inspectionRepo,
-                                             BlockchainService blockchainService,
-                                             BlockchainRetryService blockchainRetryService) {
+                                             MultiAgentCoordinator agentCoordinator,
+                                             AgentBlockchainService agentBlockchainService) {
         this.securityCodeRepo = securityCodeRepo;
         this.inspectionRepo = inspectionRepo;
-        this.blockchainService = blockchainService;
-        this.blockchainRetryService = blockchainRetryService;
+        this.agentCoordinator = agentCoordinator;
+        this.agentBlockchainService = agentBlockchainService;
     }
 
     @TransactionalEventListener
@@ -53,19 +52,31 @@ public class InspectionCompletedEventListener {
                     inspection.getInspectorName() != null ? inspection.getInspectorName() : "",
                     inspection.getInspectionTime() != null ? inspection.getInspectionTime().toString() : "");
             try {
-                blockchainService.appendBatchChainBlock(
-                        inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "INSPECTION", inspection.getId(), "CREATE",
                         snapshot, null);
-                log.info("[Blockchain] Inspection block appended for batchId={}, inspectionId={}",
+                log.info("[Blockchain] Inspection block appended via agent for batchId={}, inspectionId={}",
                         inspection.getBatchId(), inspection.getId());
             } catch (Exception e) {
                 log.error("[Blockchain] Failed to append block for batchId={}, inspectionId={}",
                         inspection.getBatchId(), inspection.getId(), e);
-                blockchainRetryService.scheduleRetry(
-                        "BATCH", inspection.getBatchId(), "INSPECTION", inspection.getId(), "CREATE",
-                        snapshot, null, "InspectionCompleted", e.getMessage());
             }
         });
+
+        try {
+            var productionAgent = agentCoordinator.getProductionAgent();
+            if (productionAgent.isAuthorized()) {
+                if (event.isQualified()) {
+                    productionAgent.updateCreditForQuality(90);
+                    log.info("[Agent] ProductionAgent credit +10 for qualified inspection batchId={}", event.batchId());
+                } else {
+                    productionAgent.updateCreditForQuality(50);
+                    log.warn("[Agent] ProductionAgent credit -20 for failed inspection batchId={}", event.batchId());
+                }
+            }
+        } catch (Exception e) {
+            log.error("[Agent] Failed to notify ProductionAgent", e);
+        }
     }
 
     private void freezeSecurityCodes(Long batchId) {

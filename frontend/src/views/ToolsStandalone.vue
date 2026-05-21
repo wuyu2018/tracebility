@@ -2,7 +2,7 @@
   <div class="tools-standalone">
     <!-- 顶部用户信息栏 -->
     <div class="user-bar" v-if="isAdminLoggedIn">
-      <span class="user-info">👤 {{ username }}</span>
+      <span class="user-info"><el-icon :size="16"><User /></el-icon> {{ username }}</span>
       <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
     </div>
 
@@ -117,6 +117,7 @@ import QRCode from 'qrcode'
 import ComplaintAdminTool from '/src/views/getAllComplaintInfo.vue'
 import AddAdmin from '/src/views/AddAdmin.vue'
 import ProductDetail from '../components/ProductDetail.vue'
+import { User } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElDialog } from 'element-plus'
 import InsertDataTool from '../components/InsertDataTool.vue';
 import BlockchainMonitor from '../components/BlockchainMonitor.vue';

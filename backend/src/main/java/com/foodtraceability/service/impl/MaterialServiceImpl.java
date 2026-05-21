@@ -1,12 +1,12 @@
 package com.foodtraceability.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.dto.MaterialDTO;
 import com.foodtraceability.entity.Material;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.policy.DeletionPolicy;
 import com.foodtraceability.repository.MaterialRepository;
-import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.service.MaterialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +24,14 @@ public class MaterialServiceImpl implements MaterialService {
 
     private final MaterialRepository repository;
     private final DeletionPolicy deletionPolicy;
-    private final BlockchainService blockchainService;
+    private final AgentBlockchainService agentBlockchainService;
     private final ObjectMapper objectMapper;
 
     public MaterialServiceImpl(MaterialRepository repository, DeletionPolicy deletionPolicy,
-                               BlockchainService blockchainService) {
+                               AgentBlockchainService agentBlockchainService) {
         this.repository = repository;
         this.deletionPolicy = deletionPolicy;
-        this.blockchainService = blockchainService;
+        this.agentBlockchainService = agentBlockchainService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -51,7 +51,8 @@ public class MaterialServiceImpl implements MaterialService {
             snapshot.put("id", saved.getId());
             snapshot.put("name", saved.getName());
             snapshot.put("isActive", saved.isActive());
-            blockchainService.appendMaterialChainBlock("MATERIAL", saved.getId(), "CREATE",
+            agentBlockchainService.appendBlockWithConsensus(
+                    "MATERIAL", "MATERIAL", saved.getId(), "CREATE",
                     objectMapper.writeValueAsString(snapshot), null);
         } catch (Exception e) {
             log.error("[Blockchain] Failed to append block for Material CREATE", e);
@@ -75,7 +76,8 @@ public class MaterialServiceImpl implements MaterialService {
             snapshot.put("id", saved.getId());
             snapshot.put("name", saved.getName());
             snapshot.put("isActive", saved.isActive());
-            blockchainService.appendMaterialChainBlock("MATERIAL", saved.getId(), "UPDATE",
+            agentBlockchainService.appendBlockWithConsensus(
+                    "MATERIAL", "MATERIAL", saved.getId(), "UPDATE",
                     objectMapper.writeValueAsString(snapshot), null);
         } catch (Exception e) {
             log.error("[Blockchain] Failed to append block for Material UPDATE", e);

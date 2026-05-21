@@ -1,7 +1,6 @@
 package com.foodtraceability.service;
 
 import com.foodtraceability.entity.BlockchainLog;
-import com.foodtraceability.security.FoodBloomFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -97,7 +96,8 @@ public class CacheService {
     
     public Long getCreditScore(String agentId) {
         String key = "agent:credit:" + agentId;
-        return redisTemplate.opsForValue().get(key);
+        Object value = redisTemplate.opsForValue().get(key);
+        return value instanceof Number ? ((Number) value).longValue() : null;
     }
     
     public void publishConsensusMessage(String channel, Object message) {

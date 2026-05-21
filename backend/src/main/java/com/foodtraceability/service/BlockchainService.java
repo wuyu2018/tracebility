@@ -5,7 +5,6 @@ import com.foodtraceability.repository.BlockchainLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -76,57 +75,6 @@ public class BlockchainService {
 
     public String getPublicKeyBase64() {
         return Base64.getEncoder().encodeToString(publicKey.getEncoded());
-    }
-
-    @Transactional
-    public BlockchainLog appendMaterialChainBlock(String entityType, Long entityId, String action,
-                                                   String dataSnapshot, Long operatorId) {
-        String previousHash = blockchainLogRepo
-                .findTopByChainTypeOrderByTimestampDesc("MATERIAL")
-                .map(BlockchainLog::getCurrentHash)
-                .orElse(genesisHash);
-
-        LocalDateTime now = LocalDateTime.now();
-        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
-                null, operatorId, null);
-        String signature = sign(currentHash);
-
-        BlockchainLog block = BlockchainLog.createMaterialChainBlock(
-                entityType, entityId, action, previousHash, currentHash,
-                dataSnapshot, signature, now, operatorId);
-
-        block = blockchainLogRepo.save(block);
-        log.debug("[Blockchain] MATERIAL block appended: type={}, id={}, hash={}",
-                entityType, entityId, currentHash);
-        return block;
-    }
-
-    @Transactional
-    public BlockchainLog appendBatchChainBlock(Long batchId, String entityType, Long entityId, String action,
-                                                String dataSnapshot, Long operatorId) {
-        String previousHash = blockchainLogRepo
-                .findTopByChainTypeAndBatchIdOrderByTimestampDesc("BATCH", batchId)
-                .map(BlockchainLog::getCurrentHash)
-                .orElse(genesisHash);
-
-        String refMasterHash = blockchainLogRepo
-                .findTopByChainTypeOrderByTimestampDesc("MATERIAL")
-                .map(BlockchainLog::getCurrentHash)
-                .orElse(genesisHash);
-
-        LocalDateTime now = LocalDateTime.now();
-        String currentHash = calculateHash(entityType, entityId, action, previousHash, dataSnapshot, now,
-                batchId, operatorId, refMasterHash);
-        String signature = sign(currentHash);
-
-        BlockchainLog block = BlockchainLog.createBatchChainBlock(
-                batchId, entityType, entityId, action, previousHash, currentHash,
-                dataSnapshot, signature, now, operatorId, refMasterHash);
-
-        block = blockchainLogRepo.save(block);
-        log.debug("[Blockchain] BATCH block appended: batchId={}, type={}, id={}, hash={}",
-                batchId, entityType, entityId, currentHash);
-        return block;
     }
 
     public IntegrityReport verifyMaterialChain() {

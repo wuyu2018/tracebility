@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -76,7 +76,7 @@ public class MultiAgentCoordinator {
         agents.put(salesAgent.getAgentId(), salesAgent);
         consensusReplicas.add(salesAgent.getAgentId());
         
-        pbftConsensus.initialize(true, consensusReplicas);
+        pbftConsensus.initialize(caAgent.getAgentId(), consensusReplicas);
         
         registerDefaultServices();
         

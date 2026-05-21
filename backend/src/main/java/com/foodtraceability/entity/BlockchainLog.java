@@ -79,47 +79,6 @@ public class BlockchainLog {
         }
     }
 
-    public static BlockchainLog createMaterialChainBlock(String entityType, Long entityId, String action,
-                                                          String previousHash, String currentHash,
-                                                          String dataSnapshot, String signature,
-                                                          LocalDateTime timestamp, Long operatorId) {
-        BlockchainLog block = new BlockchainLog();
-        block.chainType = "MATERIAL";
-        block.batchId = null;
-        block.entityType = entityType;
-        block.entityId = entityId;
-        block.action = action;
-        block.previousHash = previousHash;
-        block.currentHash = currentHash;
-        block.dataSnapshot = dataSnapshot;
-        block.signature = signature;
-        block.timestamp = timestamp;
-        block.operatorId = operatorId;
-        block.refMasterChainHash = null;
-        return block;
-    }
-
-    public static BlockchainLog createBatchChainBlock(Long batchId, String entityType, Long entityId, String action,
-                                                       String previousHash, String currentHash,
-                                                       String dataSnapshot, String signature,
-                                                       LocalDateTime timestamp, Long operatorId,
-                                                       String refMasterChainHash) {
-        BlockchainLog block = new BlockchainLog();
-        block.chainType = "BATCH";
-        block.batchId = batchId;
-        block.entityType = entityType;
-        block.entityId = entityId;
-        block.action = action;
-        block.previousHash = previousHash;
-        block.currentHash = currentHash;
-        block.dataSnapshot = dataSnapshot;
-        block.signature = signature;
-        block.timestamp = timestamp;
-        block.operatorId = operatorId;
-        block.refMasterChainHash = refMasterChainHash;
-        return block;
-    }
-
     public static BlockchainLog createOptimizedBlock(String chainType, Long batchId, String entityType, Long entityId, 
                                                       String action, String previousHash, String currentHash,
                                                       String signature, LocalDateTime timestamp, Long operatorId,

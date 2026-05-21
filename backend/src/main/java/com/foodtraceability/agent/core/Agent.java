@@ -2,7 +2,6 @@ package com.foodtraceability.agent.core;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public interface Agent {
     String getAgentId();
@@ -18,8 +17,12 @@ public interface Agent {
     Instant getRegisteredAt();
     
     long getCreditScore();
-    
+
     void updateCreditScore(long delta);
+
+    AgentState getState();
+
+    Map<String, Object> getMetadata();
     
     enum AgentType {
         PRODUCTION("P-Agent"),

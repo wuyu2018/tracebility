@@ -8,7 +8,7 @@ public class PbftMessage {
     private final Long sequenceNumber;
     private final String digest;
     private final String senderId;
-    private final String signature;
+    private String signature;
     private long timestamp;
     
     public enum MessageType {

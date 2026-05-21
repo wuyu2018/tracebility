@@ -1,9 +1,8 @@
 package com.foodtraceability.traceability.application.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.MaterialRepository;
-import com.foodtraceability.service.BlockchainRetryService;
-import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.traceability.domain.event.MaterialChanged;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,16 +18,13 @@ public class MaterialChangedEventListener {
     private static final Logger log = LoggerFactory.getLogger(MaterialChangedEventListener.class);
 
     private final MaterialRepository repository;
-    private final BlockchainService blockchainService;
-    private final BlockchainRetryService blockchainRetryService;
+    private final AgentBlockchainService agentBlockchainService;
     private final ObjectMapper objectMapper;
 
     public MaterialChangedEventListener(MaterialRepository repository,
-                                         BlockchainService blockchainService,
-                                         BlockchainRetryService blockchainRetryService) {
+                                         AgentBlockchainService agentBlockchainService) {
         this.repository = repository;
-        this.blockchainService = blockchainService;
-        this.blockchainRetryService = blockchainRetryService;
+        this.agentBlockchainService = agentBlockchainService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -54,17 +50,14 @@ public class MaterialChangedEventListener {
             }
 
             try {
-                blockchainService.appendMaterialChainBlock(
-                        "MATERIAL", material.getId(), event.action(),
+                agentBlockchainService.appendBlockWithConsensus(
+                        "MATERIAL", "MATERIAL", material.getId(), event.action(),
                         snapshotJson, null);
-                log.info("[Blockchain] Material block appended: id={}, action={}",
+                log.info("[Blockchain] Material block appended via agent: id={}, action={}",
                         material.getId(), event.action());
             } catch (Exception e) {
                 log.error("[Blockchain] Failed to append block for Material id={}, action={}",
                         material.getId(), event.action(), e);
-                blockchainRetryService.scheduleRetry(
-                        "MATERIAL", null, "MATERIAL", material.getId(), event.action(),
-                        snapshotJson, null, "MaterialChanged", e.getMessage());
             }
         });
     }

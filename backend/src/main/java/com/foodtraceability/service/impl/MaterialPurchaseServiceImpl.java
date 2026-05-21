@@ -1,13 +1,13 @@
 package com.foodtraceability.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.dto.MaterialPurchaseDTO;
 import com.foodtraceability.entity.Material;
 import com.foodtraceability.entity.MaterialPurchase;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
 import com.foodtraceability.repository.MaterialRepository;
-import com.foodtraceability.service.BlockchainService;
 import com.foodtraceability.service.MaterialPurchaseService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,15 +24,15 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
 
     private final MaterialPurchaseRepository repository;
     private final MaterialRepository materialRepository;
-    private final BlockchainService blockchainService;
+    private final AgentBlockchainService agentBlockchainService;
     private final ObjectMapper objectMapper;
 
     public MaterialPurchaseServiceImpl(MaterialPurchaseRepository repository,
                                       MaterialRepository materialRepository,
-                                      BlockchainService blockchainService) {
+                                      AgentBlockchainService agentBlockchainService) {
         this.repository = repository;
         this.materialRepository = materialRepository;
-        this.blockchainService = blockchainService;
+        this.agentBlockchainService = agentBlockchainService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -61,7 +61,8 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
             snapshot.put("purchaseDate", saved.getPurchaseDate() != null ? saved.getPurchaseDate().toString() : null);
             snapshot.put("quantity", saved.getQuantity());
             snapshot.put("unit", saved.getUnit());
-            blockchainService.appendMaterialChainBlock("MATERIAL_PURCHASE", saved.getId(), "CREATE",
+            agentBlockchainService.appendBlockWithConsensus(
+                    "MATERIAL", "MATERIAL_PURCHASE", saved.getId(), "CREATE",
                     objectMapper.writeValueAsString(snapshot), null);
         } catch (Exception e) {
             log.error("[Blockchain] Failed to append block for MaterialPurchase CREATE", e);
@@ -99,7 +100,8 @@ public class MaterialPurchaseServiceImpl implements MaterialPurchaseService {
             snapshot.put("purchaseDate", entity.getPurchaseDate() != null ? entity.getPurchaseDate().toString() : null);
             snapshot.put("quantity", entity.getQuantity());
             snapshot.put("unit", entity.getUnit());
-            blockchainService.appendMaterialChainBlock("MATERIAL_PURCHASE", entity.getId(), "UPDATE",
+            agentBlockchainService.appendBlockWithConsensus(
+                    "MATERIAL", "MATERIAL_PURCHASE", entity.getId(), "UPDATE",
                     objectMapper.writeValueAsString(snapshot), null);
         } catch (Exception e) {
             log.error("[Blockchain] Failed to append block for MaterialPurchase UPDATE", e);

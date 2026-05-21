@@ -1,12 +1,10 @@
 package com.foodtraceability.traceability.application.service;
 
-import com.foodtraceability.entity.BlockchainLog;
-import com.foodtraceability.repository.BlockchainLogRepository;
-import com.foodtraceability.service.CacheService;
+import com.foodtraceability.entity.*;
+import com.foodtraceability.exception.BusinessException;
+import com.foodtraceability.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,77 +12,112 @@ import java.util.List;
 
 @Service
 public class TraceabilityQueryApplicationService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TraceabilityQueryApplicationService.class);
-    
-    private final BlockchainLogRepository blockchainLogRepo;
-    private final CacheService cacheService;
-    
-    public TraceabilityQueryApplicationService(BlockchainLogRepository blockchainLogRepo,
-                                               CacheService cacheService) {
-        this.blockchainLogRepo = blockchainLogRepo;
-        this.cacheService = cacheService;
+
+    private final SecurityCodeRepository securityCodeRepo;
+    private final ProductionBatchRepository batchRepo;
+    private final ProductRepository productRepo;
+    private final BatchMaterialRelationRepository relationRepo;
+    private final MaterialPurchaseRepository materialPurchaseRepo;
+    private final MaterialRepository materialRepo;
+    private final InspectionRepository inspectionRepo;
+    private final StorageRepository storageRepo;
+    private final TransportSaleRepository transportSaleRepo;
+
+    public TraceabilityQueryApplicationService(SecurityCodeRepository securityCodeRepo,
+                                                ProductionBatchRepository batchRepo,
+                                                ProductRepository productRepo,
+                                                BatchMaterialRelationRepository relationRepo,
+                                                MaterialPurchaseRepository materialPurchaseRepo,
+                                                MaterialRepository materialRepo,
+                                                InspectionRepository inspectionRepo,
+                                                StorageRepository storageRepo,
+                                                TransportSaleRepository transportSaleRepo) {
+        this.securityCodeRepo = securityCodeRepo;
+        this.batchRepo = batchRepo;
+        this.productRepo = productRepo;
+        this.relationRepo = relationRepo;
+        this.materialPurchaseRepo = materialPurchaseRepo;
+        this.materialRepo = materialRepo;
+        this.inspectionRepo = inspectionRepo;
+        this.storageRepo = storageRepo;
+        this.transportSaleRepo = transportSaleRepo;
     }
-    
-    @Cacheable(value = "blockchain:log", key = "#entityType + ':' + #entityId", unless = "#result == null")
+
+    @Transactional
+    public TraceResult queryByCode(String code) {
+        SecurityCode sc = securityCodeRepo.findByCode(code)
+                .orElseThrow(() -> new BusinessException("防伪码不存在: " + code));
+
+        sc.recordQueryAndActivateIfNeeded();
+        securityCodeRepo.save(sc);
+
+        ProductionBatch batch = batchRepo.findById(sc.getBatch().getId())
+                .orElseThrow(() -> new BusinessException("批次不存在"));
+
+        return buildTraceResult(sc, batch);
+    }
+
     @Transactional(readOnly = true)
-    public List<BlockchainLog> queryByEntity(String entityType, Long entityId) {
-        log.debug("Querying blockchain logs by entity: {}={}", entityType, entityId);
-        return blockchainLogRepo.findByEntityTypeAndEntityIdOrderByTimestampAsc(entityType, entityId);
+    public TraceResult queryByBatchNumber(String batchNumber) {
+        ProductionBatch batch = batchRepo.findByBatchNumberAndIsDeletedFalse(batchNumber)
+                .orElseThrow(() -> new BusinessException("批次不存在: " + batchNumber));
+
+        return buildTraceResult(null, batch);
     }
-    
-    @Cacheable(value = "traceability", key = "#foodId", unless = "#result == null")
-    @Transactional(readOnly = true)
-    public Object getTraceabilityInfo(String foodId) {
-        log.debug("Fetching traceability info for: {}", foodId);
-        
-        if (!cacheService.mightContainFood(foodId)) {
-            log.warn("Food {} not found in Bloom Filter", foodId);
-            return null;
+
+    private TraceResult buildTraceResult(SecurityCode sc, ProductionBatch batch) {
+        Product product = batch.getProduct();
+        if (product == null && batch.getProductId() != null) {
+            product = productRepo.findById(batch.getProductId()).orElse(null);
         }
-        
-        List<BlockchainLog> logs = blockchainLogRepo.findAllByEntityId(foodId);
-        
-        return buildTraceabilityInfo(logs);
+
+        List<MaterialInfo> materials = buildMaterialInfos(batch.getId());
+
+        List<Inspection> inspections = inspectionRepo.findByBatch_Id(batch.getId());
+        Inspection inspection = inspections.isEmpty() ? null : inspections.get(0);
+
+        Storage storage = batch.getStorageId() != null
+                ? storageRepo.findById(batch.getStorageId()).orElse(null)
+                : null;
+
+        TransportSale transportSale = batch.getTransportSaleId() != null
+                ? transportSaleRepo.findById(batch.getTransportSaleId()).orElse(null)
+                : null;
+
+        String status = sc != null ? sc.getStatus() : "未扫码";
+        Boolean isRepeatedQuery = sc != null && sc.isRepeatedQuery();
+        int scanCount = sc != null ? sc.getQueryCount() : 0;
+        String firstScanTime = sc != null && sc.getFirstScanTime() != null
+                ? sc.getFirstScanTime().toString()
+                : null;
+
+        return new TraceResult(product, batch, materials, inspection, storage, transportSale,
+                status, isRepeatedQuery, scanCount, firstScanTime);
     }
-    
-    private Object buildTraceabilityInfo(List<BlockchainLog> logs) {
-        return logs.stream()
-            .map(log -> TraceabilityRecord.fromEntity(log))
-            .toList();
+
+    private List<MaterialInfo> buildMaterialInfos(Long batchId) {
+        List<BatchMaterialRelation> relations = relationRepo.findById_BatchId(batchId);
+        return relations.stream()
+                .map(r -> {
+                    MaterialPurchase mp = materialPurchaseRepo
+                            .findById(r.getId().getMaterialPurchaseId()).orElse(null);
+                    if (mp == null) return new MaterialInfo(null, null, null, null);
+                    String materialName = mp.getMaterial() != null ? mp.getMaterial().getName() : null;
+                    return new MaterialInfo(materialName, mp.getBatchNumber(),
+                            mp.getSupplierName(), mp.getProducerName());
+                })
+                .toList();
     }
-    
-    @CacheEvict(value = "blockchain:log", key = "#entityType + ':' + #entityId")
-    public void evictBlockchainLogCache(String entityType, Long entityId) {
-    }
-    
-    @CacheEvict(value = "traceability", key = "#foodId")
-    public void evictTraceabilityCache(String foodId) {
-    }
-    
-    public record TraceabilityRecord(
-        Long id,
-        String chainType,
-        String entityType,
-        Long entityId,
-        String action,
-        String currentHash,
-        String dataHash,
-        String offchainRef,
-        java.time.LocalDateTime timestamp
-    ) {
-        public static TraceabilityRecord fromEntity(BlockchainLog log) {
-            return new TraceabilityRecord(
-                log.getId(),
-                log.getChainType(),
-                log.getEntityType(),
-                log.getEntityId(),
-                log.getAction(),
-                log.getCurrentHash(),
-                log.getDataHash(),
-                log.getOffchainReference(),
-                log.getTimestamp()
-            );
-        }
-    }
+
+    public record MaterialInfo(String materialName, String batchNumber,
+                                String supplierName, String producerName) {}
+
+    public record TraceResult(Product product, ProductionBatch batch,
+                                List<MaterialInfo> materials,
+                                Inspection inspection, Storage storage,
+                                TransportSale transportSale,
+                                String status, Boolean isRepeatedQuery,
+                                int scanCount, String firstScanTime) {}
 }

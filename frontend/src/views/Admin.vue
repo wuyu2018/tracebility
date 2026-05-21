@@ -2,17 +2,17 @@
   <div class="login-page">
     <div class="login-card">
       <div class="login-header">
-        <h2>{{ '🔐 后台管理' }}</h2>
+        <h2><el-icon :size="22"><Lock /></el-icon> 后台管理</h2>
         <span class="role-badge">管理员</span>
       </div>
 
       <div v-if="loginSuccess" class="success-message">
-        <span>✅</span> 登录成功！欢迎回来，管理员 {{ adminUsername }}
+        <el-icon :size="20" color="#065f46"><SuccessFilled /></el-icon> 登录成功！欢迎回来，管理员 {{ adminUsername }}
       </div>
 
       <template v-else>
         <div class="input-group">
-          <label>👤 管理员账号</label>
+          <label><el-icon :size="16"><User /></el-icon> 管理员账号</label>
           <input
             type="text"
             class="input-field"
@@ -24,7 +24,7 @@
         </div>
 
         <div class="input-group">
-          <label>🔑 密码</label>
+          <label><el-icon :size="16"><Key /></el-icon> 密码</label>
           <input
             type="password"
             class="input-field"
@@ -35,7 +35,7 @@
         </div>
 
         <div class="input-group">
-          <label>📷 验证码</label>
+          <label><el-icon :size="16"><PictureFilled /></el-icon> 验证码</label>
           <div class="captcha-row">
             <input
               type="text"
@@ -53,17 +53,20 @@
         </div>
 
         <div v-if="errorMsg" class="error-message" :class="{'lock-alert': isLockAlert}">
-          <span>⚠️</span> {{ errorMsg }}
+          <el-icon :size="16"><WarningFilled /></el-icon> {{ errorMsg }}
         </div>
 
         <button type="button" class="login-btn" :disabled="loading" @click="handleLogin">
-          <span v-if="loading">⏳ 处理中...</span>
-          <span v-else>🚀 安全登录</span>
+          <span v-if="loading">
+            <el-icon class="icon-spin"><Loading /></el-icon> 处理中...
+          </span>
+          <span v-else><el-icon :size="16"><Pointer /></el-icon> 安全登录</span>
         </button>
       </template>
 
       <div class="footer-note">
-        <strong>⚠️ 仅限管理员登录</strong>
+        <el-icon :size="14" style="vertical-align: middle;"><WarningFilled /></el-icon>
+        <strong> 仅限管理员登录</strong>
       </div>
     </div>
   </div>
@@ -72,7 +75,9 @@
 <script setup>
 import { ref, reactive, onMounted ,nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { Lock, User, Key, PictureFilled, SuccessFilled, WarningFilled, Loading, Pointer } from '@element-plus/icons-vue'
 import { adminLogin, storeCaptcha } from '../services/api'
+import { setToken, setUsername, setRole } from '../utils/auth'
 import { setToken, setUsername, setRole } from '../utils/auth'
 
 const router = useRouter()
@@ -363,6 +368,15 @@ onMounted(() => {
   border: 2px solid #f0c040;
   color: #b7791f;
   font-weight: 600;
+}
+
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .success-message {

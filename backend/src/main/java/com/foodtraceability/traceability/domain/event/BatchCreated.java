@@ -44,7 +44,4 @@ public class BatchCreated implements DomainEvent {
         return materialPurchaseIds;
     }
 
-    public Long productId() {
-        return productId;
-    }
 }

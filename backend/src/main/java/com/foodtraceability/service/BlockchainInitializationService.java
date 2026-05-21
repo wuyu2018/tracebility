@@ -1,5 +1,6 @@
 package com.foodtraceability.service;
 
+import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.repository.*;
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ public class BlockchainInitializationService implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(BlockchainInitializationService.class);
 
     private final BlockchainLogRepository blockchainLogRepo;
-    private final BlockchainService blockchainService;
+    private final AgentBlockchainService agentBlockchainService;
     private final MaterialRepository materialRepo;
     private final MaterialPurchaseRepository materialPurchaseRepo;
     private final ProductionBatchRepository batchRepo;
@@ -27,7 +28,7 @@ public class BlockchainInitializationService implements CommandLineRunner {
     private final TransportSaleRepository transportSaleRepo;
 
     public BlockchainInitializationService(BlockchainLogRepository blockchainLogRepo,
-                                            BlockchainService blockchainService,
+                                            AgentBlockchainService agentBlockchainService,
                                             MaterialRepository materialRepo,
                                             MaterialPurchaseRepository materialPurchaseRepo,
                                             ProductionBatchRepository batchRepo,
@@ -35,7 +36,7 @@ public class BlockchainInitializationService implements CommandLineRunner {
                                             InspectionRepository inspectionRepo,
                                             TransportSaleRepository transportSaleRepo) {
         this.blockchainLogRepo = blockchainLogRepo;
-        this.blockchainService = blockchainService;
+        this.agentBlockchainService = agentBlockchainService;
         this.materialRepo = materialRepo;
         this.materialPurchaseRepo = materialPurchaseRepo;
         this.batchRepo = batchRepo;
@@ -68,7 +69,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("id", m.getId());
                 snapshot.put("name", m.getName());
                 snapshot.put("isActive", m.isActive());
-                blockchainService.appendMaterialChainBlock("MATERIAL", m.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "MATERIAL", "MATERIAL", m.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
                 log.warn("[BlockchainInit] Failed to init block for material id={}", m.getId(), e);
@@ -86,7 +88,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("supplierName", mp.getSupplierName());
                 snapshot.put("quantity", mp.getQuantity());
                 snapshot.put("unit", mp.getUnit());
-                blockchainService.appendMaterialChainBlock("MATERIAL_PURCHASE", mp.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "MATERIAL", "MATERIAL_PURCHASE", mp.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
                 log.warn("[BlockchainInit] Failed to init block for materialPurchase id={}", mp.getId(), e);
@@ -113,7 +116,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("transportSaleId", batch.getTransportSaleId());
                 snapshot.put("isDeleted", batch.isDeleted());
                 snapshot.put("createdAt", batch.getCreatedAt() != null ? batch.getCreatedAt().toString() : null);
-                blockchainService.appendBatchChainBlock(batch.getId(), "PRODUCTION_BATCH", batch.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "PRODUCTION_BATCH", batch.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
                 log.warn("[BlockchainInit] Failed to init genesis block for batch id={}", batch.getId(), e);
@@ -129,7 +133,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                         snapshot.put("quantity", s.getQuantity());
                         snapshot.put("unit", s.getUnit());
                         snapshot.put("warehouseLocation", s.getWarehouseLocation());
-                        blockchainService.appendBatchChainBlock(batch.getId(), "STORAGE", s.getId(), "CREATE",
+                        agentBlockchainService.appendBlockWithConsensus(
+                                "BATCH", "STORAGE", s.getId(), "CREATE",
                                 toJson(snapshot), null);
                     } catch (Exception e2) {
                         log.warn("[BlockchainInit] Failed to init storage block for storage id={}", s.getId(), e2);
@@ -151,7 +156,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("resultDetail", insp.getResultDetail());
                 snapshot.put("inspectorName", insp.getInspectorName());
                 snapshot.put("inspectionTime", insp.getInspectionTime() != null ? insp.getInspectionTime().toString() : null);
-                blockchainService.appendBatchChainBlock(insp.getBatchId(), "INSPECTION", insp.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "INSPECTION", insp.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
                 log.warn("[BlockchainInit] Failed to init inspection block for inspection id={}", insp.getId(), e);
@@ -171,7 +177,8 @@ public class BlockchainInitializationService implements CommandLineRunner {
                 snapshot.put("receiverContact", ts.getReceiverContact());
                 snapshot.put("recorderName", ts.getRecorderName());
                 snapshot.put("time", ts.getTime() != null ? ts.getTime().toString() : null);
-                blockchainService.appendBatchChainBlock(ts.getBatchId(), "TRANSPORT_SALE", ts.getId(), "CREATE",
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "TRANSPORT_SALE", ts.getId(), "CREATE",
                         toJson(snapshot), null);
             } catch (Exception e) {
                 log.warn("[BlockchainInit] Failed to init transportSale block for transportSale id={}", ts.getId(), e);

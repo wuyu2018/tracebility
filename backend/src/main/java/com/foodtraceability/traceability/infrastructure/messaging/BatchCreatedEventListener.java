@@ -33,7 +33,7 @@ public class BatchCreatedEventListener {
                 throw new IllegalStateException("Production agent not authorized");
             }
             
-            productionAgent.recordProductionBatch(event.batchId(), event.productId());
+            productionAgent.recordProductionBatch(event.batchId(), String.valueOf(event.productId()));
             
             String traceabilityCode = productionAgent.generateTraceabilityCode(event.batchId());
             productionAgent.addMetadata("batch_" + event.batchId(), traceabilityCode);

@@ -22,34 +22,34 @@ public class TransportSaleRecordedEventListener {
     
     @TransactionalEventListener
     public void handleTransportSaleRecorded(TransportSaleRecorded event) {
-        log.info("Handling TransportSaleRecorded event: saleId={}, batchId={}", 
-                event.saleId(), event.batchId());
-        
+        log.info("Handling TransportSaleRecorded event: saleId={}, batchId={}",
+                event.transportSaleId(), event.batchId());
+
         try {
             var circulationAgent = agentCoordinator.getCirculationAgent();
             var salesAgent = agentCoordinator.getSalesAgent();
-            
+
             if (!circulationAgent.isAuthorized() || !salesAgent.isAuthorized()) {
                 log.error("Agent not authorized");
                 throw new IllegalStateException("Agent not authorized");
             }
-            
+
             circulationAgent.recordTransport(
                 event.batchId().toString(),
-                event.origin(),
-                event.destination()
+                event.transportCompany(),
+                event.salesRegion()
             );
-            
-            circulationAgent.updateCreditForTimeliness(event.isOnTime());
-            
+
+            circulationAgent.updateCreditForTimeliness(true);
+
             salesAgent.recordSale(
                 event.batchId().toString(),
-                event.traceabilityCode(),
-                event.quantity()
+                "TRC-" + event.batchId(),
+                0L
             );
-            
+
             log.info("Transport and sale recorded successfully");
-            
+
         } catch (Exception e) {
             log.error("Failed to handle TransportSaleRecorded event", e);
             throw e;

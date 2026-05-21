@@ -105,11 +105,13 @@ public class AgentController {
         }
         
         List<Map<String, Object>> history = reputation.getHistory().stream()
-            .map(h -> Map.of(
-                "scoreChange", h.getScoreChange(),
-                "reason", h.getReason(),
-                "timestamp", h.getTimestamp().toString()
-            ))
+            .map(h -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("scoreChange", h.getScoreChange());
+                m.put("reason", h.getReason());
+                m.put("timestamp", h.getTimestamp().toString());
+                return m;
+            })
             .collect(Collectors.toList());
         
         return ResponseEntity.ok(Map.of(

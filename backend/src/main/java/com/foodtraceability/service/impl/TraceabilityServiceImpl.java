@@ -155,9 +155,7 @@ public class TraceabilityServiceImpl implements TraceabilityService {
     }
 
     private TraceInfoDTO.InspectionInfo findInspection(Long batchId) {
-        List<Inspection> inspections = inspectionRepository.findAll().stream()
-                .filter(i -> batchId.equals(i.getBatch().getId()))
-                .toList();
+        List<Inspection> inspections = inspectionRepository.findByBatch_Id(batchId);
         if (inspections.isEmpty()) {
             return null;
         }
