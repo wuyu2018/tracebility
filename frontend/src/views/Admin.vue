@@ -177,16 +177,22 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, var(--color-bg) 0%, #e8efe9 100%);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(232, 184, 109, 0.18) 0%, transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(45, 90, 61, 0.18) 0%, transparent 40%),
+    linear-gradient(135deg, #f6f1e7 0%, #e6efe8 100%);
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 440px;
   padding: 2.5rem 2rem;
+  animation: cardRise 0.55s ease-out;
 }
 
 .login-header {
@@ -197,10 +203,11 @@ onMounted(() => {
 }
 
 .login-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 600;
   color: var(--color-primary);
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
 .role-badge {
@@ -228,17 +235,18 @@ onMounted(() => {
 .input-field {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: white;
+  background: #fcfdfc;
   border: 2px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   outline: none;
 }
 
 .input-field:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.15);
+  transform: translateY(-1px);
 }
 
 .captcha-row {
@@ -267,6 +275,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 6px 16px rgba(45, 90, 61, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.captcha-box:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(45, 90, 61, 0.32);
 }
 
 .error-message {
@@ -291,7 +306,7 @@ onMounted(() => {
 
 .login-btn {
   width: 100%;
-  background: var(--color-primary);
+  background: linear-gradient(120deg, var(--color-primary-dark), var(--color-primary));
   color: white;
   border: none;
   padding: 1rem 1.25rem;
@@ -299,12 +314,15 @@ onMounted(() => {
   font-weight: 600;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
   margin-top: 1rem;
+  box-shadow: 0 8px 18px rgba(45, 90, 61, 0.25);
 }
 
 .login-btn:hover:not(:disabled) {
-  background: var(--color-primary-light);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 22px rgba(45, 90, 61, 0.3);
 }
 
 .login-btn:disabled {
@@ -328,5 +346,37 @@ onMounted(() => {
   padding: 0.25rem 0.875rem;
   border-radius: 50px;
   font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .admin-login-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .login-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .captcha-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .captcha-box {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@keyframes cardRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

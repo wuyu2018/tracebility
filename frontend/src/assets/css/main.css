@@ -6,10 +6,12 @@
   --color-accent-light: #f5d9a0;
   --color-bg: #faf8f5;
   --color-bg-card: #ffffff;
+  --color-border: #d7e2d8;
   --color-text: #2c3e2d;
   --color-text-muted: #6b7c6e;
   --color-danger: #c45c4a;
   --color-success: #4a7c59;
+  --spacing-xl: 2rem;
   --shadow-sm: 0 2px 8px rgba(45, 90, 61, 0.08);
   --shadow-md: 0 4px 20px rgba(45, 90, 61, 0.12);
   --shadow-lg: 0 8px 40px rgba(45, 90, 61, 0.15);
@@ -30,8 +32,10 @@ html {
 }
 
 body {
-  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--color-bg);
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: radial-gradient(circle at 10% 10%, #f6efe3 0%, transparent 38%),
+    radial-gradient(circle at 100% 100%, #e8f0e9 0%, transparent 42%),
+    var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
   overflow-x: hidden;

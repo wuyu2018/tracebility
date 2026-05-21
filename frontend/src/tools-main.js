@@ -20,4 +20,4 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.mount('#tools-app')
+app.mount('#app')
