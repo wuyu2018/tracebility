@@ -1,148 +1,181 @@
 <template>
-  <div class="admin-login-page">
-    <div class="aurora aurora-a"></div>
-    <div class="aurora aurora-b"></div>
+  <div class="admin-auth-page">
+    <div class="mesh mesh-a"></div>
+    <div class="mesh mesh-b"></div>
 
-    <div class="login-shell">
-      <section class="brand-panel">
-        <p class="brand-kicker">Traceability Console</p>
-        <h1>食品溯源管理台</h1>
-        <p class="brand-copy">稳定、安全、实时的供应链数据协同入口</p>
-        <div class="brand-tags">
-          <span>全流程追踪</span>
-          <span>实时监管</span>
-          <span>高可信审计</span>
+    <div class="auth-frame">
+      <aside class="hero-panel">
+        <p class="hero-kicker">Food Traceability Platform</p>
+        <h1>食品溯源后台中心</h1>
+        <p class="hero-copy">统一登录、分权注册、全链路监管，面向生产与流通协同场景。</p>
+        <div class="hero-metrics">
+          <article>
+            <strong>99.95%</strong>
+            <span>系统可用性</span>
+          </article>
+          <article>
+            <strong>24h</strong>
+            <span>实时监控</span>
+          </article>
+          <article>
+            <strong>Role-based</strong>
+            <span>权限模型</span>
+          </article>
         </div>
-      </section>
+      </aside>
 
-      <section class="login-card">
-        <div class="login-header">
-          <h2>管理员登录</h2>
-          <span class="role-badge">Admin</span>
-        </div>
-
-        <p class="login-subtitle">输入账号、密码与验证码后进入控制台</p>
-
-        <button type="button" class="create-user-link" @click="showCreateUser = !showCreateUser">
-          {{ showCreateUser ? '收起新建用户' : '新建用户' }}
-        </button>
-
-        <div v-if="showCreateUser" class="create-user-panel">
-          <div class="input-group">
-            <label>新用户名</label>
-            <input
-              type="text"
-              class="input-field"
-              v-model="newUser.username"
-              autocomplete="off"
-              placeholder="请输入新用户名"
-            />
-          </div>
-          <div class="input-group">
-            <label>新用户密码</label>
-            <input
-              type="password"
-              class="input-field"
-              v-model="newUser.password"
-              autocomplete="off"
-              placeholder="请输入新用户密码"
-            />
-          </div>
-          <div class="input-group">
-            <label>当前管理员账号</label>
-            <input
-              type="text"
-              class="input-field"
-              v-model="newUser.currentAdminUsername"
-              autocomplete="off"
-              placeholder="请输入当前管理员账号"
-            />
-          </div>
-          <div class="input-group">
-            <label>当前管理员密码</label>
-            <input
-              type="password"
-              class="input-field"
-              v-model="newUser.currentPassword"
-              autocomplete="off"
-              placeholder="请输入当前管理员密码"
-            />
-          </div>
-
-          <div v-if="createUserMsg" class="success-message create-user-msg">{{ createUserMsg }}</div>
-          <div v-if="createUserError" class="error-message create-user-msg">{{ createUserError }}</div>
-
+      <section class="auth-panel">
+        <div class="tab-row">
           <button
             type="button"
-            class="login-btn create-user-btn"
-            :disabled="creatingUser"
-            @click="handleCreateUser"
+            class="tab-btn"
+            :class="{ active: activeTab === 'login' }"
+            @click="activeTab = 'login'"
           >
-            <span v-if="creatingUser">创建中...</span>
-            <span v-else>确认新建用户</span>
+            登录
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            :class="{ active: activeTab === 'register' }"
+            @click="activeTab = 'register'"
+          >
+            注册
           </button>
         </div>
 
-        <div v-if="loginSuccess" class="success-message">
-          登录成功，欢迎 {{ username }}
+        <div v-if="activeTab === 'login'" class="panel-body">
+          <h2>管理员登录</h2>
+          <p class="panel-subtitle">输入账号、密码与验证码进入后台管理系统</p>
+
+          <div v-if="loginSuccess" class="notice success">登录成功，欢迎 {{ username }}</div>
+
+          <template v-else>
+            <div class="input-group">
+              <label>管理员账号</label>
+              <input
+                ref="usernameInput"
+                v-model="credentials.username"
+                class="input-field"
+                type="text"
+                autocomplete="off"
+                placeholder="请输入账号"
+                @keyup.enter="handleLogin"
+              />
+            </div>
+
+            <div class="input-group">
+              <label>密码</label>
+              <input
+                v-model="credentials.password"
+                class="input-field"
+                type="password"
+                autocomplete="off"
+                placeholder="请输入密码"
+                @keyup.enter="handleLogin"
+              />
+            </div>
+
+            <div class="input-group">
+              <label>验证码</label>
+              <div class="captcha-row">
+                <input
+                  v-model="credentials.captchaInput"
+                  class="input-field"
+                  type="text"
+                  maxlength="6"
+                  autocomplete="off"
+                  placeholder="请输入验证码"
+                  @keyup.enter="handleLogin"
+                />
+                <div class="captcha-box" title="点击刷新验证码" @click="generateCaptcha">{{ currentCaptcha }}</div>
+              </div>
+            </div>
+
+            <div v-if="errorMsg" class="notice error">{{ errorMsg }}</div>
+
+            <button type="button" class="primary-btn" :disabled="loading" @click="handleLogin">
+              <span v-if="loading">登录中...</span>
+              <span v-else>登录后台</span>
+            </button>
+          </template>
         </div>
 
-        <template v-else>
-          <div class="input-group">
-            <label>管理员账号</label>
-            <input
-              type="text"
-              class="input-field"
-              v-model="credentials.username"
-              autocomplete="off"
-              ref="usernameInput"
-              @keyup.enter="handleLogin"
-              placeholder="请输入账号"
-            />
-          </div>
+        <div v-else class="panel-body">
+          <h2>新建管理员</h2>
+          <p class="panel-subtitle">当前账号需为超级管理员，并通过当前密码验证</p>
 
-          <div class="input-group">
-            <label>密码</label>
-            <input
-              type="password"
-              class="input-field"
-              v-model="credentials.password"
-              autocomplete="off"
-              @keyup.enter="handleLogin"
-              placeholder="请输入密码"
-            />
-          </div>
-
-          <div class="input-group">
-            <label>验证码</label>
-            <div class="captcha-row">
+          <div class="input-grid">
+            <div class="input-group">
+              <label>新用户名</label>
               <input
-                type="text"
+                v-model="registerForm.username"
                 class="input-field"
-                v-model="credentials.captchaInput"
-                maxlength="6"
+                type="text"
                 autocomplete="off"
-                @keyup.enter="handleLogin"
-                placeholder="请输入验证码"
+                placeholder="3-20 位，字母数字下划线"
               />
-              <div class="captcha-box" @click="generateCaptcha" title="点击刷新验证码">
-                {{ currentCaptcha }}
-              </div>
+            </div>
+
+            <div class="input-group">
+              <label>新用户密码</label>
+              <input
+                v-model="registerForm.password"
+                class="input-field"
+                type="password"
+                autocomplete="off"
+                placeholder="至少 6 位"
+              />
+            </div>
+
+            <div class="input-group">
+              <label>角色</label>
+              <select v-model="registerForm.role" class="input-field">
+                <option value="ADMIN">普通管理员</option>
+                <option value="SUPER_ADMIN">超级管理员</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label>业务类型</label>
+              <select v-model="registerForm.agentType" class="input-field">
+                <option value="">不指定</option>
+                <option value="PRODUCTION">生产方</option>
+                <option value="CIRCULATION">流通方</option>
+                <option value="SALES">销售方</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label>当前管理员账号</label>
+              <input
+                v-model="registerForm.currentAdminUsername"
+                class="input-field"
+                type="text"
+                autocomplete="off"
+                placeholder="用于后端身份核验"
+              />
+            </div>
+
+            <div class="input-group">
+              <label>当前管理员密码</label>
+              <input
+                v-model="registerForm.currentPassword"
+                class="input-field"
+                type="password"
+                autocomplete="off"
+                placeholder="请输入当前管理员密码"
+              />
             </div>
           </div>
 
-          <div v-if="errorMsg" class="error-message">
-            {{ errorMsg }}
-          </div>
+          <div v-if="registerError" class="notice error">{{ registerError }}</div>
+          <div v-if="registerSuccess" class="notice success">{{ registerSuccess }}</div>
 
-          <button type="button" class="login-btn" :disabled="loading" @click="handleLogin">
-            <span v-if="loading">处理中...</span>
-            <span v-else>进入控制台</span>
+          <button type="button" class="primary-btn" :disabled="registering" @click="handleRegister">
+            <span v-if="registering">创建中...</span>
+            <span v-else>创建管理员</span>
           </button>
-        </template>
-
-        <div class="footer-note">
-          <strong>受控访问环境</strong>
         </div>
       </section>
     </div>
@@ -150,9 +183,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { login, storeCaptcha, registerAdmin } from '../api'
-import { setToken, setUsername, setRole, setAgentType } from '../utils/auth'
+import { reactive, ref, onMounted } from 'vue'
+import { login, registerAdmin, storeCaptcha } from '../api'
+import { setAgentType, setRole, setToken, setUsername } from '../utils/auth'
+
+const activeTab = ref('login')
 
 const credentials = reactive({
   username: '',
@@ -160,98 +195,53 @@ const credentials = reactive({
   captchaInput: ''
 })
 
+const registerForm = reactive({
+  username: '',
+  password: '',
+  role: 'ADMIN',
+  agentType: '',
+  currentPassword: '',
+  currentAdminUsername: ''
+})
+
 const currentCaptcha = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
 const loginSuccess = ref(false)
 const username = ref('')
-const showCreateUser = ref(false)
-const creatingUser = ref(false)
-const createUserMsg = ref('')
-const createUserError = ref('')
-const newUser = reactive({
-  username: '',
-  password: '',
-  currentPassword: '',
-  currentAdminUsername: ''
-})
+
+const registering = ref(false)
+const registerError = ref('')
+const registerSuccess = ref('')
 
 function generateCaptcha() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
   let captcha = ''
-  const length = 5
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < 5; i += 1) {
     captcha += chars[Math.floor(Math.random() * chars.length)]
   }
   currentCaptcha.value = captcha
   credentials.captchaInput = ''
 
   if (credentials.username && credentials.username.trim()) {
-    storeCaptcha(credentials.username, captcha).catch(err => {
+    storeCaptcha(credentials.username.trim(), captcha).catch((err) => {
       console.error('验证码存储失败:', err)
     })
-  }
-}
-
-async function handleCreateUser() {
-  if (!newUser.username.trim()) {
-    createUserError.value = '请输入新用户名'
-    return
-  }
-  if (!newUser.password.trim()) {
-    createUserError.value = '请输入新用户密码'
-    return
-  }
-  if (!newUser.currentAdminUsername.trim()) {
-    createUserError.value = '请输入当前管理员账号'
-    return
-  }
-  if (!newUser.currentPassword.trim()) {
-    createUserError.value = '请输入当前管理员密码'
-    return
-  }
-
-  creatingUser.value = true
-  createUserError.value = ''
-  createUserMsg.value = ''
-
-  try {
-    await registerAdmin({
-      username: newUser.username.trim(),
-      password: newUser.password,
-      currentPassword: newUser.currentPassword,
-      currentAdminUsername: newUser.currentAdminUsername.trim()
-    })
-    createUserMsg.value = `用户 ${newUser.username.trim()} 创建成功`
-    newUser.username = ''
-    newUser.password = ''
-    newUser.currentPassword = ''
-    newUser.currentAdminUsername = ''
-  } catch (error) {
-    if (error.response) {
-      createUserError.value = error.response.data?.message || error.response.data || '新建用户失败'
-    } else if (error.request) {
-      createUserError.value = '网络错误，请稍后重试'
-    } else {
-      createUserError.value = error.message || '新建用户失败'
-    }
-  } finally {
-    creatingUser.value = false
   }
 }
 
 generateCaptcha()
 
 async function handleLogin() {
-  if (!credentials.username || !credentials.username.trim()) {
+  if (!credentials.username.trim()) {
     errorMsg.value = '请输入管理员账号'
     return
   }
-  if (!credentials.password || !credentials.password.trim()) {
+  if (!credentials.password.trim()) {
     errorMsg.value = '请输入密码'
     return
   }
-  if (!credentials.captchaInput || !credentials.captchaInput.trim()) {
+  if (!credentials.captchaInput.trim()) {
     errorMsg.value = '请输入验证码'
     return
   }
@@ -260,13 +250,8 @@ async function handleLogin() {
   errorMsg.value = ''
 
   try {
-    await storeCaptcha(credentials.username, currentCaptcha.value)
-
-    const res = await login(
-      credentials.username,
-      credentials.password,
-      credentials.captchaInput
-    )
+    await storeCaptcha(credentials.username.trim(), currentCaptcha.value)
+    const res = await login(credentials.username.trim(), credentials.password, credentials.captchaInput.trim())
     const payload = res?.data || {}
     const finalUsername = payload.username || credentials.username.trim()
 
@@ -276,14 +261,12 @@ async function handleLogin() {
     setAgentType(payload.agentType || '')
 
     loginSuccess.value = true
-    errorMsg.value = ''
     username.value = finalUsername
 
     setTimeout(() => {
       window.location.href = '/dashboard'
-    }, 700)
+    }, 650)
   } catch (error) {
-    console.error('登录失败:', error)
     if (error.response) {
       errorMsg.value = error.response.data?.message || error.response.data || '登录失败'
     } else if (error.request) {
@@ -297,16 +280,66 @@ async function handleLogin() {
   }
 }
 
+async function handleRegister() {
+  registerError.value = ''
+  registerSuccess.value = ''
+
+  if (!registerForm.username.trim()) {
+    registerError.value = '请输入新用户名'
+    return
+  }
+  if (!registerForm.password.trim()) {
+    registerError.value = '请输入新用户密码'
+    return
+  }
+  if (!registerForm.currentAdminUsername.trim()) {
+    registerError.value = '请输入当前管理员账号'
+    return
+  }
+  if (!registerForm.currentPassword.trim()) {
+    registerError.value = '请输入当前管理员密码'
+    return
+  }
+
+  registering.value = true
+  try {
+    await registerAdmin({
+      username: registerForm.username.trim(),
+      password: registerForm.password,
+      role: registerForm.role,
+      agentType: registerForm.agentType || null,
+      currentPassword: registerForm.currentPassword,
+      currentAdminUsername: registerForm.currentAdminUsername.trim()
+    })
+
+    registerSuccess.value = `用户 ${registerForm.username.trim()} 创建成功`
+    registerForm.username = ''
+    registerForm.password = ''
+    registerForm.role = 'ADMIN'
+    registerForm.agentType = ''
+    registerForm.currentPassword = ''
+    registerForm.currentAdminUsername = ''
+  } catch (error) {
+    if (error.response) {
+      registerError.value = error.response.data?.message || error.response.data || '注册失败'
+    } else if (error.request) {
+      registerError.value = '网络错误，请稍后重试'
+    } else {
+      registerError.value = error.message || '注册失败，请稍后重试'
+    }
+  } finally {
+    registering.value = false
+  }
+}
+
 onMounted(() => {
   const usernameInput = document.querySelector('.input-field')
-  if (usernameInput) {
-    usernameInput.focus()
-  }
+  if (usernameInput) usernameInput.focus()
 })
 </script>
 
 <style scoped>
-.admin-login-page {
+.admin-auth-page {
   min-height: 100vh;
   width: 100%;
   position: relative;
@@ -315,271 +348,257 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
-  background: #f3f4f8;
+  background: linear-gradient(140deg, #f7fafc 0%, #eef3ff 50%, #edfdfb 100%);
 }
 
-.aurora {
+.mesh {
   position: absolute;
   border-radius: 999px;
   filter: blur(56px);
   pointer-events: none;
 }
 
-.aurora-a {
+.mesh-a {
   width: 380px;
   height: 380px;
-  background: rgba(255, 122, 89, 0.32);
-  top: -130px;
   left: -90px;
+  top: -120px;
+  background: rgba(56, 189, 248, 0.25);
 }
 
-.aurora-b {
-  width: 440px;
-  height: 440px;
-  background: rgba(34, 197, 168, 0.25);
-  right: -130px;
+.mesh-b {
+  width: 420px;
+  height: 420px;
+  right: -140px;
   bottom: -170px;
+  background: rgba(16, 185, 129, 0.22);
 }
 
-.login-shell {
-  width: min(980px, 100%);
-  display: grid;
-  grid-template-columns: 1.08fr 1fr;
+.auth-frame {
+  width: min(1080px, 100%);
   border-radius: 28px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  box-shadow: 0 20px 60px rgba(27, 39, 70, 0.16);
-  animation: shellIn 0.65s ease;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.15);
+  display: grid;
+  grid-template-columns: 1.02fr 1fr;
 }
 
-.brand-panel {
-  padding: 3rem 2.75rem;
-  background: linear-gradient(145deg, #0f172a 0%, #1d4ed8 50%, #06b6d4 100%);
-  color: #eaf3ff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.hero-panel {
+  background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 52%, #0ea5e9 100%);
+  color: #e9f0ff;
+  padding: 3rem 2.5rem;
 }
 
-.brand-kicker {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
+.hero-kicker {
   font-size: 0.78rem;
-  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
   opacity: 0.9;
-  margin-bottom: 1rem;
 }
 
-.brand-panel h1 {
-  font-size: clamp(1.9rem, 2.4vw, 2.45rem);
+.hero-panel h1 {
+  font-size: clamp(1.9rem, 2.5vw, 2.5rem);
   line-height: 1.2;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem;
 }
 
-.brand-copy {
+.hero-copy {
   font-size: 1rem;
   line-height: 1.75;
-  opacity: 0.92;
-  margin-bottom: 1.5rem;
+  opacity: 0.95;
 }
 
-.brand-tags {
-  display: flex;
-  gap: 0.55rem;
-  flex-wrap: wrap;
+.hero-metrics {
+  margin-top: 1.8rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
 }
 
-.brand-tags span {
-  padding: 0.45rem 0.8rem;
-  border: 1px solid rgba(234, 243, 255, 0.32);
-  border-radius: 999px;
+.hero-metrics article {
+  padding: 0.7rem;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.3);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 0.8rem;
 }
 
-.login-card {
-  padding: 2.3rem 2rem;
+.hero-metrics strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.hero-metrics span {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.auth-panel {
+  padding: 1.35rem;
   background: #ffffff;
 }
 
-.login-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.65rem;
+.tab-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
 }
 
-.login-header h2 {
-  font-size: 1.45rem;
-  color: #0f172a;
-  margin: 0;
-}
-
-.role-badge {
-  background: #ecfeff;
-  color: #0f766e;
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.76rem;
+.tab-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 0.65rem;
+  font-size: 0.93rem;
   font-weight: 700;
+  color: #334155;
+  background: #f8fafc;
 }
 
-.login-subtitle {
-  color: #475569;
-  font-size: 0.92rem;
-  margin-bottom: 1.2rem;
+.tab-btn.active {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(120deg, #2563eb 0%, #0ea5e9 100%);
 }
 
-.create-user-link {
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  background: #eff6ff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 0.4rem 0.72rem;
-  margin-bottom: 0.95rem;
-}
-
-.create-user-panel {
-  border: 1px solid #dbeafe;
-  background: #f8fbff;
+.panel-body {
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 0.9rem;
-  margin-bottom: 1.1rem;
+  padding: 1.05rem;
+  background: #fbfdff;
 }
 
-.create-user-msg {
-  margin-top: 0.1rem;
+.panel-body h2 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #0f172a;
 }
 
-.create-user-btn {
-  margin-top: 0.25rem;
+.panel-subtitle {
+  margin: 0.35rem 0 0.95rem;
+  color: #475569;
+  font-size: 0.9rem;
 }
 
 .input-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.86rem;
 }
 
 .input-group label {
   display: block;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.42rem;
   color: #334155;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.72rem;
 }
 
 .input-field {
   width: 100%;
-  padding: 0.88rem 1rem;
   border: 1px solid #cbd5e1;
-  border-radius: 12px;
   background: #f8fafc;
-  font-size: 0.96rem;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  border-radius: 11px;
+  font-size: 0.92rem;
+  padding: 0.76rem 0.86rem;
   outline: none;
+  transition: border-color 0.16s, box-shadow 0.16s, background-color 0.16s;
 }
 
 .input-field:focus {
-  border-color: #2563eb;
+  border-color: #3b82f6;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
 }
 
 .captcha-row {
   display: grid;
-  grid-template-columns: 1fr 130px;
-  gap: 0.65rem;
+  grid-template-columns: 1fr 120px;
+  gap: 0.62rem;
 }
 
 .captcha-box {
-  border-radius: 12px;
+  border-radius: 11px;
   background: linear-gradient(120deg, #0f172a 0%, #334155 100%);
   color: #f8fafc;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 1.32rem;
-  letter-spacing: 0.2em;
+  font-size: 1.22rem;
+  letter-spacing: 0.18em;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   user-select: none;
+  cursor: pointer;
 }
 
-.error-message {
-  margin: 0.5rem 0 0.85rem;
+.notice {
+  margin-bottom: 0.8rem;
   border-radius: 10px;
-  padding: 0.65rem 0.8rem;
+  padding: 0.62rem 0.75rem;
+  font-size: 0.86rem;
+}
+
+.notice.error {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
-  font-size: 0.88rem;
 }
 
-.success-message {
-  border-radius: 12px;
-  padding: 0.78rem 0.9rem;
+.notice.success {
   background: #ecfeff;
   border: 1px solid #a5f3fc;
   color: #155e75;
-  margin-bottom: 1rem;
-  font-size: 0.92rem;
 }
 
-.login-btn {
+.primary-btn {
   width: 100%;
   border: none;
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
+  border-radius: 11px;
+  padding: 0.8rem 0.9rem;
   color: #ffffff;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  background: linear-gradient(120deg, #2563eb 0%, #06b6d4 100%);
-  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+  background: linear-gradient(120deg, #2563eb 0%, #0ea5e9 100%);
+  box-shadow: 0 9px 20px rgba(37, 99, 235, 0.28);
 }
 
-.login-btn:hover:enabled {
-  transform: translateY(-1px);
-  filter: brightness(1.05);
-  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.34);
-}
-
-.login-btn:disabled {
+.primary-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-.footer-note {
-  margin-top: 1.15rem;
-  text-align: center;
-}
-
-.footer-note strong {
-  font-size: 0.76rem;
-  color: #64748b;
-  font-weight: 600;
-}
-
-@media (max-width: 920px) {
-  .login-shell {
+@media (max-width: 980px) {
+  .auth-frame {
     grid-template-columns: 1fr;
   }
 
-  .brand-panel {
-    padding: 2rem 1.4rem;
+  .hero-panel {
+    padding: 1.8rem 1.2rem;
   }
 
-  .login-card {
-    padding: 1.5rem 1.15rem;
+  .hero-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 520px) {
-  .admin-login-page {
+@media (max-width: 640px) {
+  .admin-auth-page {
     padding: 0.6rem;
+  }
+
+  .auth-panel {
+    padding: 0.8rem;
+  }
+
+  .input-grid {
+    grid-template-columns: 1fr;
   }
 
   .captcha-row {
@@ -587,18 +606,11 @@ onMounted(() => {
   }
 
   .captcha-box {
-    min-height: 48px;
+    min-height: 44px;
   }
-}
 
-@keyframes shellIn {
-  from {
-    transform: translateY(10px) scale(0.985);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
+  .hero-metrics {
+    grid-template-columns: 1fr;
   }
 }
 </style>
