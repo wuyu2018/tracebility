@@ -1,40 +1,39 @@
 <template>
   <form class="verify-form" @submit.prevent="handleSubmit" novalidate>
-    <div class="form-group">
-      <label for="antiFakeCode">请输入产品防伪码</label>
-      <div class="input-wrap">
-        <input
-          id="antiFakeCode"
-          v-model="antiFakeCode"
-          type="text"
-          placeholder="防伪码"
-          maxlength="64"
-          autocomplete="off"
-          :disabled="loading"
-          @keydown.enter.prevent="handleSubmit"
-          ref="inputRef"
-        />
-        <button type="submit" class="btn-submit" :disabled="loading">
-          <span v-if="loading" class="loading-spinner"></span>
-          <span v-else>验证</span>
-        </button>
-        <button type="button" class="btn-submit" @click="startScan">
-            <span class="scan-icon">扫码查询</span>
-        </button>
-      </div>
-      <p class="form-tip">输入防伪码验证产品真伪并查看溯源信息</p>
-      <p v-if="error" class="form-error">{{ error }}</p>
+    <div class="input-wrapper">
+      <input
+        v-model="antiFakeCode"
+        type="text"
+        placeholder="请输入产品防伪码"
+        maxlength="64"
+        autocomplete="off"
+        :disabled="loading"
+        ref="inputRef"
+      />
+      <button type="submit" class="btn-verify" :disabled="loading">
+        {{ loading ? '验证中...' : '验证' }}
+      </button>
     </div>
-    <div v-if="showCamera" class="camera-overlay">
+    <button type="button" class="btn-scan" @click="startScan">
+      扫码查询
+    </button>
+    
+    <!-- 扫码弹窗 -->
+    <div v-if="showCamera" class="camera-overlay" @click.self="stopCamera">
       <div class="camera-container">
-        <video ref="videoRef" class="camera-video" autoplay></video>
-        <div class="scan-frame">
-          <div class="scan-corner top-left"></div>
-          <div class="scan-corner top-right"></div>
-          <div class="scan-corner bottom-left"></div>
-          <div class="scan-corner bottom-right"></div>
+        <div class="camera-header">
+          <span>请对准二维码</span>
+          <button type="button" class="btn-close" @click="stopCamera">关闭</button>
         </div>
-        <button class="btn-close-camera" @click="stopCamera">关闭</button>
+        <div class="camera-content">
+          <video ref="videoRef" class="camera-video" autoplay playsinline></video>
+          <div class="scan-frame">
+            <div class="scan-corner top-left"></div>
+            <div class="scan-corner top-right"></div>
+            <div class="scan-corner bottom-left"></div>
+            <div class="scan-corner bottom-right"></div>
+          </div>
+        </div>
       </div>
     </div>
   </form>
@@ -44,15 +43,13 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import jsQR from 'jsqr'
-import { verifyAntiFakeCodeGet } from '../services/api'
+import { verifyAntiFakeCode } from '../api'
 
 const emit = defineEmits(['verified', 'invalid'])
 
 const antiFakeCode = ref('')
 const loading = ref(false)
-const error = ref('')
 const inputRef = ref(null)
-
 const showCamera = ref(false)
 const videoRef = ref(null)
 let stream = null
@@ -104,34 +101,16 @@ function startQrScan() {
           scannedCode = url
         }
 
-        if (scannedCode && scannedCode.length >= 12) {
+        if (scannedCode) {
           stopCamera()
-          await queryByCode(scannedCode)
+          antiFakeCode.value = scannedCode
+          await handleSubmit()
         }
       }
     } catch (err) {
+      // 忽略识别错误
     }
   }, 500)
-}
-
-async function queryByCode(code) {
-  sessionStorage.setItem('scannedCode', code)
-  loading.value = true
-  try {
-    const result = await verifyAntiFakeCodeGet(code)
-    if (result.valid && result.data) {
-      emit('verified', result.data)
-    } else {
-      // result.valid === false 表示可能是重复查询或无效码
-      const message = result.message || '该产品可能是伪品，请谨慎购买！'
-      emit('invalid', message)
-    }
-  } catch (err) {
-    error.value = '网络错误，请稍后重试'
-    emit('invalid', '验证失败，请检查网络连接')
-  } finally {
-    loading.value = false
-  }
 }
 
 function stopCamera() {
@@ -146,128 +125,224 @@ function stopCamera() {
   }
 }
 
-const handleSubmit = async () => {
-  error.value = ''
-
-  if (!antiFakeCode.value || antiFakeCode.value.trim().length < 12) {
-    error.value = '防伪码长度至少12位'
+async function handleSubmit() {
+  if (!antiFakeCode.value || antiFakeCode.value.trim().length < 6) {
+    ElMessage.warning('防伪码至少 6 位')
     return
   }
+  
   loading.value = true
   try {
     const code = antiFakeCode.value.trim()
     sessionStorage.setItem('scannedCode', code)
-    const result = await verifyAntiFakeCodeGet(code)
+    const result = await verifyAntiFakeCode(code)
+    
     if (result.valid && result.data) {
       emit('verified', result.data)
     } else {
-      emit('invalid', result.message || '该产品可能是伪品，请谨慎购买！')
+      emit('invalid', result.message || '未找到该防伪码对应的产品信息')
     }
   } catch (err) {
-    error.value = '网络错误，请稍后重试'
+    ElMessage.error('验证失败，请检查网络连接')
     emit('invalid', '验证失败，请检查网络连接')
   } finally {
     loading.value = false
   }
 }
 
-defineExpose({ focus: () => inputRef.value?.focus() })
+defineExpose({ 
+  focus: () => inputRef.value?.focus(),
+  setCode: (code) => { antiFakeCode.value = code }
+})
 </script>
 
 <style scoped>
 .verify-form {
   width: 100%;
-  max-width: 480px;
-  padding: 0 0.5rem;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
-.form-group {
+.input-wrapper {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
-.form-group label {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.input-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: stretch;
-}
-
-.input-wrap input:first-child {
-  flex: 1;
-  min-width: 150px;
-}
-
-@media (max-width: 480px) {
-  .input-wrap {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .input-wrap input {
-    width: 100%;
-  }
-  .btn-submit {
-    display: flex;         
-    align-items: center;
-    justify-content: center;
-    min-height: 48px;
-    width: 100%;
-  }
-}
-
-.input-wrap input {
+.input-wrapper input {
   flex: 1;
   padding: 1rem 1.25rem;
-  border: 2px solid #e0e6e1;
+  border: 2px solid var(--color-border);
   border-radius: var(--radius);
-  font-size: 1rem;
+  font-size: 16px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.input-wrap input:focus {
+.input-wrapper input:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.15);
 }
 
-.input-wrap input::placeholder {
-  color: #9ca89e;
+.input-wrapper input::placeholder {
+  color: var(--color-text-light);
 }
 
-.btn-submit {
-  display: inline-flex;       
-  align-items: center;        
-  justify-content: center;  
-  text-align: center;
+.btn-verify {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: var(--color-primary);
   color: white;
   font-weight: 600;
   font-size: 1rem;
+  border: none;
   border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s;
   white-space: nowrap;
-  transition: transform 0.2s, box-shadow 0.2s;
-  min-width: 100px;
 }
 
-.btn-submit:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+.btn-verify:hover:not(:disabled) {
+  background: var(--color-primary-light);
 }
 
-.btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-submit:disabled {
-  opacity: 0.7;
+.btn-verify:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-scan {
+  width: 100%;
+  padding: 1rem;
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  font-weight: 500;
+  font-size: 1rem;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-scan:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.camera-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.camera-container {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.camera-header span {
+  font-weight: 500;
+}
+
+.btn-close {
+  padding: 0.4rem 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  background: var(--color-border-light);
+}
+
+.camera-content {
+  position: relative;
+  padding: var(--spacing-lg);
+}
+
+.camera-video {
+  width: 100%;
+  border-radius: var(--radius);
+}
+
+.scan-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+}
+
+.scan-corner {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--color-primary);
+}
+
+.scan-corner.top-left {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.scan-corner.top-right {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.scan-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.scan-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+@media (max-width: 768px) {
+  .input-wrapper {
+    flex-direction: column;
+  }
+  
+  .input-wrapper input {
+    font-size: 16px;
+  }
+  
+  .btn-verify {
+    width: 100%;
+  }
+  
+  .btn-scan {
+    font-size: 0.95rem;
+  }
 }
 </style>

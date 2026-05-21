@@ -1,43 +1,68 @@
 <template>
   <footer class="footer">
-    <div class="footer-inner">
-      <p>食品溯源系统 · 保障食品安全 · 让每一口都放心</p>
+    <div class="footer-content">
+      <div class="footer-links">
+        <router-link to="/">产品溯源</router-link>
+        <a href="#contact">联系我们</a>
+        <router-link to="/complaint">投诉入口</router-link>
+      </div>
+      <div class="footer-text">
+        &copy; 2025 食品溯源系统 · 安全可追溯
+      </div>
     </div>
   </footer>
 </template>
 
+<script setup>
+</script>
+
 <style scoped>
 .footer {
-  background: var(--color-primary-dark);
-  color: rgba(255, 255, 255, 0.85);
-  padding: 1.5rem 2rem;
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
-  text-align: center;
+  background: var(--color-bg-card);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-lg) var(--spacing-md);
   margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.footer-links {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.footer-links a {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+  color: var(--color-primary);
+}
+
+.footer-text {
+  color: var(--color-text-light);
+  font-size: 0.85rem;
 }
 
 @media (max-width: 768px) {
   .footer {
-    padding: 1.25rem 1rem;
+    padding: var(--spacing-md) var(--spacing-sm);
   }
-}
-
-@media (max-width: 480px) {
-  .footer {
-    padding: 1rem 0.875rem;
+  
+  .footer-links {
+    gap: var(--spacing-md);
   }
-  .footer p {
+  
+  .footer-links a {
     font-size: 0.85rem;
-    line-height: 1.5;
   }
-}
-
-.footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.footer p {
-  font-size: 0.9rem;
 }
 </style>

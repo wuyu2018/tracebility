@@ -1,18 +1,18 @@
 <template>
-  <div class="login-page">
+  <div class="admin-login-page">
     <div class="login-card">
       <div class="login-header">
-        <h2><el-icon :size="22"><Lock /></el-icon> 后台管理</h2>
+        <h2>后台管理</h2>
         <span class="role-badge">管理员</span>
       </div>
 
       <div v-if="loginSuccess" class="success-message">
-        <el-icon :size="20" color="#065f46"><SuccessFilled /></el-icon> 登录成功！欢迎回来，管理员 {{ adminUsername }}
+        登录成功！欢迎回来，{{ username }}
       </div>
 
       <template v-else>
         <div class="input-group">
-          <label><el-icon :size="16"><User /></el-icon> 管理员账号</label>
+          <label>管理员账号</label>
           <input
             type="text"
             class="input-field"
@@ -24,7 +24,7 @@
         </div>
 
         <div class="input-group">
-          <label><el-icon :size="16"><Key /></el-icon> 密码</label>
+          <label>密码</label>
           <input
             type="password"
             class="input-field"
@@ -35,7 +35,7 @@
         </div>
 
         <div class="input-group">
-          <label><el-icon :size="16"><PictureFilled /></el-icon> 验证码</label>
+          <label>验证码</label>
           <div class="captcha-row">
             <input
               type="text"
@@ -52,35 +52,30 @@
           </div>
         </div>
 
-        <div v-if="errorMsg" class="error-message" :class="{'lock-alert': isLockAlert}">
-          <el-icon :size="16"><WarningFilled /></el-icon> {{ errorMsg }}
+        <div v-if="errorMsg" class="error-message">
+          {{ errorMsg }}
         </div>
 
         <button type="button" class="login-btn" :disabled="loading" @click="handleLogin">
-          <span v-if="loading">
-            <el-icon class="icon-spin"><Loading /></el-icon> 处理中...
-          </span>
-          <span v-else><el-icon :size="16"><Pointer /></el-icon> 安全登录</span>
+          <span v-if="loading">处理中...</span>
+          <span v-else>安全登录</span>
         </button>
       </template>
 
       <div class="footer-note">
-        <el-icon :size="14" style="vertical-align: middle;"><WarningFilled /></el-icon>
-        <strong> 仅限管理员登录</strong>
+        <strong>仅限管理员登录</strong>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted ,nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Lock, User, Key, PictureFilled, SuccessFilled, WarningFilled, Loading, Pointer } from '@element-plus/icons-vue'
-import { adminLogin, storeCaptcha } from '../services/api'
+import { login, storeCaptcha } from '../api'
 import { setToken, setUsername, setRole, setAgentType } from '../utils/auth'
 
 const router = useRouter()
-const isOpen = ref(false)
 
 const credentials = reactive({
   username: '',
@@ -90,13 +85,11 @@ const credentials = reactive({
 
 const currentCaptcha = ref('')
 const errorMsg = ref('')
-const isLockAlert = ref(false)
 const loading = ref(false)
 const loginSuccess = ref(false)
-const adminUsername = ref('')
+const username = ref('')
 
-
-const generateCaptcha = () => {
+function generateCaptcha() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
   let captcha = ''
   const length = 5
@@ -115,7 +108,7 @@ const generateCaptcha = () => {
 
 generateCaptcha()
 
-const handleLogin = async () => {
+async function handleLogin() {
   if (!credentials.username || !credentials.username.trim()) {
     errorMsg.value = '请输入管理员账号'
     return
@@ -130,20 +123,17 @@ const handleLogin = async () => {
   }
 
   loading.value = true
-  errorMsg.value = '' 
+  errorMsg.value = ''
 
   try {
-    // 先存储验证码
     await storeCaptcha(credentials.username, currentCaptcha.value)
     
-    // 登录获取 JWT Token
-    const response = await adminLogin(
+    const response = await login(
       credentials.username,
       credentials.password,
       credentials.captchaInput
     )
 
-    // 保存 Token 和用户信息
     setToken(response.token, response.tokenType)
     setUsername(response.username)
     setRole(response.role)
@@ -151,22 +141,19 @@ const handleLogin = async () => {
 
     loginSuccess.value = true
     errorMsg.value = ''
+    username.value = response.username
     
-    // 使用完整 URL，避免在网关/非根路径部署时跳转失败
-    window.location.assign(`${window.location.origin}/ToolsStandalone`)
-    return 
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 1000)
   } catch (error) {
     console.error('登录失败:', error)
     if (error.response) {
       errorMsg.value = error.response.data?.message || error.response.data || '登录失败'
-      isLockAlert.value = errorMsg.value.includes('账号已被锁定')
-      console.error('错误详情:', error.response.data);
     } else if (error.request) {
       errorMsg.value = '网络错误，请稍后重试'
-      isLockAlert.value = false
     } else {
       errorMsg.value = error.message || '登录失败，请稍后重试'
-      isLockAlert.value = false
     }
     generateCaptcha()
   } finally {
@@ -183,7 +170,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.login-page {
+.admin-login-page {
   min-height: 100vh;
   width: 100%;
   display: flex;
@@ -193,45 +180,13 @@ onMounted(() => {
   background: linear-gradient(135deg, var(--color-bg) 0%, #e8efe9 100%);
 }
 
-@media (max-width: 768px) {
-  .login-page {
-    padding: 1.5rem 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-page {
-    padding: 1rem 0.875rem;
-    align-items: flex-start;
-    padding-top: 2rem;
-  }
-}
-
 .login-card {
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
   max-width: 440px;
   padding: 2.5rem 2rem;
-  transition: all 0.2s ease;
-}
-
-@media (max-width: 768px) {
-  .login-card {
-    padding: 2rem 1.5rem;
-    max-width: 400px;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-card {
-    padding: 1.5rem 1.25rem;
-    max-width: 100%;
-    border-radius: var(--radius);
-  }
 }
 
 .login-header {
@@ -244,18 +199,8 @@ onMounted(() => {
 .login-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-@media (max-width: 480px) {
-  .login-header h2 {
-    font-size: 1.25rem;
-    gap: 0.35rem;
-  }
 }
 
 .role-badge {
@@ -268,13 +213,6 @@ onMounted(() => {
   border: 1px solid #b9d3f0;
 }
 
-@media (max-width: 480px) {
-  .role-badge {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-  }
-}
-
 .input-group {
   margin-bottom: 1.25rem;
 }
@@ -285,14 +223,13 @@ onMounted(() => {
   font-weight: 500;
   color: var(--color-text);
   margin-bottom: 0.5rem;
-  letter-spacing: 0.3px;
 }
 
 .input-field {
   width: 100%;
   padding: 1rem 1.25rem;
-  background-color: white;
-  border: 2px solid #e0e6e1;
+  background: white;
+  border: 2px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -302,11 +239,6 @@ onMounted(() => {
 .input-field:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.15);
-}
-
-.input-field::placeholder {
-  color: #9ca89e;
-  font-size: 0.95rem;
 }
 
 .captcha-row {
@@ -330,53 +262,20 @@ onMounted(() => {
   min-width: 120px;
   border-radius: var(--radius);
   font-family: 'Courier New', monospace;
-  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
-  border: 2px solid rgba(255,255,255,0.2);
   cursor: pointer;
   user-select: none;
-  transition: transform 0.15s, box-shadow 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.2;
-}
-
-.captcha-box:hover {
-  transform: scale(1.02);
-  box-shadow: var(--shadow-md);
-}
-
-.captcha-box:active {
-  transform: scale(0.98);
 }
 
 .error-message {
   color: var(--color-danger);
   font-size: 0.9rem;
   margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
   background: #fee2e2;
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  width: fit-content;
-}
-
-.error-message.lock-alert {
-  background: linear-gradient(145deg, #fff3cd 0%, #ffe69c 100%);
-  border: 2px solid #f0c040;
-  color: #b7791f;
-  font-weight: 600;
-}
-
-.icon-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 .success-message {
@@ -387,15 +286,12 @@ onMounted(() => {
   font-size: 0.95rem;
   font-weight: 500;
   margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid #a7f3d0;
+  text-align: center;
 }
 
 .login-btn {
   width: 100%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  background: var(--color-primary);
   color: white;
   border: none;
   padding: 1rem 1.25rem;
@@ -403,27 +299,17 @@ onMounted(() => {
   font-weight: 600;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: var(--shadow-md);
+  transition: background 0.2s;
   margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
 }
 
 .login-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background: var(--color-primary-light);
 }
 
 .login-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-.login-btn:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .footer-note {
@@ -431,17 +317,16 @@ onMounted(() => {
   font-size: 0.85rem;
   color: var(--color-text-muted);
   text-align: center;
-  border-top: 1px dashed #e0e6e1;
+  border-top: 1px dashed var(--color-border);
   padding-top: 1.25rem;
 }
 
 .footer-note strong {
-  color: var(--color-primary-dark);
+  color: var(--color-primary);
   font-weight: 600;
   background: var(--color-bg);
   padding: 0.25rem 0.875rem;
   border-radius: 50px;
   font-size: 0.8rem;
-  display: inline-block;
 }
 </style>

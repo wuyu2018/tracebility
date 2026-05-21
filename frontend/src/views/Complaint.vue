@@ -1,282 +1,109 @@
 <template>
-  <div class="complaint-container">
-    <el-card class="complaint-card" shadow="always">
-      <template #header>
-        <div class="card-header">
-          <h2>产品投诉</h2>
-        </div>
-      </template>
-
-      <el-form
-        ref="complaintFormRef"
-        :model="complaintForm"
-        :rules="complaintRules"
-        label-width="120px"
-        class="complaint-form"
-        @submit.prevent="submitComplaint"
-      >
-        <el-form-item label="防伪码" prop="antiFakeCode">
-          <el-input
-            v-model="complaintForm.antiFakeCode"
-            placeholder="请输入产品防伪码"
-            clearable
-            maxlength="50"
-          />
-          <div class="form-tip">必填项，请扫描或输入产品防伪码</div>
-        </el-form-item>
-
-        <el-form-item label="投诉原因" prop="complaintReason">
-          <el-input
-            v-model="complaintForm.complaintReason"
-            type="textarea"
-            :rows="5"
-            placeholder="请输入详细的投诉原因"
-            maxlength="500"
-            show-word-limit
-            clearable
-          />
-          <div class="form-tip">必填项，请详细描述投诉原因</div>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button
-            type="primary"
-            :loading="submitting"
-            @click="submitComplaint"
-          >
-            {{ submitting ? '提交中...' : '提交投诉' }}
-          </el-button>
-          <el-button @click="resetForm">重置</el-button>
-        </el-form-item>
-      </el-form>
-
-      <!-- 错误提示 -->
-      <el-alert
-        v-if="errorMessage"
-        :title="errorMessage"
-        type="error"
-        show-icon
-        :closable="true"
-        @close="errorMessage = ''"
-        class="error-alert"
-      />
-    </el-card>
+  <div class="complaint-page">
+    <h1>我要投诉</h1>
+    <p class="page-desc">如果您对产品有疑问或投诉，请填写以下信息</p>
+    
+    <el-form :model="form" label-width="100px" class="complaint-form">
+      <el-form-item label="防伪码" required>
+        <el-input v-model="form.antiFakeCode" placeholder="请输入产品防伪码" />
+      </el-form-item>
+      
+      <el-form-item label="产品名称" required>
+        <el-input v-model="form.productName" placeholder="请输入产品名称" />
+      </el-form-item>
+      
+      <el-form-item label="批次号">
+        <el-input v-model="form.batchNumber" placeholder="请输入批次号（选填）" />
+      </el-form-item>
+      
+      <el-form-item label="投诉原因" required>
+        <el-radio-group v-model="form.complaintReason">
+          <el-radio label="product_expired">产品已过期</el-radio>
+          <el-radio label="package_damaged">包装破损</el-radio>
+          <el-radio label="quality_issue">质量问题</el-radio>
+          <el-radio label="code_abnormal">防伪码异常</el-radio>
+          <el-radio label="other">其他</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      
+      <el-form-item label="补充说明">
+        <el-input
+          v-model="form.description"
+          type="textarea"
+          :rows="5"
+          placeholder="请详细描述您的问题"
+        />
+      </el-form-item>
+      
+      <el-form-item>
+        <el-button type="primary" @click="handleSubmit" :loading="submitting">
+          提交投诉
+        </el-button>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import axios from '../utils/axios'
+import { reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { submitComplaint } from '../api'
 
-const complaintFormRef = ref()
-const complaintForm = reactive({
+const form = reactive({
   antiFakeCode: '',
-  complaintReason: ''
+  productName: '',
+  batchNumber: '',
+  complaintReason: 'quality_issue',
+  description: ''
 })
-const complaintRules = {
-  antiFakeCode: [
-    { required: true, message: '请输入防伪码', trigger: 'blur' }
-  ],
-  complaintReason: [
-    { required: true, message: '投诉原因不能为空', trigger: 'blur' }
-  ]
-}
+
 const submitting = ref(false)
-const errorMessage = ref('')
-const COMPLAINT_API = '/complaint'
 
-// 自动填充用户已扫码的防伪码
-const route = useRoute()
-const scannedCode = route.query.code || sessionStorage.getItem('scannedCode')
-if (scannedCode) {
-  complaintForm.antiFakeCode = scannedCode
-}
-
-const submitComplaint = async () => {
+async function handleSubmit() {
+  if (!form.antiFakeCode || !form.productName) {
+    ElMessage.warning('请填写防伪码和产品名称')
+    return
+  }
+  
+  submitting.value = true
   try {
-    const valid = await complaintFormRef.value.validate()
-    if (!valid) return
-
-    submitting.value = true
-    errorMessage.value = ''
-
-    const requestData = {
-      antiFakeCode: complaintForm.antiFakeCode.trim(),
-      complaintReason: complaintForm.complaintReason.trim()
-    }
-
-    const response = await axios.post(COMPLAINT_API, requestData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-
-    if (response.status === 200 || response.status === 201) {
-      ElMessage.success({
-        message: '投诉提交成功！',
-        duration: 3000
-      })
-
-      await ElMessageBox.alert(
-        `投诉已成功提交！\n投诉ID: ${response.data.id || 'N/A'}\n处理时间: ${new Date().toLocaleString()}`,
-        '提交成功',
-        {
-          confirmButtonText: '确定',
-          type: 'success'
-        }
-      )
-
-      resetForm()
-    }
-  } catch (error) {
-    handleApiError(error)
+    await submitComplaint(form)
+    ElMessage.success('投诉提交成功')
+    form.antiFakeCode = ''
+    form.productName = ''
+    form.batchNumber = ''
+    form.description = ''
+  } catch (err) {
+    ElMessage.error('提交失败，请稍后重试')
   } finally {
     submitting.value = false
   }
 }
-
-const handleApiError = (error) => {
-  if (error.response) {
-    const { status, data } = error.response
-
-    switch (status) {
-      case 400:
-        if (data && data.errors) {
-          try {
-            if (typeof data.errors === 'object' && !Array.isArray(data.errors) && data.errors !== null) {
-              const errorMessages = Object.entries(data.errors)
-                .map(([field, message]) => `${field}: ${message}`)
-                .join('\n')
-              errorMessage.value = `验证错误：\n${errorMessages}`
-            } else if (Array.isArray(data.errors)) {
-              const errorMessages = data.errors
-                .map(err => `${err.field || err}: ${err.message || err}`)
-                .join('\n')
-              errorMessage.value = `验证错误：\n${errorMessages}`
-            } else {
-              errorMessage.value = data.message || '请求参数有误，请检查填写内容'
-            }
-          } catch (e) {
-            errorMessage.value = data.message || '请求参数有误，请检查填写内容'
-          }
-        } else if (data && data.message) {
-          errorMessage.value = data.message
-        } else {
-          errorMessage.value = '请求参数有误，请检查填写内容'
-        }
-        break
-
-      case 404:
-        errorMessage.value = '未找到相关资源，请检查产品名称是否正确'
-        break
-
-      case 409:
-        errorMessage.value = '该产品已存在投诉记录'
-        break
-
-      case 500:
-        errorMessage.value = '服务器内部错误，请稍后重试'
-        break
-
-      default:
-        errorMessage.value = `请求失败：${status} ${data?.message || error.message || '未知错误'}`
-    }
-  } else if (error.request) {
-    errorMessage.value = '服务器无响应，请检查网络连接'
-  } else {
-    errorMessage.value = `请求配置错误：${error.message || '未知配置错误'}`
-  }
-  ElMessage.error({
-    message: errorMessage.value,
-    duration: 5000
-  })
-}
-
-const resetForm = () => {
-  if (complaintFormRef.value) {
-    complaintFormRef.value.resetFields()
-  }
-  errorMessage.value = ''
-}
-
-
 </script>
 
 <style scoped>
-.complaint-container {
-  max-width: 800px;
+.complaint-page {
+  max-width: 600px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
-  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+  padding: var(--spacing-2xl) var(--spacing-lg);
 }
 
-@media (max-width: 768px) {
-  .complaint-container {
-    padding: 1.5rem 1rem 3rem;
-  }
+.complaint-page h1 {
+  text-align: center;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
-@media (max-width: 480px) {
-  .complaint-container {
-    padding: 1rem 0.875rem 2.5rem;
-  }
-}
-
-.complaint-card {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-:deep(.el-card__header) {
-  background: var(--color-primary);
-  color: white;
-  padding: 1.25rem 1.5rem;
-}
-
-:deep(.el-card__body) {
-  padding: 1.5rem;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: white;
+.page-desc {
+  text-align: center;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-xl);
 }
 
 .complaint-form {
-  margin-top: 1.25rem;
-}
-
-.form-tip {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-top: 0.35rem;
-}
-
-.error-alert {
-  margin-top: 1.25rem;
-}
-
-@media (max-width: 768px) {
-  .complaint-container {
-    padding: 1rem;
-  }
-
-  :deep(.el-form-item) {
-    margin-bottom: 1.25rem;
-  }
-
-  :deep(.el-form-item__label) {
-    text-align: left !important;
-    padding-right: 0.5rem;
-  }
+  background: var(--color-bg-card);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 </style>

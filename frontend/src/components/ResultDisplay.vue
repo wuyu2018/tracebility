@@ -1,295 +1,282 @@
 <template>
-  <div v-if="traceData" class="result-display">
-    <!-- 重复查询警告 -->
-    <div v-if="traceData.isQueried" class="warning-banner">
-      <span class="warning-icon">⚠️</span>
-      <div class="warning-content">
-        <h3>该产品可能已被查询过</h3>
-        <p>{{ traceData.queryTip }}</p>
-        <p class="warning-tip">请谨慎购买，如有疑问请联系正规渠道核实</p>
+  <div class="result-display" v-if="traceData">
+    <div class="status-card" :class="statusClass">
+      <div class="status-header">
+        <span class="status-text">{{ statusText }}</span>
+        <span class="status-tip" v-if="traceData.repeatedQuery">
+          该产品已被查询 {{ traceData.scanCount }} 次，首次查询：{{ formatTime(traceData.firstScanTime) }}，请谨慎购买！
+        </span>
       </div>
     </div>
 
-    <div class="result-header">
-      <span class="success-badge" v-if="traceData.status === '已激活' && !traceData.isQueried">✓ 正品验证通过</span>
-      <span class="warning-badge" v-else-if="traceData.isQueried">⚠️ 重复查询</span>
-      <span class="info-badge" v-else>{{ traceData.status }}</span>
-      <h2>{{ traceData.product?.name }}</h2>
-      <p class="specification">{{ traceData.product?.specification }}</p>
-    </div>
-
-    <div class="result-cards">
-      <section class="card">
-        <h3>基本信息</h3>
-        <dl>
-          <dt>批次号</dt><dd>{{ traceData.batch?.batchNumber || '-' }}</dd>
-          <dt>生产日期</dt><dd>{{ formatDate(traceData.batch?.productionDate) }}</dd>
-          <dt>保质期</dt><dd>{{ traceData.batch?.shelfLife || traceData.product?.shelfLife || '-' }}</dd>
-        </dl>
-      </section>
-
-      <section v-if="traceData.materials?.length" class="card">
-        <h3>原料信息</h3>
-        <ul class="list">
-          <li v-for="(m, i) in traceData.materials" :key="i">
-            <strong>{{ m.materialName }}</strong>
-            <span>批次：{{ m.batchNumber }}</span>
-            <span>供应商：{{ m.supplierName || '-' }}</span>
-            <span>生产商：{{ m.producerName || '-' }}</span>
-          </li>
-        </ul>
-      </section>
-
-      <section v-if="traceData.inspection" class="card">
-        <h3>检测报告</h3>
-        <dl>
-          <dt>样品名称</dt><dd>{{ traceData.inspection.sampleName || '-' }}</dd>
-          <dt>抽样数量</dt><dd>{{ traceData.inspection.sampleQuantity || '-' }}</dd>
-          <dt>规格</dt><dd>{{ traceData.inspection.sampleSpecification || '-' }}</dd>
-          <dt>检验时间</dt><dd>{{ formatDateTime(traceData.inspection.inspectionTime) }}</dd>
-        </dl>
-        <div v-if="traceData.inspection.imageUrl" class="inspection-image">
-          <img :src="traceData.inspection.imageUrl" alt="检测报告" />
+    <div class="info-card">
+      <h3>产品信息</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">产品名称</span>
+          <span class="value">{{ traceData.product?.name || '-' }}</span>
         </div>
-      </section>
-
-      <section v-if="traceData.storage" class="card">
-        <h3>仓储信息</h3>
-        <dl>
-          <dt>入库时间</dt><dd>{{ formatDateTime(traceData.storage.storageTime) }}</dd>
-          <dt>出库时间</dt><dd>{{ formatDateTime(traceData.storage.outboundTime) }}</dd>
-        </dl>
-      </section>
-
-      <section v-if="traceData.transportSale" class="card">
-        <h3>运输销售</h3>
-        <dl>
-          <dt>运输时间</dt><dd>{{ formatDateTime(traceData.transportSale.transportTime) }}</dd>
-          <dt>销售区域</dt><dd>{{ traceData.transportSale.salesRegion || '-' }}</dd>
-        </dl>
-      </section>
-
-      <section v-if="traceData.firstScanTime" class="card card-highlight">
-        <h3>首次扫码</h3>
-        <dl>
-          <dt>首次扫码时间</dt><dd class="highlight">{{ formatDateTime(traceData.firstScanTime) }}</dd>
-        </dl>
-      </section>
+        <div class="info-item">
+          <span class="label">规格</span>
+          <span class="value">{{ traceData.product?.specification || '-' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">保质期</span>
+          <span class="value">{{ traceData.product?.shelfLife || '-' }}</span>
+        </div>
+        <div class="info-item" v-if="traceData.batch?.batchNumber">
+          <span class="label">批次号</span>
+          <span class="value">{{ traceData.batch.batchNumber }}</span>
+        </div>
+      </div>
     </div>
+
+    <div class="trace-card">
+      <h3>溯源信息</h3>
+      <div class="trace-timeline">
+        <div class="trace-item" v-if="traceData.materials?.length">
+          <div class="trace-dot"></div>
+          <div class="trace-content">
+            <div class="trace-title">原料采购</div>
+            <div class="trace-desc">
+              <span v-for="(m, i) in traceData.materials" :key="i">
+                {{ m.materialName }} ({{ m.batchNumber }})
+                <span v-if="i < traceData.materials.length - 1">、</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="trace-item" v-if="traceData.inspection">
+          <div class="trace-dot"></div>
+          <div class="trace-content">
+            <div class="trace-title">质检完成</div>
+            <div class="trace-desc">
+              样品：{{ traceData.inspection.sampleName }}
+              {{ traceData.inspection.qualified ? '✓ 合格' : '✗ 不合格' }}
+            </div>
+          </div>
+        </div>
+        <div class="trace-item" v-if="traceData.storage">
+          <div class="trace-dot"></div>
+          <div class="trace-content">
+            <div class="trace-title">仓储</div>
+            <div class="trace-desc">
+              {{ traceData.storage.warehouseLocation }}
+              <br>
+              入库：{{ formatTime(traceData.storage.storageTime) }}
+              出库：{{ formatTime(traceData.storage.outboundTime) }}
+            </div>
+          </div>
+        </div>
+        <div class="trace-item" v-if="traceData.transportSale">
+          <div class="trace-dot"></div>
+          <div class="trace-content">
+            <div class="trace-title">运输销售</div>
+            <div class="trace-desc">
+              区域：{{ traceData.transportSale.salesRegion }}
+              <br>
+              物流：{{ traceData.transportSale.transportCompany || '-' }}
+              {{ traceData.transportSale.vehicleNumber || '' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-complaint" @click="$emit('complaint')">
+      我要投诉
+    </button>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  traceData: Object,
+import { computed } from 'vue'
+
+const props = defineProps({
+  traceData: Object
 })
 
-function formatDate(val) {
-  if (!val) return '-'
-  const d = new Date(val)
-  return isNaN(d.getTime()) ? val : d.toLocaleDateString('zh-CN')
-}
+defineEmits(['complaint'])
 
-function formatDateTime(val) {
-  if (!val) return '-'
-  const d = new Date(val)
-  return isNaN(d.getTime()) ? val : d.toLocaleString('zh-CN')
+const statusClass = computed(() => {
+  if (props.traceData?.repeatedQuery) return 'status-warning'
+  return 'status-success'
+})
+
+const statusText = computed(() => {
+  if (props.traceData?.repeatedQuery) return '⚠️ 重复查询告警'
+  return '✓ 验证成功 - 正品'
+})
+
+function formatTime(time) {
+  if (!time) return '-'
+  const date = new Date(time)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 </script>
 
 <style scoped>
 .result-display {
-  animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.warning-banner {
-  background: linear-gradient(145deg, #fff3cd 0%, #ffe69c 100%);
-  border: 2px solid #f0c040;
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
-.warning-icon {
-  font-size: 2.5rem;
-  flex-shrink: 0;
+.status-card {
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  text-align: center;
 }
 
-.warning-content {
-  flex: 1;
+.status-success {
+  background: #d1fae5;
+  border: 2px solid #10b981;
+  color: #065f46;
 }
 
-.warning-content h3 {
-  color: #b7791f;
+.status-warning {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  color: #92400e;
+}
+
+.status-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.status-text {
   font-size: 1.1rem;
-  margin: 0 0 0.5rem;
   font-weight: 600;
 }
 
-.warning-content p {
-  color: #744210;
+.status-tip {
   font-size: 0.9rem;
-  margin: 0.25rem 0;
-  line-height: 1.5;
+  opacity: 0.9;
 }
 
-.warning-tip {
-  font-size: 0.85rem !important;
-  color: #975a16 !important;
-  margin-top: 0.75rem !important;
-  font-style: italic;
-}
-
-.result-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.success-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, var(--color-success) 0%, #5a9c6a 100%);
-  color: white;
-  padding: 0.35rem 1rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-}
-
-.warning-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
-  color: white;
-  padding: 0.35rem 1rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-}
-
-.info-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, #4a90a4 0%, #357a8a 100%);
-  color: white;
-  padding: 0.35rem 1rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-}
-
-.result-header h2 {
-  font-size: 1.5rem;
-  color: var(--color-primary-dark);
-  margin: 0;
-}
-
-.specification {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-  margin: 0.5rem 0 0;
-}
-
-.result-cards {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.card {
+.info-card, .trace-card {
   background: var(--color-bg-card);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid rgba(45, 90, 61, 0.08);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
 }
 
-.card h3 {
+.info-card h3, .trace-card h3 {
   font-size: 1rem;
-  color: var(--color-primary);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--color-accent-light);
-}
-
-.card dl {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.5rem 1.5rem;
-}
-
-.card dt {
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.card dd {
-  margin: 0;
-}
-
-.card-highlight {
-  background: linear-gradient(145deg, #f0fff4 0%, #e6ffe9 100%);
-  border-color: #a7f3d0;
-}
-
-.card-highlight .highlight {
-  color: var(--color-success);
   font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
 }
 
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
 }
 
-.list li {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #eee;
+.info-item {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.list li:last-child {
-  border-bottom: none;
-}
-
-.list li strong {
-  color: var(--color-primary-dark);
-}
-
-.list li span {
-  font-size: 0.875rem;
+.info-item .label {
+  font-size: 0.85rem;
   color: var(--color-text-muted);
 }
 
-.inspection-image {
-  margin-top: 1rem;
-  text-align: center;
+.info-item .value {
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.inspection-image img {
-  max-width: 100%;
+.trace-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.trace-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  position: relative;
+}
+
+.trace-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 30px;
+  bottom: -20px;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.trace-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.trace-content {
+  flex: 1;
+}
+
+.trace-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.trace-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.btn-complaint {
+  padding: 1rem;
+  background: white;
+  color: var(--color-danger);
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid var(--color-danger);
   border-radius: var(--radius);
-  border: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-@media (max-width: 480px) {
-  .card dl {
+.btn-complaint:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .info-grid {
     grid-template-columns: 1fr;
-    gap: 0.35rem;
   }
   
-  .card {
-    padding: 1.25rem 1rem;
+  .status-card {
+    padding: var(--spacing-md);
+  }
+  
+  .info-card, .trace-card {
+    padding: var(--spacing-md);
   }
 }
 </style>
