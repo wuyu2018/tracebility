@@ -3,6 +3,7 @@
     <!-- 顶部用户信息栏 -->
     <div class="user-bar" v-if="isAdminLoggedIn">
       <span class="user-info"><el-icon :size="16"><User /></el-icon> {{ username }}</span>
+      <el-tag :type="roleTagType" size="small" effect="dark">{{ roleLabel }}</el-tag>
       <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
     </div>
 
@@ -134,7 +135,7 @@ import CirculationDataEntry from '../components/CirculationDataEntry.vue';
 import SalesDataEntry from '../components/SalesDataEntry.vue';
 import BlockchainMonitor from '../components/BlockchainMonitor.vue';
 import { listAllProducts, generateQrCode, batchGenerateQrCodes as batchGenerateQrCodesApi, batchDeleteProducts as batchDeleteProductsApi } from '../services/api'
-import { isAuthenticated, removeToken, getUsername, getRole, getAgentType } from '../utils/auth'
+import { isAuthenticated, removeToken, getUsername, getRole, getAgentType, getRoleLabel } from '../utils/auth'
 import { useRouter } from 'vue-router'
 import axios from '../utils/axios'
 
@@ -144,6 +145,16 @@ const activeTab = ref('qrcode')
 // 认证状态
 const isAdminLoggedIn = computed(() => isAuthenticated())
 const username = computed(() => getUsername() || '管理员')
+const roleLabel = computed(() => getRoleLabel())
+const roleTagType = computed(() => {
+  const agentType = getAgentType()
+  if (agentType) {
+    const map = { PRODUCTION: 'success', CIRCULATION: 'warning', SALES: 'danger' }
+    return map[agentType] || 'info'
+  }
+  const role = getRole()
+  return role === 'SUPER_ADMIN' ? 'danger' : 'primary'
+})
 
 const handleLogout = () => {
   removeToken()

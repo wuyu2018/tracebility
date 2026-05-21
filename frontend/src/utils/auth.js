@@ -114,6 +114,28 @@ export function isAuthenticated() {
 }
 
 /**
+ * 获取角色中文标签
+ * 优先用 agentType，否则用 role
+ */
+export function getRoleLabel() {
+  const agentType = getAgentType()
+  if (agentType) {
+    const labels = {
+      PRODUCTION: '生产方',
+      CIRCULATION: '流通方',
+      SALES: '销售方'
+    }
+    return labels[agentType] || agentType
+  }
+  const role = getRole()
+  const labels = {
+    SUPER_ADMIN: '超级管理员',
+    ADMIN: '管理员'
+  }
+  return labels[role] || role
+}
+
+/**
  * 获取完整的 Authorization Header 值
  */
 export function getAuthHeader() {
