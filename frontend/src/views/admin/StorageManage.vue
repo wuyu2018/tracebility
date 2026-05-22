@@ -27,10 +27,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="入库时间" prop="storageTime">
-          <el-date-picker v-model="form.storageTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker v-model="form.storageTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
         </el-form-item>
         <el-form-item label="出库时间">
-          <el-date-picker v-model="form.outboundTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker v-model="form.outboundTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
         </el-form-item>
         <el-form-item label="数量" prop="quantity">
           <el-input-number v-model="form.quantity" :min="0" style="width:100%" />

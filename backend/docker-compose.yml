@@ -8,8 +8,12 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      ANCHOR_MYSQL_DATABASE: ${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}
+      ANCHOR_MYSQL_USER: ${ANCHOR_MYSQL_USER:-anchor_app_user}
+      ANCHOR_MYSQL_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ../scripts/anchor-init.sh:/docker-entrypoint-initdb.d/02-anchor.sh:ro
     networks:
       - traceability-network
     healthcheck:
@@ -17,6 +21,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 384M
 
   redis:
     image: redis:7-alpine
@@ -29,26 +37,6 @@ services:
       - traceability-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  anchor-mysql:
-    image: mysql:8.0
-    container_name: food-traceability-anchor-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${ANCHOR_MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}
-      ANCHOR_MYSQL_USER: ${ANCHOR_MYSQL_USER:-anchor_app_user}
-      ANCHOR_MYSQL_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
-    volumes:
-      - anchor_mysql_data:/var/lib/mysql
-      - ../scripts/anchor-init.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
-    networks:
-      - traceability-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -73,7 +61,7 @@ services:
       DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD}
       BLOCKCHAIN_RSA_PRIVATE_KEY: ${BLOCKCHAIN_RSA_PRIVATE_KEY:-/app/keys/private.pem}
       BLOCKCHAIN_RSA_PUBLIC_KEY: ${BLOCKCHAIN_RSA_PUBLIC_KEY:-/app/keys/public.pem}
-      ANCHOR_DATASOURCE_URL: jdbc:mysql://anchor-mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
       ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     volumes:
@@ -89,7 +77,6 @@ services:
 
 volumes:
   mysql_data:
-  anchor_mysql_data:
   redis_data:
   backend_logs:
 

@@ -104,7 +104,7 @@
           <el-input v-model="purchaseForm.producerAddress" />
         </el-form-item>
         <el-form-item label="采购日期" prop="purchaseDate">
-          <el-input v-model="purchaseForm.purchaseDate" placeholder="yyyy-MM-dd" />
+          <el-date-picker v-model="purchaseForm.purchaseDate" type="datetime" placeholder="选择日期" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
         </el-form-item>
         <el-form-item label="数量" prop="quantity">
           <el-input-number v-model="purchaseForm.quantity" :min="0" style="width:100%" />

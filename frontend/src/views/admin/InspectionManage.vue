@@ -16,8 +16,8 @@
       <el-table-column prop="sampleSpecification" label="样品规格" />
       <el-table-column label="检验结果" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.resultStatus === 'PASS' ? 'success' : 'danger'" size="small">
-            {{ row.resultStatus === 'PASS' ? '合格' : '不合格' }}
+          <el-tag :type="row.resultStatus === '合格' ? 'success' : 'danger'" size="small">
+            {{ row.resultStatus === '合格' ? '合格' : '不合格' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -42,20 +42,20 @@
         <el-form-item label="样品数量" prop="sampleQuantity">
           <el-input-number v-model="form.sampleQuantity" :min="0" style="width:100%" />
         </el-form-item>
-        <el-form-item label="检验结果" prop="resultStatus">
-          <el-select v-model="form.resultStatus" style="width:100%">
-            <el-option label="合格" value="PASS" />
-            <el-option label="不合格" value="FAIL" />
+        <el-form-item label="检验结果" prop="qualified">
+          <el-select v-model="form.qualified" style="width:100%">
+            <el-option label="合格" :value="true" />
+            <el-option label="不合格" :value="false" />
           </el-select>
         </el-form-item>
-        <el-form-item label="检验详情" prop="resultDetail">
-          <el-input v-model="form.resultDetail" type="textarea" :rows="3" />
+        <el-form-item label="不合格原因" prop="failReason" v-if="!form.qualified">
+          <el-input v-model="form.failReason" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="检验员" prop="inspectorName">
           <el-input v-model="form.inspectorName" />
         </el-form-item>
         <el-form-item label="检验时间" prop="inspectionTime">
-          <el-date-picker v-model="form.inspectionTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker v-model="form.inspectionTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -80,12 +80,12 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = reactive({
   batchId: '', sampleName: '', sampleSpecification: '', sampleQuantity: 0,
-  resultStatus: 'PASS', resultDetail: '', inspectorName: '' , inspectionTime: ''
+  qualified: true, failReason: '', inspectorName: '' , inspectionTime: ''
 })
 const rules = {
   batchId: [{ required: true, message: '请选择批次' }],
   sampleName: [{ required: true, message: '请输入样品名称' }],
-  resultStatus: [{ required: true, message: '请选择检验结果' }],
+  qualified: [{ required: true, message: '请选择检验结果' }],
   inspectorName: [{ required: true, message: '请输入检验员' }]
 }
 
@@ -105,7 +105,7 @@ async function openDialog() {
 }
 function resetForm() {
   formRef.value?.resetFields()
-  Object.assign(form, { batchId: '', sampleName: '', sampleSpecification: '', sampleQuantity: 0, resultStatus: 'PASS', resultDetail: '', inspectorName: '', inspectionTime: '' })
+  Object.assign(form, { batchId: '', sampleName: '', sampleSpecification: '', sampleQuantity: 0, qualified: true, failReason: '', inspectorName: '', inspectionTime: '' })
 }
 
 async function handleSave() {

@@ -35,7 +35,7 @@
           <el-input v-model="form.vehicleNumber" />
         </el-form-item>
         <el-form-item label="运输时间" prop="time">
-          <el-date-picker v-model="form.time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
+          <el-date-picker v-model="form.time" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
         </el-form-item>
         <el-form-item label="销售区域" prop="salesRegion">
           <el-input v-model="form.salesRegion" />
@@ -47,10 +47,10 @@
           <el-input v-model="form.receiverContact" />
         </el-form-item>
         <el-form-item label="环境温度">
-          <el-input v-model="form.environmentTemperature" placeholder="如: 25°C" />
+          <el-input-number v-model="form.environmentTemperature" :min="-50" :max="100" style="width:100%" />
         </el-form-item>
         <el-form-item label="产品温度">
-          <el-input v-model="form.productTemperature" placeholder="如: 18°C" />
+          <el-input-number v-model="form.productTemperature" :min="-50" :max="100" style="width:100%" />
         </el-form-item>
         <el-form-item label="记录人">
           <el-input v-model="form.recorderName" />
@@ -78,8 +78,8 @@ const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = reactive({
   batchId: '', transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
-  receiverName: '', receiverContact: '', environmentTemperature: '',
-  productTemperature: '', recorderName: ''
+  receiverName: '', receiverContact: '', environmentTemperature: null,
+  productTemperature: null, recorderName: ''
 })
 const rules = {
   batchId: [{ required: true, message: '请选择批次' }],
@@ -107,8 +107,8 @@ function resetForm() {
   formRef.value?.resetFields()
   Object.assign(form, {
     batchId: '', transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
-    receiverName: '', receiverContact: '', environmentTemperature: '',
-    productTemperature: '', recorderName: ''
+    receiverName: '', receiverContact: '', environmentTemperature: null,
+    productTemperature: null, recorderName: ''
   })
 }
 
