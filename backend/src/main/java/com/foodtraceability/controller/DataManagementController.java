@@ -189,6 +189,7 @@ public class DataManagementController {
                     var dto = new com.foodtraceability.dto.ProductMaterialRelationDTO();
                     dto.setId(r.getId());
                     dto.setProductId(r.getProduct().getId());
+                    dto.setProductName(r.getProduct().getName());
                     dto.setMaterialId(r.getMaterial().getId());
                     dto.setMaterialName(r.getMaterial().getName());
                     dto.setIsHidden(r.getIsHidden());

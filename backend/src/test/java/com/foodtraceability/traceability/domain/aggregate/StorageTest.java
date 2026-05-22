@@ -15,7 +15,7 @@ class StorageTest {
     @Test
     void create_setsAllFields() {
         LocalDateTime now = LocalDateTime.of(2026, 4, 30, 10, 0);
-        Storage s = Storage.create(10L, now, 1000.0, "箱", "A区-01库位");
+        Storage s = Storage.create(10L, now, null, 1000.0, "箱", "A区-01库位");
 
         assertEquals(10L, s.getBatchId());
         assertEquals(now, s.getStorageTime());
@@ -28,7 +28,7 @@ class StorageTest {
 
     @Test
     void registerAndPullEvents() {
-        Storage s = Storage.create(10L, LocalDateTime.now(), 100.0, "盒", "B区");
+        Storage s = Storage.create(10L, LocalDateTime.now(), null, 100.0, "盒", "B区");
         GoodsReceived event = new GoodsReceived(1L, 10L, LocalDateTime.now());
 
         s.registerEvent(event);
@@ -41,7 +41,7 @@ class StorageTest {
 
     @Test
     void associateBatch_setsBatchId() {
-        Storage s = Storage.create(10L, LocalDateTime.now(), 100.0, "盒", "C区");
+        Storage s = Storage.create(10L, LocalDateTime.now(), null, 100.0, "盒", "C区");
         com.foodtraceability.entity.ProductionBatch batch = new com.foodtraceability.entity.ProductionBatch();
         batch.setId(99L);
 

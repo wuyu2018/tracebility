@@ -23,6 +23,11 @@
 
     <el-dialog v-model="dialogVisible" title="新增运输销售记录" width="520px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="选择批次" prop="batchId">
+          <el-select v-model="form.batchId" placeholder="请选择批次" filterable style="width:100%">
+            <el-option v-for="b in batches" :key="b.id" :label="b.batchNumber" :value="b.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="运输公司" prop="transportCompany">
           <el-input v-model="form.transportCompany" />
         </el-form-item>
@@ -62,20 +67,22 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getTransportSales, createTransportSale } from '@/api/admin'
+import { getTransportSales, createTransportSale, getBatches } from '@/api/admin'
 import { Plus } from '@element-plus/icons-vue'
 
 const list = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const batches = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = reactive({
-  transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
+  batchId: '', transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
   receiverName: '', receiverContact: '', environmentTemperature: '',
   productTemperature: '', recorderName: ''
 })
 const rules = {
+  batchId: [{ required: true, message: '请选择批次' }],
   transportCompany: [{ required: true, message: '请输入运输公司' }],
   vehicleNumber: [{ required: true, message: '请输入车牌号' }],
   salesRegion: [{ required: true, message: '请输入销售区域' }],
@@ -90,11 +97,16 @@ async function fetchList() {
   } finally { loading.value = false }
 }
 
-function openDialog() { resetForm(); dialogVisible.value = true }
+async function openDialog() {
+  const res = await getBatches()
+  batches.value = Array.isArray(res) ? res : res?.data || res?.records || []
+  resetForm()
+  dialogVisible.value = true
+}
 function resetForm() {
   formRef.value?.resetFields()
   Object.assign(form, {
-    transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
+    batchId: '', transportCompany: '', vehicleNumber: '', time: '', salesRegion: '',
     receiverName: '', receiverContact: '', environmentTemperature: '',
     productTemperature: '', recorderName: ''
   })

@@ -53,11 +53,12 @@ public class Storage {
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
-    public static Storage create(Long batchId, LocalDateTime storageTime, Double quantity,
-                                  String unit, String warehouseLocation) {
+    public static Storage create(Long batchId, LocalDateTime storageTime, LocalDateTime outboundTime,
+                                  Double quantity, String unit, String warehouseLocation) {
         Storage s = new Storage();
         s.batchId = batchId;
         s.storageTime = storageTime;
+        s.outboundTime = outboundTime;
         s.quantity = quantity;
         s.unit = unit;
         s.warehouseLocation = warehouseLocation;

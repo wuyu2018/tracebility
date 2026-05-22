@@ -62,8 +62,8 @@ class TraceabilityQueryApplicationServiceTest {
 
         assertNotNull(result);
         assertEquals("已激活", result.status());
-        assertEquals(1L, result.product().getId());
-        assertEquals(10L, result.batch().getId());
+        assertEquals(1L, result.product().id());
+        assertEquals(10L, result.batch().id());
         assertEquals(1, result.materials().size());
         assertNull(result.materials().get(0).materialName()); // no Material linked
         assertEquals("MP-001", result.materials().get(0).batchNumber());
@@ -131,7 +131,7 @@ class TraceabilityQueryApplicationServiceTest {
         TraceabilityQueryApplicationService.TraceResult result = service.queryByBatchNumber("B202604300001");
 
         assertNotNull(result);
-        assertEquals("B202604300001", result.batch().getBatchNumber());
+        assertEquals("B202604300001", result.batch().batchNumber());
         assertEquals("未扫码", result.status());
         assertFalse(result.isRepeatedQuery());
     }
@@ -166,9 +166,9 @@ class TraceabilityQueryApplicationServiceTest {
         var result = service.queryByCode("SC999");
 
         assertNotNull(result.storage());
-        assertEquals("A区", result.storage().getWarehouseLocation());
+        assertEquals("A区", result.storage().warehouseLocation());
         assertNotNull(result.transportSale());
-        assertEquals("物流公司", result.transportSale().getTransportCompany());
+        assertEquals("物流公司", result.transportSale().transportCompany());
     }
 
     @Test
@@ -186,7 +186,7 @@ class TraceabilityQueryApplicationServiceTest {
         var result = service.queryByCode("SC111");
 
         assertNotNull(result.inspection());
-        assertEquals("样本A", result.inspection().getSampleName());
+        assertEquals("样本A", result.inspection().sampleName());
     }
 
     @Test

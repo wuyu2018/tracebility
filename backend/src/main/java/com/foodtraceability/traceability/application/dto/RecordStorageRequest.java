@@ -5,15 +5,17 @@ import java.time.LocalDateTime;
 public class RecordStorageRequest {
     private final Long batchId;
     private final LocalDateTime storageTime;
+    private final LocalDateTime outboundTime;
     private final Double quantity;
     private final String unit;
     private final String warehouseLocation;
     private final Long companyId;
 
-    public RecordStorageRequest(Long batchId, LocalDateTime storageTime, Double quantity,
-                                 String unit, String warehouseLocation, Long companyId) {
+    public RecordStorageRequest(Long batchId, LocalDateTime storageTime, LocalDateTime outboundTime,
+                                 Double quantity, String unit, String warehouseLocation, Long companyId) {
         this.batchId = batchId;
         this.storageTime = storageTime;
+        this.outboundTime = outboundTime;
         this.quantity = quantity;
         this.unit = unit;
         this.warehouseLocation = warehouseLocation;
@@ -22,6 +24,7 @@ public class RecordStorageRequest {
 
     public Long batchId() { return batchId; }
     public LocalDateTime storageTime() { return storageTime; }
+    public LocalDateTime outboundTime() { return outboundTime; }
     public Double quantity() { return quantity; }
     public String unit() { return unit; }
     public String warehouseLocation() { return warehouseLocation; }

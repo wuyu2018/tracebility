@@ -85,12 +85,14 @@ public class ProductMaterialRelationServiceImpl implements ProductMaterialRelati
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductMaterialRelationDTO> getRelationsByProductId(Long productId) {
         return repository.findByProductId(productId).stream()
                 .map(r -> {
                     ProductMaterialRelationDTO dto = new ProductMaterialRelationDTO();
                     dto.setId(r.getId());
                     dto.setProductId(r.getProduct().getId());
+                    dto.setProductName(r.getProduct().getName());
                     dto.setMaterialId(r.getMaterial().getId());
                     dto.setMaterialName(r.getMaterial().getName());
                     dto.setIsHidden(r.getIsHidden());
@@ -100,12 +102,14 @@ public class ProductMaterialRelationServiceImpl implements ProductMaterialRelati
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductMaterialRelationDTO> listAllRelations() {
         return repository.findAll().stream()
                 .map(r -> {
                     ProductMaterialRelationDTO dto = new ProductMaterialRelationDTO();
                     dto.setId(r.getId());
                     dto.setProductId(r.getProduct().getId());
+                    dto.setProductName(r.getProduct().getName());
                     dto.setMaterialId(r.getMaterial().getId());
                     dto.setMaterialName(r.getMaterial().getName());
                     dto.setIsHidden(r.getIsHidden());

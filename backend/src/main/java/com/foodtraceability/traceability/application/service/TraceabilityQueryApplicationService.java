@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -73,17 +75,41 @@ public class TraceabilityQueryApplicationService {
             product = productRepo.findById(batch.getProductId()).orElse(null);
         }
 
+        ProductDto productDto = product != null
+                ? new ProductDto(product.getId(), product.getName(), product.getSpecification(),
+                        product.getShelfLife(), product.getImageUrl(),
+                        product.getContactPhone(), product.getContactEmail())
+                : null;
+
+        BatchDto batchDto = new BatchDto(batch.getId(), batch.getBatchNumber(),
+                batch.getProductionDate(), batch.getShelfLife(), batch.getCreatedAt());
+
         List<MaterialInfo> materials = buildMaterialInfos(batch.getId());
 
         List<Inspection> inspections = inspectionRepo.findByBatch_Id(batch.getId());
         Inspection inspection = inspections.isEmpty() ? null : inspections.get(0);
+        InspectionDto inspectionDto = inspection != null
+                ? new InspectionDto(inspection.getSampleName(), inspection.getSampleQuantity(),
+                        inspection.getSampleSpecification(), inspection.getImageUrl(),
+                        inspection.getInspectorName(), inspection.getInspectionTime())
+                : null;
 
         Storage storage = batch.getStorageId() != null
                 ? storageRepo.findById(batch.getStorageId()).orElse(null)
                 : null;
+        StorageDto storageDto = storage != null
+                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime(),
+                        storage.getWarehouseLocation())
+                : null;
 
         TransportSale transportSale = batch.getTransportSaleId() != null
                 ? transportSaleRepo.findById(batch.getTransportSaleId()).orElse(null)
+                : null;
+        TransportSaleDto transportSaleDto = transportSale != null
+                ? new TransportSaleDto(transportSale.getTime(), transportSale.getTransportCompany(),
+                        transportSale.getVehicleNumber(), transportSale.getSalesRegion(),
+                        transportSale.getReceiverName(), transportSale.getReceiverContact(),
+                        transportSale.getRecorderName())
                 : null;
 
         String status = sc != null ? sc.getStatus() : "未扫码";
@@ -93,8 +119,8 @@ public class TraceabilityQueryApplicationService {
                 ? sc.getFirstScanTime().toString()
                 : null;
 
-        return new TraceResult(product, batch, materials, inspection, storage, transportSale,
-                status, isRepeatedQuery, scanCount, firstScanTime);
+        return new TraceResult(productDto, batchDto, materials, inspectionDto, storageDto,
+                transportSaleDto, status, isRepeatedQuery, scanCount, firstScanTime);
     }
 
     private List<MaterialInfo> buildMaterialInfos(Long batchId) {
@@ -111,13 +137,32 @@ public class TraceabilityQueryApplicationService {
                 .toList();
     }
 
+    public record ProductDto(Long id, String name, String specification,
+                              String shelfLife, String imageUrl,
+                              String contactPhone, String contactEmail) {}
+
+    public record BatchDto(Long id, String batchNumber, LocalDate productionDate,
+                            String shelfLife, LocalDateTime createdAt) {}
+
+    public record InspectionDto(String sampleName, Integer sampleQuantity,
+                                 String sampleSpecification, String imageUrl,
+                                 String inspectorName, LocalDateTime inspectionTime) {}
+
+    public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime,
+                              String warehouseLocation) {}
+
+    public record TransportSaleDto(LocalDateTime time, String transportCompany,
+                                    String vehicleNumber, String salesRegion,
+                                    String receiverName, String receiverContact,
+                                    String recorderName) {}
+
     public record MaterialInfo(String materialName, String batchNumber,
                                 String supplierName, String producerName) {}
 
-    public record TraceResult(Product product, ProductionBatch batch,
+    public record TraceResult(ProductDto product, BatchDto batch,
                                 List<MaterialInfo> materials,
-                                Inspection inspection, Storage storage,
-                                TransportSale transportSale,
+                                InspectionDto inspection, StorageDto storage,
+                                TransportSaleDto transportSale,
                                 String status, Boolean isRepeatedQuery,
                                 int scanCount, String firstScanTime) {}
 }

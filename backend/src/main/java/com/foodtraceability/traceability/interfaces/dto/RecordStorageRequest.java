@@ -25,6 +25,6 @@ public class RecordStorageRequest {
 
     public com.foodtraceability.traceability.application.dto.RecordStorageRequest toAppRequest(Long companyId) {
         return new com.foodtraceability.traceability.application.dto.RecordStorageRequest(
-                batchId, storageTime, quantity, unit, warehouseLocation, companyId);
+                batchId, storageTime, outboundTime, quantity, unit, warehouseLocation, companyId);
     }
 }

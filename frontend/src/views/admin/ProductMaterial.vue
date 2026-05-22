@@ -85,6 +85,8 @@ async function fetchList() {
   try {
     const res = await getProductMaterials()
     list.value = Array.isArray(res) ? res : res?.data || res?.records || []
+  } catch {
+    // error already shown by response interceptor
   } finally { loading.value = false }
 }
 

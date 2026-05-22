@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -28,6 +29,10 @@ public class StorageApplicationService {
     private final ProductionBatchRepository batchRepo;
     private final DomainEventPublisherImpl eventPublisher;
 
+    public record StorageListResponse(Long id, Long batchId, LocalDateTime storageTime,
+                                       LocalDateTime outboundTime, Double quantity,
+                                       String unit, String warehouseLocation) {}
+
     public StorageApplicationService(StorageRepository storageRepo,
                                      ProductionBatchRepository batchRepo,
                                      DomainEventPublisherImpl eventPublisher) {
@@ -37,11 +42,14 @@ public class StorageApplicationService {
     }
 
     public RecordStorageResponse recordStorage(RecordStorageRequest req) {
+        if (req.batchId() == null) {
+            throw new BusinessException("批次不能为空");
+        }
         ProductionBatch batch = batchRepo.findById(req.batchId())
                 .orElseThrow(() -> new BusinessException("批次不存在: " + req.batchId()));
 
         Storage storage = Storage.create(
-                req.batchId(), req.storageTime(), req.quantity(), req.unit(), req.warehouseLocation());
+                req.batchId(), req.storageTime(), req.outboundTime(), req.quantity(), req.unit(), req.warehouseLocation());
         if (req.companyId() != null) {
             storage.setCompanyId(req.companyId());
         }
@@ -59,11 +67,17 @@ public class StorageApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Storage> listStorages(Long companyId) {
+    public List<StorageListResponse> listStorages(Long companyId) {
+        List<Storage> storages;
         if (companyId != null) {
-            return storageRepo.findByCompanyId(companyId);
+            storages = storageRepo.findByCompanyId(companyId);
+        } else {
+            storages = storageRepo.findAll();
         }
-        return storageRepo.findAll();
+        return storages.stream()
+                .map(s -> new StorageListResponse(s.getId(), s.getBatchId(), s.getStorageTime(),
+                        s.getOutboundTime(), s.getQuantity(), s.getUnit(), s.getWarehouseLocation()))
+                .toList();
     }
 
     private void publishAfterCommit(GoodsReceived event) {

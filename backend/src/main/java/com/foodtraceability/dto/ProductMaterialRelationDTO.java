@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 public class ProductMaterialRelationDTO {
     private Long id;
     private Long productId;
+    private String productName;
     private Long materialId;
     private String materialName;
     private Boolean isHidden;

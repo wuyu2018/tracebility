@@ -28,6 +28,11 @@
 
     <el-dialog v-model="dialogVisible" title="新增质检记录" width="520px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
+        <el-form-item label="选择批次" prop="batchId">
+          <el-select v-model="form.batchId" placeholder="请选择批次" filterable style="width:100%">
+            <el-option v-for="b in batches" :key="b.id" :label="b.batchNumber" :value="b.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="样品名称" prop="sampleName">
           <el-input v-model="form.sampleName" />
         </el-form-item>
@@ -64,19 +69,21 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getInspections, createInspection } from '@/api/admin'
+import { getInspections, createInspection, getBatches } from '@/api/admin'
 import { Plus } from '@element-plus/icons-vue'
 
 const list = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const batches = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = reactive({
-  sampleName: '', sampleSpecification: '', sampleQuantity: 0,
+  batchId: '', sampleName: '', sampleSpecification: '', sampleQuantity: 0,
   resultStatus: 'PASS', resultDetail: '', inspectorName: '' , inspectionTime: ''
 })
 const rules = {
+  batchId: [{ required: true, message: '请选择批次' }],
   sampleName: [{ required: true, message: '请输入样品名称' }],
   resultStatus: [{ required: true, message: '请选择检验结果' }],
   inspectorName: [{ required: true, message: '请输入检验员' }]
@@ -90,10 +97,15 @@ async function fetchList() {
   } finally { loading.value = false }
 }
 
-function openDialog() { resetForm(); dialogVisible.value = true }
+async function openDialog() {
+  const res = await getBatches()
+  batches.value = Array.isArray(res) ? res : res?.data || res?.records || []
+  resetForm()
+  dialogVisible.value = true
+}
 function resetForm() {
   formRef.value?.resetFields()
-  Object.assign(form, { sampleName: '', sampleSpecification: '', sampleQuantity: 0, resultStatus: 'PASS', resultDetail: '', inspectorName: '', inspectionTime: '' })
+  Object.assign(form, { batchId: '', sampleName: '', sampleSpecification: '', sampleQuantity: 0, resultStatus: 'PASS', resultDetail: '', inspectorName: '', inspectionTime: '' })
 }
 
 async function handleSave() {

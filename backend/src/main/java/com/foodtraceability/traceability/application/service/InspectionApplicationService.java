@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,6 +30,11 @@ public class InspectionApplicationService {
     private final ProductionBatchRepository batchRepo;
     private final DomainEventPublisherImpl eventPublisher;
 
+    public record InspectionListResponse(Long id, Long batchId, String sampleName,
+                                          Integer sampleQuantity, String sampleSpecification,
+                                          String imageUrl, String resultStatus, String resultDetail,
+                                          String inspectorName, LocalDateTime inspectionTime) {}
+
     public InspectionApplicationService(InspectionRepository inspectionRepo,
                                         ProductionBatchRepository batchRepo,
                                         DomainEventPublisherImpl eventPublisher) {
@@ -38,6 +44,9 @@ public class InspectionApplicationService {
     }
 
     public CompleteInspectionResponse completeInspection(CompleteInspectionRequest req) {
+        if (req.batchId() == null) {
+            throw new BusinessException("批次不能为空");
+        }
         ProductionBatch batch = batchRepo.findById(req.batchId())
                 .orElseThrow(() -> new BusinessException("批次不存在: " + req.batchId()));
 
@@ -67,11 +76,19 @@ public class InspectionApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<Inspection> listInspections(Long companyId) {
+    public List<InspectionListResponse> listInspections(Long companyId) {
+        List<Inspection> inspections;
         if (companyId != null) {
-            return inspectionRepo.findByCompanyId(companyId);
+            inspections = inspectionRepo.findByCompanyId(companyId);
+        } else {
+            inspections = inspectionRepo.findAll();
         }
-        return inspectionRepo.findAll();
+        return inspections.stream()
+                .map(i -> new InspectionListResponse(i.getId(), i.getBatchId(), i.getSampleName(),
+                        i.getSampleQuantity(), i.getSampleSpecification(), i.getImageUrl(),
+                        i.getResultStatus(), i.getResultDetail(), i.getInspectorName(),
+                        i.getInspectionTime()))
+                .toList();
     }
 
     private void publishAfterCommit(DomainEvent event) {

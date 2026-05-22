@@ -21,6 +21,11 @@
 
     <el-dialog v-model="dialogVisible" title="新增仓储记录" width="460px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="选择批次" prop="batchId">
+          <el-select v-model="form.batchId" placeholder="请选择批次" filterable style="width:100%">
+            <el-option v-for="b in batches" :key="b.id" :label="b.batchNumber" :value="b.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="入库时间" prop="storageTime">
           <el-date-picker v-model="form.storageTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%" />
         </el-form-item>
@@ -48,16 +53,18 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getStorages, createStorage } from '@/api/admin'
+import { getStorages, createStorage, getBatches } from '@/api/admin'
 import { Plus } from '@element-plus/icons-vue'
 
 const list = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const batches = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
-const form = reactive({ storageTime: '', outboundTime: '', quantity: 0, unit: '', warehouseLocation: '' })
+const form = reactive({ batchId: '', storageTime: '', outboundTime: '', quantity: 0, unit: '', warehouseLocation: '' })
 const rules = {
+  batchId: [{ required: true, message: '请选择批次' }],
   storageTime: [{ required: true, message: '请选择入库时间' }],
   warehouseLocation: [{ required: true, message: '请输入仓储位置' }]
 }
@@ -70,8 +77,13 @@ async function fetchList() {
   } finally { loading.value = false }
 }
 
-function openDialog() { resetForm(); dialogVisible.value = true }
-function resetForm() { formRef.value?.resetFields(); form.storageTime = ''; form.outboundTime = ''; form.quantity = 0; form.unit = ''; form.warehouseLocation = '' }
+async function openDialog() {
+  const res = await getBatches()
+  batches.value = Array.isArray(res) ? res : res?.data || res?.records || []
+  resetForm()
+  dialogVisible.value = true
+}
+function resetForm() { formRef.value?.resetFields(); form.batchId = ''; form.storageTime = ''; form.outboundTime = ''; form.quantity = 0; form.unit = ''; form.warehouseLocation = '' }
 
 async function handleSave() {
   const valid = await formRef.value.validate().catch(() => false)

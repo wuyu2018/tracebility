@@ -61,28 +61,30 @@ public class TraceabilityQueryController {
     private TraceabilityQueryResponse toResponse(TraceResult r) {
         return new TraceabilityQueryResponse(
                 r.product() != null ? new TraceabilityQueryResponse.ProductInfo(
-                        r.product().getId(), r.product().getName(), r.product().getSpecification(),
-                        r.product().getShelfLife(), r.product().getImageUrl(),
-                        r.product().getContactPhone(), r.product().getContactEmail()) : null,
+                        r.product().id(), r.product().name(), r.product().specification(),
+                        r.product().shelfLife(), r.product().imageUrl(),
+                        r.product().contactPhone(), r.product().contactEmail()) : null,
                 r.batch() != null ? new TraceabilityQueryResponse.BatchInfo(
-                        r.batch().getId(), r.batch().getBatchNumber(), r.batch().getProductionDate(),
-                        r.batch().getShelfLife(), r.batch().getCreatedAt()) : null,
+                        r.batch().id(), r.batch().batchNumber(), r.batch().productionDate(),
+                        r.batch().shelfLife(), r.batch().createdAt()) : null,
                 r.materials().stream()
                         .map(m -> new TraceabilityQueryResponse.MaterialInfo(
                                 m.materialName(), m.batchNumber(), m.supplierName(), m.producerName()))
                         .toList(),
                 r.inspection() != null ? new TraceabilityQueryResponse.InspectionInfo(
-                        r.inspection().getSampleName(), r.inspection().getSampleQuantity(),
-                        r.inspection().getSampleSpecification(), r.inspection().getImageUrl(),
-                        r.inspection().getInspectorName(),
-                        r.inspection().getInspectionTime() != null
-                                ? r.inspection().getInspectionTime().toString() : null) : null,
+                        r.inspection().sampleName(), r.inspection().sampleQuantity(),
+                        r.inspection().sampleSpecification(), r.inspection().imageUrl(),
+                        r.inspection().inspectorName(),
+                        r.inspection().inspectionTime() != null
+                                ? r.inspection().inspectionTime().toString() : null) : null,
                 r.storage() != null ? new TraceabilityQueryResponse.StorageInfo(
-                        r.storage().getStorageTime(), r.storage().getOutboundTime(),
-                        r.storage().getWarehouseLocation()) : null,
+                        r.storage().storageTime(), r.storage().outboundTime(),
+                        r.storage().warehouseLocation()) : null,
                 r.transportSale() != null ? new TraceabilityQueryResponse.TransportSaleInfo(
-                        r.transportSale().getTime(), null, null,
-                        r.transportSale().getSalesRegion(), null, null, null) : null,
+                        r.transportSale().time(), r.transportSale().transportCompany(),
+                        r.transportSale().vehicleNumber(),
+                        r.transportSale().salesRegion(), r.transportSale().receiverName(),
+                        r.transportSale().receiverContact(), r.transportSale().recorderName()) : null,
                 r.status(),
                 r.isRepeatedQuery(),
                 r.scanCount(),

@@ -44,7 +44,18 @@ public class TransportSaleApplicationService {
 
     public record RecordTransportSaleResponse(Long id, Long batchId, String transportCompany, String salesRegion) {}
 
+    public record TransportSaleListResponse(Long id, Long batchId, String transportCompany,
+                                              String vehicleNumber, LocalDateTime time,
+                                              String salesRegion, String receiverName,
+                                              String receiverContact,
+                                              Double environmentTemperature,
+                                              Double productTemperature,
+                                              String recorderName) {}
+
     public RecordTransportSaleResponse recordTransportSale(RecordTransportSaleRequest req) {
+        if (req.batchId() == null) {
+            throw new BusinessException("批次不能为空");
+        }
         ProductionBatch batch = batchRepo.findById(req.batchId())
                 .orElseThrow(() -> new BusinessException("批次不存在: " + req.batchId()));
 
@@ -77,11 +88,20 @@ public class TransportSaleApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransportSale> listTransportSales(Long companyId) {
+    public List<TransportSaleListResponse> listTransportSales(Long companyId) {
+        List<TransportSale> sales;
         if (companyId != null) {
-            return transportSaleRepo.findByCompanyId(companyId);
+            sales = transportSaleRepo.findByCompanyId(companyId);
+        } else {
+            sales = transportSaleRepo.findAll();
         }
-        return transportSaleRepo.findAll();
+        return sales.stream()
+                .map(t -> new TransportSaleListResponse(t.getId(), t.getBatchId(),
+                        t.getTransportCompany(), t.getVehicleNumber(), t.getTime(),
+                        t.getSalesRegion(), t.getReceiverName(), t.getReceiverContact(),
+                        t.getEnvironmentTemperature(), t.getProductTemperature(),
+                        t.getRecorderName()))
+                .toList();
     }
 
     private void publishAfterCommit(TransportSaleRecorded event) {

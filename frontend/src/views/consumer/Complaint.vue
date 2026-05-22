@@ -104,7 +104,7 @@ async function submit() {
   submitting.value = true
   try {
     await submitComplaint({
-      securityCode: form.securityCode,
+      antiFakeCode: form.securityCode,
       complaintReason: form.complaintReason
     })
     ElMessage.success('投诉已提交，我们会尽快处理')
