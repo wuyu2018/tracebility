@@ -64,18 +64,22 @@ public class MultiAgentCoordinator {
         caAgent.initialize();
         agents.put(caAgent.getAgentId(), caAgent);
         consensusReplicas.add(caAgent.getAgentId());
-        
+        caAgent.registerAgent(caAgent.getAgentId(), "CA-Agent", 365);
+
         productionAgent.initialize();
         agents.put(productionAgent.getAgentId(), productionAgent);
         consensusReplicas.add(productionAgent.getAgentId());
-        
+        caAgent.registerAgent(productionAgent.getAgentId(), "Production-Agent", 365);
+
         circulationAgent.initialize();
         agents.put(circulationAgent.getAgentId(), circulationAgent);
         consensusReplicas.add(circulationAgent.getAgentId());
-        
+        caAgent.registerAgent(circulationAgent.getAgentId(), "Circulation-Agent", 365);
+
         salesAgent.initialize();
         agents.put(salesAgent.getAgentId(), salesAgent);
         consensusReplicas.add(salesAgent.getAgentId());
+        caAgent.registerAgent(salesAgent.getAgentId(), "Sales-Agent", 365);
         
         pbftConsensus.initialize(caAgent.getAgentId(), consensusReplicas);
         

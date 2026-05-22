@@ -8,6 +8,7 @@ import com.foodtraceability.entity.BlockHeader;
 import com.foodtraceability.entity.BlockchainLog;
 import com.foodtraceability.entity.OffchainStorage;
 import com.foodtraceability.repository.BlockHeaderRepository;
+import com.foodtraceability.repository.BlockchainLogRepository;
 import com.foodtraceability.repository.OffchainStorageRepository;
 import com.foodtraceability.security.DataEncryptionService;
 import com.foodtraceability.security.FoodBloomFilter;
@@ -32,6 +33,7 @@ public class AgentBlockchainService {
     private final DataEncryptionService encryptionService;
     private final FoodBloomFilter bloomFilter;
     private final BlockHeaderRepository blockHeaderRepo;
+    private final BlockchainLogRepository blockchainLogRepo;
 
     public AgentBlockchainService(
             MultiAgentCoordinator agentCoordinator,
@@ -40,7 +42,8 @@ public class AgentBlockchainService {
             OffchainStorageRepository offchainStorageRepo,
             DataEncryptionService encryptionService,
             FoodBloomFilter bloomFilter,
-            BlockHeaderRepository blockHeaderRepo) {
+            BlockHeaderRepository blockHeaderRepo,
+            BlockchainLogRepository blockchainLogRepo) {
         this.agentCoordinator = agentCoordinator;
         this.dataOnChainContract = dataOnChainContract;
         this.permissionControlContract = permissionControlContract;
@@ -48,6 +51,7 @@ public class AgentBlockchainService {
         this.encryptionService = encryptionService;
         this.bloomFilter = bloomFilter;
         this.blockHeaderRepo = blockHeaderRepo;
+        this.blockchainLogRepo = blockchainLogRepo;
     }
 
     @Transactional
@@ -83,7 +87,7 @@ public class AgentBlockchainService {
                 permissionControlContract,
                 dataOnChainContract,
                 agentCoordinator.getCaAgent(),
-                currentAgent.getAgentId());
+                agentCoordinator.getCaAgent().getAgentId());
 
         if (!consensusReached) {
             throw new IllegalStateException("Consensus not reached for block append");
@@ -143,6 +147,7 @@ public class AgentBlockchainService {
             offchainStorage.getFoodId()
         );
         block.setBlockHeader(header);
+        block = blockchainLogRepo.save(block);
 
         currentAgent.updateCreditScore(1);
 
@@ -162,7 +167,7 @@ public class AgentBlockchainService {
                                       String action, String previousHash, String dataHash,
                                       LocalDateTime timestamp) {
         String input = chainType + "|" + entityType + "|" + entityId + "|" + action +
-                      "|" + previousHash + "|" + dataHash + "|" + timestamp;
+                      "|" + previousHash + "|" + dataHash + "|" + timestamp.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));

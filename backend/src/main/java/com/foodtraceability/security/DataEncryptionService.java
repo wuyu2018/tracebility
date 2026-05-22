@@ -45,7 +45,7 @@ public class DataEncryptionService {
         Cipher cipher = Cipher.getInstance(AES_CIPHER);
         byte[] iv = generateIV();
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        SecretKeySpec keySpec = new SecretKeySpec(aesKey.getBytes(), AES_ALGORITHM);
+        SecretKeySpec keySpec = new SecretKeySpec(Base64.getDecoder().decode(aesKey), AES_ALGORITHM);
         
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
         byte[] encrypted = cipher.doFinal(plaintext.getBytes("UTF-8"));
@@ -68,7 +68,7 @@ public class DataEncryptionService {
         
         Cipher cipher = Cipher.getInstance(AES_CIPHER);
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-        SecretKeySpec keySpec = new SecretKeySpec(aesKey.getBytes(), AES_ALGORITHM);
+        SecretKeySpec keySpec = new SecretKeySpec(Base64.getDecoder().decode(aesKey), AES_ALGORITHM);
         
         cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
         byte[] decrypted = cipher.doFinal(ciphertext);

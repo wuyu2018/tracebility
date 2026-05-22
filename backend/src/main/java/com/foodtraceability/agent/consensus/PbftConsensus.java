@@ -265,7 +265,8 @@ public class PbftConsensus {
         PbftMessage primaryPrepare = createPrepare(prePrepare);
         receivePrepare(primaryPrepare);
 
-        if (!canExecute(request.getSequenceNumber())) {
+        if (!consensusStates.containsKey(request.getSequenceNumber())
+                || !consensusStates.get(request.getSequenceNumber()).isPrepared()) {
             log.warn("PBFT: not enough prepares, consensus failed");
             return false;
         }

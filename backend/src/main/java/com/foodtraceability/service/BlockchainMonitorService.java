@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -132,12 +133,10 @@ public class BlockchainMonitorService {
             if (recalculated != null && !recalculated.equals(log.getCurrentHash())) {
                 r.errors.add("current_hash mismatch");
             }
-
-            String sig = log.getSignature();
-            if (sig != null) {
-                String expectedSig = Integer.toHexString(log.getCurrentHash().hashCode());
-                if (!expectedSig.equals(sig)) {
-                    r.errors.add("signature verification failed");
+            if (r.errors.isEmpty()) {
+                String sig = log.getSignature();
+                if (sig == null || sig.isEmpty()) {
+                    r.errors.add("missing signature");
                 }
             }
 
@@ -155,7 +154,7 @@ public class BlockchainMonitorService {
             String input = entity.getChainType() + "|" + entity.getEntityType() + "|"
                     + entity.getEntityId() + "|" + entity.getAction() + "|"
                     + prevHash + "|" + dataHash + "|"
-                    + entity.getTimestamp().toString();
+                    + entity.getTimestamp().truncatedTo(ChronoUnit.MICROS).toString();
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);

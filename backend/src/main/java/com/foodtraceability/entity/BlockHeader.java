@@ -37,7 +37,7 @@ public class BlockHeader {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(name = "bloom_filter", columnDefinition = "BLOB")
+    @Column(name = "bloom_filter", columnDefinition = "MEDIUMBLOB")
     private byte[] bloomFilter;
 
     @Column(name = "metadata_index", columnDefinition = "JSON")
