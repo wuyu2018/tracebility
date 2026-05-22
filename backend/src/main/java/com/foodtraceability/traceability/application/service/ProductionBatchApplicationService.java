@@ -22,6 +22,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @Transactional
@@ -88,6 +89,42 @@ public class ProductionBatchApplicationService {
 
         log.info("Batch created: {} (productId={})", batchNo, req.productId());
         return new CreateBatchResponse(batchId, batchNo.value(), product.getName());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductionBatch> listBatches(Long productId, Long companyId) {
+        List<ProductionBatch> batches;
+        if (companyId != null) {
+            batches = batchRepo.findByCompanyIdAndIsDeletedFalse(companyId);
+        } else {
+            batches = batchRepo.findByIsDeletedFalse();
+        }
+        if (productId != null) {
+            batches = batches.stream()
+                    .filter(b -> b.getProductId().equals(productId))
+                    .toList();
+        }
+        return batches;
+    }
+
+    @Transactional(readOnly = true)
+    public ProductionBatch getBatch(Long id) {
+        return batchRepo.findById(id)
+                .orElseThrow(() -> new BusinessException("批次不存在: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public ProductionBatch getBatchByBatchNumber(String batchNumber) {
+        return batchRepo.findByBatchNumber(batchNumber)
+                .orElseThrow(() -> new BusinessException("批次不存在: " + batchNumber));
+    }
+
+    public void deleteBatch(Long id) {
+        ProductionBatch batch = batchRepo.findById(id)
+                .orElseThrow(() -> new BusinessException("批次不存在: " + id));
+        batch.softDelete();
+        batchRepo.save(batch);
+        log.info("Batch soft-deleted: id={}", id);
     }
 
     private void publishAfterCommit(BatchCreated event) {

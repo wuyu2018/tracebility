@@ -26,6 +26,16 @@ public class TransportSaleController {
         this.securityUtils = securityUtils;
     }
 
+    @GetMapping("/transport-sales")
+    public ResponseEntity<?> listTransportSales() {
+        try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            return ResponseEntity.ok(appService.listTransportSales(companyId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/transport-sales")
     public ResponseEntity<?> recordTransportSale(@RequestBody RecordTransportSaleRequest req) {
         log.info("[v2] 录入运输销售 batchId={}", req.getBatchId());

@@ -26,6 +26,16 @@ public class StorageController {
         this.securityUtils = securityUtils;
     }
 
+    @GetMapping("/storage")
+    public ResponseEntity<?> listStorages() {
+        try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            return ResponseEntity.ok(appService.listStorages(companyId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/storage")
     public ResponseEntity<?> recordStorage(@RequestBody RecordStorageRequest req) {
         log.info("[v2] 录入仓储 batchId={}", req.getBatchId());

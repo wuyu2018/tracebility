@@ -49,7 +49,6 @@ public class BlockchainInitializationService {
 
     @Async
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void initializeBlockchain() {
         if (blockchainLogRepo.existsByChainType("MATERIAL") || blockchainLogRepo.existsByChainType("BATCH")) {
             log.info("[BlockchainInit] Blockchain data already exists, skipping initialization");

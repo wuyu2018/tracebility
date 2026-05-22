@@ -15,6 +15,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -73,6 +74,14 @@ public class TransportSaleApplicationService {
 
         log.info("TransportSale recorded: id={}, batchId={}", tsId, req.batchId());
         return new RecordTransportSaleResponse(tsId, req.batchId(), req.transportCompany(), req.salesRegion());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransportSale> listTransportSales(Long companyId) {
+        if (companyId != null) {
+            return transportSaleRepo.findByCompanyId(companyId);
+        }
+        return transportSaleRepo.findAll();
     }
 
     private void publishAfterCommit(TransportSaleRecorded event) {

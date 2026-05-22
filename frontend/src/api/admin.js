@@ -121,15 +121,15 @@ export function toggleProductMaterialVisibility(id) {
 }
 
 export function getBatches(params) {
-  return request.get('/batches', { params })
+  return request.get('/v2/batches', { params })
 }
 
 export function getBatch(id) {
-  return request.get(`/batches/${id}`)
+  return request.get(`/v2/batches/${id}`)
 }
 
 export function getBatchByNumber(batchNumber) {
-  return request.get(`/batches/by-number/${encodeURIComponent(batchNumber)}`)
+  return request.get(`/v2/batches/by-number/${encodeURIComponent(batchNumber)}`)
 }
 
 export function createBatch(data) {
@@ -137,7 +137,7 @@ export function createBatch(data) {
 }
 
 export function deleteBatch(id) {
-  return request.delete(`/batches/${id}`)
+  return request.delete(`/v2/batches/${id}`)
 }
 
 export function generateSecurityCodes(batchId, data) {
@@ -153,7 +153,7 @@ export function exportSecurityCodes(batchId) {
 }
 
 export function getStorages() {
-  return request.get('/insert/storages')
+  return request.get('/v2/storage')
 }
 
 export function createStorage(data) {
@@ -161,7 +161,7 @@ export function createStorage(data) {
 }
 
 export function getTransportSales() {
-  return request.get('/insert/transport-sales')
+  return request.get('/v2/transport-sales')
 }
 
 export function createTransportSale(data) {
@@ -169,7 +169,7 @@ export function createTransportSale(data) {
 }
 
 export function getInspections() {
-  return request.get('/insert/inspections')
+  return request.get('/v2/inspections')
 }
 
 export function createInspection(data) {

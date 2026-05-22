@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class InspectionApplicationService {
@@ -62,6 +64,14 @@ public class InspectionApplicationService {
         log.info("Inspection completed: id={}, batchId={}, result={}",
                 inspection.getId(), req.batchId(), result.displayStatus());
         return new CompleteInspectionResponse(inspection.getId(), req.batchId(), result.displayStatus());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Inspection> listInspections(Long companyId) {
+        if (companyId != null) {
+            return inspectionRepo.findByCompanyId(companyId);
+        }
+        return inspectionRepo.findAll();
     }
 
     private void publishAfterCommit(DomainEvent event) {

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -24,6 +25,45 @@ public class ProductionBatchController {
     public ProductionBatchController(ProductionBatchApplicationService appService, SecurityUtils securityUtils) {
         this.appService = appService;
         this.securityUtils = securityUtils;
+    }
+
+    @GetMapping("/batches")
+    public ResponseEntity<?> listBatches(@RequestParam(required = false) Long productId) {
+        try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            return ResponseEntity.ok(appService.listBatches(productId, companyId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/batches/{id}")
+    public ResponseEntity<?> getBatch(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(appService.getBatch(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/batches/by-number/{batchNumber}")
+    public ResponseEntity<?> getBatchByNumber(@PathVariable String batchNumber) {
+        try {
+            return ResponseEntity.ok(appService.getBatchByBatchNumber(batchNumber));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/batches/{id}")
+    public ResponseEntity<?> deleteBatch(@PathVariable Long id) {
+        try {
+            appService.deleteBatch(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
+        } catch (Exception e) {
+            log.error("[v2] 删除批次失败 - ID: {}, {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/batches")

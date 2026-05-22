@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class StorageApplicationService {
@@ -54,6 +56,14 @@ public class StorageApplicationService {
 
         log.info("Storage recorded: id={}, batchId={}", storageId, req.batchId());
         return new RecordStorageResponse(storageId, req.batchId(), req.warehouseLocation());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Storage> listStorages(Long companyId) {
+        if (companyId != null) {
+            return storageRepo.findByCompanyId(companyId);
+        }
+        return storageRepo.findAll();
     }
 
     private void publishAfterCommit(GoodsReceived event) {

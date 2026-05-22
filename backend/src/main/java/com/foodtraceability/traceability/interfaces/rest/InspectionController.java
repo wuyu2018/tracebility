@@ -26,6 +26,16 @@ public class InspectionController {
         this.securityUtils = securityUtils;
     }
 
+    @GetMapping("/inspections")
+    public ResponseEntity<?> listInspections() {
+        try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            return ResponseEntity.ok(appService.listInspections(companyId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/inspections")
     public ResponseEntity<?> completeInspection(@RequestBody CompleteInspectionRequest req) {
         log.info("[v2] 检验完成 batchId={}, qualified={}", req.getBatchId(), req.getQualified());
