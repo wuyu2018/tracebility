@@ -38,6 +38,30 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <el-row :gutter="20" style="margin-top: 20px" v-if="brokenBlocks.length > 0">
+      <el-col :span="24">
+        <el-card header="损坏区块详情" shadow="hover">
+          <el-table :data="brokenBlocks" border stripe size="small">
+            <el-table-column prop="blockId" label="区块 ID" width="80" />
+            <el-table-column label="所属批次" width="80">
+              <template #default="{ row }">{{ row.batchId ?? '-' }}</template>
+            </el-table-column>
+            <el-table-column prop="entityType" label="业务类型" width="150" />
+            <el-table-column prop="entityId" label="实体 ID" width="80" />
+            <el-table-column prop="action" label="操作" width="80" />
+            <el-table-column label="异常原因">
+              <template #default="{ row }">
+                <template v-if="row.errors && row.errors.length">
+                  <el-tag v-for="e in row.errors" :key="e" type="danger" size="small" style="margin: 2px">{{ e }}</el-tag>
+                </template>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -48,6 +72,7 @@ import { getBlockchainSummary, getBlockchainPublicKey } from '@/api/admin'
 const loading = ref(true)
 const pkLoading = ref(true)
 const publicKey = ref('')
+const brokenBlocks = ref([])
 
 const summary = reactive({
   overallHealthy: false,
@@ -76,6 +101,7 @@ onMounted(async () => {
       summary.brokenCount = res.batchChains?.brokenCount ?? 0
       summary.batchAnchorDate = res.batchChains?.lastAnchorDate || ''
       summary.lastUpdated = res.lastUpdated || ''
+      brokenBlocks.value = res.brokenBlocks || []
     }
   } finally { loading.value = false }
 
