@@ -115,7 +115,7 @@ public class ProductionBatchApplicationService {
 
     @Transactional(readOnly = true)
     public ProductionBatch getBatchByBatchNumber(String batchNumber) {
-        return batchRepo.findByBatchNumber(batchNumber)
+        return batchRepo.findByBatchNumberAndIsDeletedFalse(batchNumber)
                 .orElseThrow(() -> new BusinessException("批次不存在: " + batchNumber));
     }
 
