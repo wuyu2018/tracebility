@@ -62,7 +62,10 @@
               <el-descriptions-item label="保质期">{{ resultData.product?.shelfLife || '-' }}</el-descriptions-item>
               <el-descriptions-item label="生产日期">{{ resultData.batch?.productionDate || '-' }}</el-descriptions-item>
               <el-descriptions-item label="批次号">{{ resultData.batch?.batchNumber || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="生产数量">{{ resultData.batch?.quantity || '-' }} {{ resultData.batch?.unit || '' }}</el-descriptions-item>
+              <el-descriptions-item v-if="resultData.product?.imageUrl" label="产品图片">
+                <el-image :src="resultData.product.imageUrl" style="width:120px" fit="contain" />
+              </el-descriptions-item>
+              <el-descriptions-item label="厂家电话">{{ resultData.product?.contactPhone || '-' }}</el-descriptions-item>
             </el-descriptions>
 
             <h3 class="trace-section-title">
@@ -71,10 +74,10 @@
             </h3>
             <div v-if="resultData.materials && resultData.materials.length">
               <el-table :data="resultData.materials" border stripe>
-                <el-table-column prop="name" label="原料名称" />
+                <el-table-column prop="materialName" label="原料名称" />
                 <el-table-column prop="batchNumber" label="采购批次" />
                 <el-table-column prop="supplierName" label="供应商" />
-                <el-table-column prop="producerName" label="生产商" />
+                <el-table-column prop="producerAddress" label="产地" />
                 <el-table-column prop="purchaseDate" label="采购日期" />
               </el-table>
             </div>
@@ -89,8 +92,8 @@
                 <el-descriptions-item label="检验员">{{ resultData.inspection.inspectorName || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="检验时间">{{ resultData.inspection.inspectionTime || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="检验结果" :span="2">
-                  <el-tag :type="resultData.inspection.resultStatus === 'PASS' ? 'success' : 'danger'">
-                    {{ resultData.inspection.resultStatus === 'PASS' ? '合格' : '不合格' }}
+                  <el-tag :type="resultData.inspection.resultStatus === '合格' ? 'success' : 'danger'">
+                    {{ resultData.inspection.resultStatus === '合格' ? '合格' : '不合格' }}
                   </el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="检验详情" :span="2">{{ resultData.inspection.resultDetail || '-' }}</el-descriptions-item>
@@ -106,7 +109,6 @@
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="入库时间">{{ resultData.storage.storageTime || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="出库时间">{{ resultData.storage.outboundTime || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="仓储位置">{{ resultData.storage.warehouseLocation || '-' }}</el-descriptions-item>
               </el-descriptions>
             </div>
             <el-empty v-else description="暂无仓储信息" />
@@ -117,10 +119,8 @@
             </h3>
             <div v-if="resultData.transportSale">
               <el-descriptions :column="1" border>
-                <el-descriptions-item label="运输公司">{{ resultData.transportSale.transportCompany || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="运输时间">{{ resultData.transportSale.time || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="运输时间">{{ resultData.transportSale.transportTime || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="销售区域">{{ resultData.transportSale.salesRegion || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="收货人">{{ resultData.transportSale.receiverName || '-' }}</el-descriptions-item>
               </el-descriptions>
             </div>
             <el-empty v-else description="暂无运输信息" />

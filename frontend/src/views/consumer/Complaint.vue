@@ -28,22 +28,6 @@
             </el-input>
           </el-form-item>
 
-          <el-form-item label="产品名称">
-            <el-input
-              v-model="form.productName"
-              placeholder="请输入产品名称（选填）"
-              clearable
-            />
-          </el-form-item>
-
-          <el-form-item label="批次号">
-            <el-input
-              v-model="form.batchNumber"
-              placeholder="请输入批次号（选填）"
-              clearable
-            />
-          </el-form-item>
-
           <el-form-item label="投诉原因" prop="complaintReason">
             <el-input
               v-model="form.complaintReason"

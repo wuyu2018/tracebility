@@ -69,7 +69,9 @@ public class TraceabilityQueryController {
                         r.batch().shelfLife(), r.batch().createdAt()) : null,
                 r.materials().stream()
                         .map(m -> new TraceabilityQueryResponse.MaterialInfo(
-                                m.materialName(), m.batchNumber(), m.supplierName(), m.producerName()))
+                                m.materialName(), m.batchNumber(), m.supplierName(), m.producerName(),
+                                m.producerAddress(),
+                                m.purchaseDate() != null ? m.purchaseDate().toString() : null))
                         .toList(),
                 r.inspection() != null ? new TraceabilityQueryResponse.InspectionInfo(
                         r.inspection().sampleName(), r.inspection().sampleQuantity(),
@@ -78,13 +80,10 @@ public class TraceabilityQueryController {
                         r.inspection().inspectionTime() != null
                                 ? r.inspection().inspectionTime().toString() : null) : null,
                 r.storage() != null ? new TraceabilityQueryResponse.StorageInfo(
-                        r.storage().storageTime(), r.storage().outboundTime(),
-                        r.storage().warehouseLocation()) : null,
+                        r.storage().storageTime(), r.storage().outboundTime()) : null,
                 r.transportSale() != null ? new TraceabilityQueryResponse.TransportSaleInfo(
-                        r.transportSale().time(), r.transportSale().transportCompany(),
-                        r.transportSale().vehicleNumber(),
-                        r.transportSale().salesRegion(), r.transportSale().receiverName(),
-                        r.transportSale().receiverContact(), r.transportSale().recorderName()) : null,
+                        r.transportSale().time(),
+                        r.transportSale().salesRegion()) : null,
                 r.status(),
                 r.isRepeatedQuery(),
                 r.scanCount(),

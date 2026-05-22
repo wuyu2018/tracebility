@@ -98,18 +98,15 @@ public class TraceabilityQueryApplicationService {
                 ? storageRepo.findById(batch.getStorageId()).orElse(null)
                 : null;
         StorageDto storageDto = storage != null
-                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime(),
-                        storage.getWarehouseLocation())
+                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime())
                 : null;
 
         TransportSale transportSale = batch.getTransportSaleId() != null
                 ? transportSaleRepo.findById(batch.getTransportSaleId()).orElse(null)
                 : null;
         TransportSaleDto transportSaleDto = transportSale != null
-                ? new TransportSaleDto(transportSale.getTime(), transportSale.getTransportCompany(),
-                        transportSale.getVehicleNumber(), transportSale.getSalesRegion(),
-                        transportSale.getReceiverName(), transportSale.getReceiverContact(),
-                        transportSale.getRecorderName())
+                ? new TransportSaleDto(transportSale.getTime(),
+                        transportSale.getSalesRegion())
                 : null;
 
         String status = sc != null ? sc.getStatus() : "未扫码";
@@ -129,10 +126,11 @@ public class TraceabilityQueryApplicationService {
                 .map(r -> {
                     MaterialPurchase mp = materialPurchaseRepo
                             .findById(r.getId().getMaterialPurchaseId()).orElse(null);
-                    if (mp == null) return new MaterialInfo(null, null, null, null);
+                    if (mp == null) return new MaterialInfo(null, null, null, null, null, null);
                     String materialName = mp.getMaterial() != null ? mp.getMaterial().getName() : null;
                     return new MaterialInfo(materialName, mp.getBatchNumber(),
-                            mp.getSupplierName(), mp.getProducerName());
+                            mp.getSupplierName(), mp.getProducerName(),
+                            mp.getProducerAddress(), mp.getPurchaseDate());
                 })
                 .toList();
     }
@@ -148,16 +146,13 @@ public class TraceabilityQueryApplicationService {
                                  String sampleSpecification, String imageUrl,
                                  String inspectorName, LocalDateTime inspectionTime) {}
 
-    public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime,
-                              String warehouseLocation) {}
+    public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime) {}
 
-    public record TransportSaleDto(LocalDateTime time, String transportCompany,
-                                    String vehicleNumber, String salesRegion,
-                                    String receiverName, String receiverContact,
-                                    String recorderName) {}
+    public record TransportSaleDto(LocalDateTime time, String salesRegion) {}
 
     public record MaterialInfo(String materialName, String batchNumber,
-                                String supplierName, String producerName) {}
+                                String supplierName, String producerName,
+                                String producerAddress, LocalDateTime purchaseDate) {}
 
     public record TraceResult(ProductDto product, BatchDto batch,
                                 List<MaterialInfo> materials,

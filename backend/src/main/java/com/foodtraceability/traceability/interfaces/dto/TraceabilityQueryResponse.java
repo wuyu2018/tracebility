@@ -102,18 +102,25 @@ public class TraceabilityQueryResponse {
         private final String batchNumber;
         private final String supplierName;
         private final String producerName;
+        private final String producerAddress;
+        private final String purchaseDate;
 
-        public MaterialInfo(String materialName, String batchNumber, String supplierName, String producerName) {
+        public MaterialInfo(String materialName, String batchNumber, String supplierName,
+                           String producerName, String producerAddress, String purchaseDate) {
             this.materialName = materialName;
             this.batchNumber = batchNumber;
             this.supplierName = supplierName;
             this.producerName = producerName;
+            this.producerAddress = producerAddress;
+            this.purchaseDate = purchaseDate;
         }
 
         public String getMaterialName() { return materialName; }
         public String getBatchNumber() { return batchNumber; }
         public String getSupplierName() { return supplierName; }
         public String getProducerName() { return producerName; }
+        public String getProducerAddress() { return producerAddress; }
+        public String getPurchaseDate() { return purchaseDate; }
     }
 
     public static class InspectionInfo {
@@ -145,46 +152,26 @@ public class TraceabilityQueryResponse {
     public static class StorageInfo {
         private final LocalDateTime storageTime;
         private final LocalDateTime outboundTime;
-        private final String warehouseLocation;
 
-        public StorageInfo(LocalDateTime storageTime, LocalDateTime outboundTime, String warehouseLocation) {
+        public StorageInfo(LocalDateTime storageTime, LocalDateTime outboundTime) {
             this.storageTime = storageTime;
             this.outboundTime = outboundTime;
-            this.warehouseLocation = warehouseLocation;
         }
 
         public LocalDateTime getStorageTime() { return storageTime; }
         public LocalDateTime getOutboundTime() { return outboundTime; }
-        public String getWarehouseLocation() { return warehouseLocation; }
     }
 
     public static class TransportSaleInfo {
         private final LocalDateTime transportTime;
-        private final String transportCompany;
-        private final String vehicleNumber;
         private final String salesRegion;
-        private final String receiverName;
-        private final String receiverContact;
-        private final String recorderName;
 
-        public TransportSaleInfo(LocalDateTime transportTime, String transportCompany, String vehicleNumber,
-                                 String salesRegion, String receiverName, String receiverContact,
-                                 String recorderName) {
+        public TransportSaleInfo(LocalDateTime transportTime, String salesRegion) {
             this.transportTime = transportTime;
-            this.transportCompany = transportCompany;
-            this.vehicleNumber = vehicleNumber;
             this.salesRegion = salesRegion;
-            this.receiverName = receiverName;
-            this.receiverContact = receiverContact;
-            this.recorderName = recorderName;
         }
 
         public LocalDateTime getTransportTime() { return transportTime; }
-        public String getTransportCompany() { return transportCompany; }
-        public String getVehicleNumber() { return vehicleNumber; }
         public String getSalesRegion() { return salesRegion; }
-        public String getReceiverName() { return receiverName; }
-        public String getReceiverContact() { return receiverContact; }
-        public String getRecorderName() { return recorderName; }
     }
 }
