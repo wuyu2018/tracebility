@@ -23,7 +23,7 @@
             <el-descriptions-item label="批次链总数">{{ summary.totalBatches ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="完好批次">{{ summary.intactBatches ?? '-' }} / {{ summary.totalBatches ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="批次链总区块">{{ summary.batchBlocks ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="损坏区块">{{ summary.brokenCount ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="损坏批次">{{ summary.brokenCount ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="批次链最近锚定">{{ summary.batchAnchorDate || '-' }}</el-descriptions-item>
             <el-descriptions-item label="最后更新">{{ summary.lastUpdated || '-' }}</el-descriptions-item>
           </el-descriptions>

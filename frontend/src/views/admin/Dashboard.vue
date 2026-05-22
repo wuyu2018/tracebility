@@ -1,15 +1,54 @@
 <template>
   <div class="dashboard">
     <el-row :gutter="20">
-      <el-col :md="6" :sm="12" v-for="card in cards" :key="card.label">
-        <el-card class="stat-card" shadow="hover" v-loading="card.loading">
+      <el-col :md="6" :sm="12">
+        <el-card class="stat-card" shadow="hover" v-loading="productLoading">
           <div class="stat-content">
-            <div class="stat-icon" :style="{ background: card.color }">
-              <el-icon :size="28" color="#fff"><component :is="card.icon" /></el-icon>
+            <div class="stat-icon" style="background: #409eff">
+              <el-icon :size="28" color="#fff"><Goods /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-value">{{ card.value }}</div>
-              <div class="stat-label">{{ card.label }}</div>
+              <div class="stat-value">{{ productCount }}</div>
+              <div class="stat-label">产品总数</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12">
+        <el-card class="stat-card" shadow="hover" v-loading="batchLoading">
+          <div class="stat-content">
+            <div class="stat-icon" style="background: #67c23a">
+              <el-icon :size="28" color="#fff"><Box /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ batchCount }}</div>
+              <div class="stat-label">生产批次</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12">
+        <el-card class="stat-card" shadow="hover" v-loading="complaintLoading">
+          <div class="stat-content">
+            <div class="stat-icon" style="background: #f56c6c">
+              <el-icon :size="28" color="#fff"><WarningFilled /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ complaintCount }}</div>
+              <div class="stat-label">待处理投诉</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :md="6" :sm="12">
+        <el-card class="stat-card" shadow="hover" v-loading="agentLoading">
+          <div class="stat-content">
+            <div class="stat-icon" style="background: #e6a23c">
+              <el-icon :size="28" color="#fff"><Monitor /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ agentCount }}</div>
+              <div class="stat-label">溯源智能体</div>
             </div>
           </div>
         </el-card>
@@ -27,7 +66,7 @@
             </el-descriptions-item>
             <el-descriptions-item label="原料链区块">{{ blockchainData.materialBlocks ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="批次链总区块">{{ blockchainData.batchBlocks ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="损坏区块">{{ blockchainData.brokenCount ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="损坏批次">{{ blockchainData.brokenCount ?? '-' }}</el-descriptions-item>
           </el-descriptions>
         </el-card>
       </el-col>
@@ -70,13 +109,6 @@ const agentData = reactive({
   total: 0,
   active: 0
 })
-
-const cards = [
-  { label: '产品总数', value: productCount, icon: Goods, color: '#409eff', loading: productLoading },
-  { label: '生产批次', value: batchCount, icon: Box, color: '#67c23a', loading: batchLoading },
-  { label: '待处理投诉', value: complaintCount, icon: WarningFilled, color: '#f56c6c', loading: complaintLoading },
-  { label: '溯源智能体', value: agentCount, icon: Monitor, color: '#e6a23c', loading: agentLoading }
-]
 
 onMounted(async () => {
   const [prods, batches, complaints, agents, blockchain] = await Promise.allSettled([
