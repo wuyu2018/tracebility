@@ -104,6 +104,10 @@ export function getBatch(id) {
   return request.get(`/v2/batches/${id}`)
 }
 
+export function getBatchDetail(id) {
+  return request.get(`/v2/batches/${id}/detail`)
+}
+
 export function getBatchByNumber(batchNumber) {
   return request.get(`/v2/batches/by-number/${encodeURIComponent(batchNumber)}`)
 }

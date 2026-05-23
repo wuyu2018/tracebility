@@ -54,6 +54,12 @@ const routes = [
         component: () => import('@/views/admin/BatchManage.vue')
       },
       {
+        path: 'batches/:id',
+        name: 'BatchDetail',
+        meta: { requiresAuth: true },
+        component: () => import('@/views/admin/BatchDetail.vue')
+      },
+      {
         path: 'storages',
         name: 'StorageManage',
         component: () => import('@/views/admin/StorageManage.vue')

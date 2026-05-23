@@ -1,5 +1,6 @@
 package com.foodtraceability.traceability.application.service;
 
+import com.foodtraceability.dto.BatchDetailDto;
 import com.foodtraceability.entity.*;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.*;
@@ -71,6 +72,101 @@ public class TraceabilityQueryApplicationService {
                 .orElseThrow(() -> new BusinessException("批次不存在: " + batchNumber));
 
         return buildTraceResult(null, batch);
+    }
+
+    @Transactional(readOnly = true)
+    public BatchDetailDto getBatchDetail(Long batchId) {
+        ProductionBatch batch = batchRepo.findById(batchId)
+                .orElseThrow(() -> new BusinessException("批次不存在: " + batchId));
+
+        BatchDetailDto dto = new BatchDetailDto();
+
+        dto.setBatch(new BatchDetailDto.BatchInfo(
+                batch.getId(), batch.getBatchNumber(), batch.getProductionDate(),
+                batch.getShelfLife(), batch.getQuantity(), batch.getUnit(),
+                batch.getCreatedAt()));
+
+        Product product = batch.getProduct();
+        if (product == null && batch.getProductId() != null) {
+            product = productRepo.findById(batch.getProductId()).orElse(null);
+        }
+        if (product != null) {
+            dto.setProduct(new BatchDetailDto.ProductInfo(
+                    product.getId(), product.getName(), product.getSpecification(),
+                    product.getShelfLife(), product.getContactPhone(), product.getContactEmail()));
+        }
+
+        Map<String, List<Long>> links = groupLinksByEntityType(batchId);
+
+        List<Long> mpIds = getEntityIds(links, "MATERIAL_PURCHASE");
+        if (mpIds == null) {
+            mpIds = buildMaterialIdsLegacy(batchId);
+        }
+        List<BatchDetailDto.MaterialInfo> materials = new ArrayList<>();
+        for (Long mpId : mpIds) {
+            MaterialPurchase mp = materialPurchaseRepo.findById(mpId).orElse(null);
+            if (mp == null) continue;
+            String materialName = mp.getMaterial() != null ? mp.getMaterial().getName() : null;
+            materials.add(new BatchDetailDto.MaterialInfo(
+                    materialName, mp.getBatchNumber(), mp.getSupplierName(),
+                    mp.getProducerName(), mp.getProducerAddress(), mp.getPurchaseDate(),
+                    mp.getQuantity(), mp.getUnit()));
+        }
+        dto.setMaterials(materials);
+
+        List<Long> inspIds = getEntityIds(links, "INSPECTION");
+        if (inspIds != null && !inspIds.isEmpty()) {
+            inspectionRepo.findById(inspIds.get(0)).ifPresent(insp -> {
+                dto.setInspection(new BatchDetailDto.InspectionInfo(
+                        insp.getSampleName(), insp.getSampleQuantity(),
+                        insp.getSampleSpecification(), insp.getImageUrl(),
+                        insp.getInspectorName(), insp.getInspectionTime(),
+                        insp.getResultStatus(), insp.getResultDetail()));
+            });
+        }
+
+        List<Long> stIds = getEntityIds(links, "STORAGE");
+        if (stIds != null && !stIds.isEmpty()) {
+            storageRepo.findById(stIds.get(0)).ifPresent(s -> {
+                dto.setStorage(new BatchDetailDto.StorageInfo(
+                        s.getStorageTime(), s.getOutboundTime(), s.getWarehouseLocation(),
+                        s.getQuantity(), s.getUnit()));
+            });
+        }
+
+        List<Long> trIds = getEntityIds(links, "TRANSPORT_SALE");
+        if (trIds != null && !trIds.isEmpty()) {
+            transportSaleRepo.findById(trIds.get(0)).ifPresent(ts -> {
+                dto.setTransport(new BatchDetailDto.TransportInfo(
+                        ts.getTransportCompany(), ts.getVehicleNumber(), ts.getTime(),
+                        ts.getSalesRegion(), ts.getReceiverName(), ts.getReceiverContact(),
+                        ts.getEnvironmentTemperature(), ts.getProductTemperature(),
+                        ts.getRecorderName()));
+            });
+        }
+
+        Map<String, Long> statusCount = securityCodeRepo.findByBatch_Id(batchId).stream()
+                .collect(Collectors.groupingBy(
+                        sc -> sc.getStatus() != null ? sc.getStatus() : "未激活",
+                        Collectors.counting()));
+        long total = statusCount.values().stream().mapToLong(Long::longValue).sum();
+        dto.setCodes(new BatchDetailDto.CodeStats(
+                total,
+                statusCount.getOrDefault("未激活", 0L),
+                statusCount.getOrDefault("已激活", 0L),
+                statusCount.getOrDefault("已冻结", 0L)));
+
+        log.info("[BatchDetail] batchId={} materials={} inspection={} storage={} transport={} codes={}",
+                batchId, materials.size(), dto.getInspection() != null,
+                dto.getStorage() != null, dto.getTransport() != null, total);
+
+        return dto;
+    }
+
+    private List<Long> buildMaterialIdsLegacy(Long batchId) {
+        return relationRepo.findById_BatchId(batchId).stream()
+                .map(r -> r.getId().getMaterialPurchaseId())
+                .toList();
     }
 
     private TraceResult buildTraceResult(SecurityCode sc, ProductionBatch batch) {

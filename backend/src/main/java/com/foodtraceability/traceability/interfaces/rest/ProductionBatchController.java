@@ -1,6 +1,7 @@
 package com.foodtraceability.traceability.interfaces.rest;
 
 import com.foodtraceability.traceability.application.service.ProductionBatchApplicationService;
+import com.foodtraceability.traceability.application.service.TraceabilityQueryApplicationService;
 import com.foodtraceability.traceability.interfaces.dto.BatchResponse;
 import com.foodtraceability.traceability.interfaces.dto.CreateBatchRequest;
 import com.foodtraceability.util.SecurityUtils;
@@ -19,10 +20,14 @@ public class ProductionBatchController {
     private static final Logger log = LoggerFactory.getLogger(ProductionBatchController.class);
 
     private final ProductionBatchApplicationService appService;
+    private final TraceabilityQueryApplicationService queryService;
     private final SecurityUtils securityUtils;
 
-    public ProductionBatchController(ProductionBatchApplicationService appService, SecurityUtils securityUtils) {
+    public ProductionBatchController(ProductionBatchApplicationService appService,
+                                     TraceabilityQueryApplicationService queryService,
+                                     SecurityUtils securityUtils) {
         this.appService = appService;
+        this.queryService = queryService;
         this.securityUtils = securityUtils;
     }
 
@@ -85,6 +90,16 @@ public class ProductionBatchController {
                     .body(new BatchResponse(result.id(), result.batchNumber(), result.productName()));
         } catch (Exception e) {
             log.error("[v2] 创建批次失败 - {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/batches/{id}/detail")
+    public ResponseEntity<?> getBatchDetail(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(queryService.getBatchDetail(id));
+        } catch (Exception e) {
+            log.error("[v2] 获取批次详情失败 - ID: {}, {}", id, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

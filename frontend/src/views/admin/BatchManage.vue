@@ -9,7 +9,13 @@
 
     <el-table :data="list" v-loading="loading" border stripe>
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="batchNumber" label="批次号" width="180" />
+      <el-table-column prop="batchNumber" label="批次号" width="180">
+        <template #default="{ row }">
+          <router-link :to="'/manage/batches/' + row.id" style="color: #409eff; text-decoration: none;">
+            {{ row.batchNumber }}
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column label="产品" width="120">
         <template #default="{ row }">{{ row.product?.name || row.productName || row.productId || '-' }}</template>
       </el-table-column>
@@ -73,15 +79,20 @@
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag
-              :type="row.status === 'ACTIVE' ? 'success' : row.status === 'FROZEN' ? 'warning' : 'info'"
+              :type="row.status === '已激活' ? 'success' : row.status === '已冻结' ? 'warning' : 'info'"
               size="small"
             >
-              {{ row.status === 'ACTIVE' ? '已激活' : row.status === 'FROZEN' ? '已冻结' : '未激活' }}
+              {{ row.status || '未激活' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="scanCount" label="扫码次数" width="100" />
         <el-table-column prop="firstScanTime" label="首次扫描" width="180" />
+        <el-table-column label="操作" width="80">
+          <template #default="{ row }">
+            <el-button size="small" @click="handleShowQr(row)">二维码</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-dialog>
 
@@ -96,17 +107,33 @@
         <el-button type="primary" :loading="generating" @click="handleGenerate">生成</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="qrDialogVisible" title="防伪码二维码" width="420px" @closed="closeQrDialog">
+      <div style="text-align: center;">
+        <p style="margin-bottom: 16px; font-weight: 500; word-break: break-all; font-size: 13px;">
+          {{ currentQrCode }}
+        </p>
+        <canvas ref="qrCanvas" style="border: 1px solid #eee; padding: 8px;"></canvas>
+      </div>
+      <template #footer>
+        <el-button @click="closeQrDialog">关闭</el-button>
+        <el-button type="primary" @click="downloadQrCode">
+          <el-icon><Download /></el-icon>下载
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   getBatches, createBatch, deleteBatch,
   generateSecurityCodes, getSecurityCodes, exportSecurityCodes, getProducts, getMaterialPurchases
 } from '@/api/admin'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Download } from '@element-plus/icons-vue'
+import QRCode from 'qrcode'
 
 const list = ref([])
 const loading = ref(false)
@@ -135,6 +162,10 @@ const generateDialogVisible = ref(false)
 const generateFormRef = ref(null)
 const generating = ref(false)
 const generateForm = reactive({ count: 100 })
+
+const qrDialogVisible = ref(false)
+const qrCanvas = ref(null)
+const currentQrCode = ref('')
 
 async function fetchList() {
   loading.value = true
@@ -212,6 +243,34 @@ function handleExport(row) {
     exportSecurityCodes(row.id)
     ElMessage.success('导出请求已发送')
   } catch { /* */ }
+}
+
+async function handleShowQr(row) {
+  const url = window.location.origin + '/verify?code=' + encodeURIComponent(row.code)
+  currentQrCode.value = row.code
+  qrDialogVisible.value = true
+  await nextTick()
+  await QRCode.toCanvas(qrCanvas.value, url, { width: 300, margin: 2 })
+}
+
+function downloadQrCode() {
+  const canvas = qrCanvas.value
+  if (!canvas) return
+  const link = document.createElement('a')
+  link.download = 'qrcode-' + currentQrCode.value + '.png'
+  link.href = canvas.toDataURL('image/png')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+function closeQrDialog() {
+  qrDialogVisible.value = false
+  const canvas = qrCanvas.value
+  if (canvas) {
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
 }
 
 fetchList()
