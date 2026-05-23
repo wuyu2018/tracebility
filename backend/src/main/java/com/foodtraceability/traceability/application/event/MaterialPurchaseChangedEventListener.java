@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.application.event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.MaterialPurchaseChanged;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +20,15 @@ public class MaterialPurchaseChangedEventListener {
 
     private final MaterialPurchaseRepository repository;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
     private final ObjectMapper objectMapper;
 
     public MaterialPurchaseChangedEventListener(MaterialPurchaseRepository repository,
-                                                  AgentBlockchainService agentBlockchainService) {
+                                                  AgentBlockchainService agentBlockchainService,
+                                                  BlockchainRetryService blockchainRetryService) {
         this.repository = repository;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -62,8 +66,11 @@ public class MaterialPurchaseChangedEventListener {
                 log.info("[Blockchain] MaterialPurchase block appended via agent: id={}, action={}",
                         purchase.getId(), event.action());
             } catch (Exception e) {
-                log.error("[Blockchain] Failed to append block for MaterialPurchase id={}, action={}",
+                log.error("[Blockchain] Failed to append block for MaterialPurchase id={}, action={} — scheduling retry",
                         purchase.getId(), event.action(), e);
+                blockchainRetryService.scheduleRetry(
+                        "MATERIAL", "MATERIAL_PURCHASE", purchase.getId(), event.action(),
+                        snapshotJson, null, null, e.getMessage());
             }
         });
     }

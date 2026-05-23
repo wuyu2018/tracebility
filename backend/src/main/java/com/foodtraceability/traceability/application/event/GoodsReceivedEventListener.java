@@ -4,6 +4,7 @@ import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.GoodsReceived;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +20,18 @@ public class GoodsReceivedEventListener {
     private final StorageRepository storageRepo;
     private final MultiAgentCoordinator agentCoordinator;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
 
     public GoodsReceivedEventListener(ProductionBatchRepository batchRepo,
                                        StorageRepository storageRepo,
                                        MultiAgentCoordinator agentCoordinator,
-                                       AgentBlockchainService agentBlockchainService) {
+                                       AgentBlockchainService agentBlockchainService,
+                                       BlockchainRetryService blockchainRetryService) {
         this.batchRepo = batchRepo;
         this.storageRepo = storageRepo;
         this.agentCoordinator = agentCoordinator;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
     }
 
     @TransactionalEventListener
@@ -56,8 +60,11 @@ public class GoodsReceivedEventListener {
                 log.info("[Blockchain] Storage block appended via agent for batchId={}, storageId={}",
                         storage.getBatchId(), storage.getId());
             } catch (Exception e) {
-                log.error("[Blockchain] Failed to append block for batchId={}, storageId={}",
+                log.error("[Blockchain] Failed to append block for batchId={}, storageId={} — scheduling retry",
                         storage.getBatchId(), storage.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", "STORAGE", storage.getId(), "CREATE",
+                        snapshot, null, null, e.getMessage());
             }
         });
 

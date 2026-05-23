@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.application.event;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.MaterialRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.MaterialChanged;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +20,15 @@ public class MaterialChangedEventListener {
 
     private final MaterialRepository repository;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
     private final ObjectMapper objectMapper;
 
     public MaterialChangedEventListener(MaterialRepository repository,
-                                         AgentBlockchainService agentBlockchainService) {
+                                         AgentBlockchainService agentBlockchainService,
+                                         BlockchainRetryService blockchainRetryService) {
         this.repository = repository;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -56,8 +60,11 @@ public class MaterialChangedEventListener {
                 log.info("[Blockchain] Material block appended via agent: id={}, action={}",
                         material.getId(), event.action());
             } catch (Exception e) {
-                log.error("[Blockchain] Failed to append block for Material id={}, action={}",
+                log.error("[Blockchain] Failed to append block for Material id={}, action={} — scheduling retry",
                         material.getId(), event.action(), e);
+                blockchainRetryService.scheduleRetry(
+                        "MATERIAL", "MATERIAL", material.getId(), event.action(),
+                        snapshotJson, null, null, e.getMessage());
             }
         });
     }

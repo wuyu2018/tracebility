@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.infrastructure.messaging;
 import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.BatchCreated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +21,17 @@ public class BatchCreatedEventListener {
 
     private final MultiAgentCoordinator agentCoordinator;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
     private final ProductionBatchRepository batchRepo;
 
     @Autowired
     public BatchCreatedEventListener(MultiAgentCoordinator agentCoordinator,
                                       AgentBlockchainService agentBlockchainService,
+                                      BlockchainRetryService blockchainRetryService,
                                       ProductionBatchRepository batchRepo) {
         this.agentCoordinator = agentCoordinator;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
         this.batchRepo = batchRepo;
     }
 
@@ -52,6 +56,7 @@ public class BatchCreatedEventListener {
             productionAgent.updateCreditScore(5);
 
             batchRepo.findById(event.batchId()).ifPresent(batch -> {
+                String snapshotJson = null;
                 try {
                     Map<String, Object> snapshot = new LinkedHashMap<>();
                     snapshot.put("id", batch.getId());
@@ -62,7 +67,7 @@ public class BatchCreatedEventListener {
                     snapshot.put("shelfLife", batch.getShelfLife());
                     snapshot.put("quantity", batch.getQuantity());
                     snapshot.put("unit", batch.getUnit());
-                    String snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                    snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
                             .writeValueAsString(snapshot);
                     agentBlockchainService.appendBlockWithConsensus(
                             "BATCH", "PRODUCTION_BATCH", batch.getId(), "CREATE",
@@ -70,8 +75,11 @@ public class BatchCreatedEventListener {
                     log.info("[Blockchain] ProductionBatch block appended via agent: batchId={}",
                             batch.getId());
                 } catch (Exception e) {
-                    log.error("[Blockchain] Failed to append block for batchId={}",
+                    log.error("[Blockchain] Failed to append block for batchId={} — scheduling retry",
                             batch.getId(), e);
+                    blockchainRetryService.scheduleRetry(
+                            "BATCH", "PRODUCTION_BATCH", batch.getId(), "CREATE",
+                            snapshotJson, null, null, e.getMessage());
                 }
             });
 

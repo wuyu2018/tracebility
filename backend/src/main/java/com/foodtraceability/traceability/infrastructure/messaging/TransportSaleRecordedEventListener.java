@@ -3,6 +3,7 @@ package com.foodtraceability.traceability.infrastructure.messaging;
 import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.TransportSaleRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.TransportSaleRecorded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +21,17 @@ public class TransportSaleRecordedEventListener {
 
     private final MultiAgentCoordinator agentCoordinator;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
     private final TransportSaleRepository transportSaleRepo;
 
     @Autowired
     public TransportSaleRecordedEventListener(MultiAgentCoordinator agentCoordinator,
                                                AgentBlockchainService agentBlockchainService,
+                                               BlockchainRetryService blockchainRetryService,
                                                TransportSaleRepository transportSaleRepo) {
         this.agentCoordinator = agentCoordinator;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
         this.transportSaleRepo = transportSaleRepo;
     }
 
@@ -60,6 +64,7 @@ public class TransportSaleRecordedEventListener {
             );
 
             transportSaleRepo.findById(event.transportSaleId()).ifPresent(ts -> {
+                String snapshotJson = null;
                 try {
                     Map<String, Object> snapshot = new LinkedHashMap<>();
                     snapshot.put("id", ts.getId());
@@ -73,7 +78,7 @@ public class TransportSaleRecordedEventListener {
                     snapshot.put("environmentTemperature", ts.getEnvironmentTemperature());
                     snapshot.put("productTemperature", ts.getProductTemperature());
                     snapshot.put("time", ts.getTime() != null ? ts.getTime().toString() : null);
-                    String snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                    snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
                             .writeValueAsString(snapshot);
                     agentBlockchainService.appendBlockWithConsensus(
                             "BATCH", "TRANSPORT_SALE", ts.getId(), "CREATE",
@@ -81,8 +86,11 @@ public class TransportSaleRecordedEventListener {
                     log.info("[Blockchain] TransportSale block appended via agent: saleId={}",
                             ts.getId());
                 } catch (Exception e) {
-                    log.error("[Blockchain] Failed to append block for transportSaleId={}",
+                    log.error("[Blockchain] Failed to append block for transportSaleId={} — scheduling retry",
                             ts.getId(), e);
+                    blockchainRetryService.scheduleRetry(
+                            "BATCH", "TRANSPORT_SALE", ts.getId(), "CREATE",
+                            snapshotJson, null, null, e.getMessage());
                 }
             });
 

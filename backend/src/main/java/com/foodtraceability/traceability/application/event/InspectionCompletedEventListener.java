@@ -5,6 +5,7 @@ import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.InspectionRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
+import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.InspectionCompleted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +21,18 @@ public class InspectionCompletedEventListener {
     private final InspectionRepository inspectionRepo;
     private final MultiAgentCoordinator agentCoordinator;
     private final AgentBlockchainService agentBlockchainService;
+    private final BlockchainRetryService blockchainRetryService;
 
     public InspectionCompletedEventListener(SecurityCodeRepository securityCodeRepo,
                                              InspectionRepository inspectionRepo,
                                              MultiAgentCoordinator agentCoordinator,
-                                             AgentBlockchainService agentBlockchainService) {
+                                             AgentBlockchainService agentBlockchainService,
+                                             BlockchainRetryService blockchainRetryService) {
         this.securityCodeRepo = securityCodeRepo;
         this.inspectionRepo = inspectionRepo;
         this.agentCoordinator = agentCoordinator;
         this.agentBlockchainService = agentBlockchainService;
+        this.blockchainRetryService = blockchainRetryService;
     }
 
     @TransactionalEventListener
@@ -58,8 +62,11 @@ public class InspectionCompletedEventListener {
                 log.info("[Blockchain] Inspection block appended via agent for batchId={}, inspectionId={}",
                         inspection.getBatchId(), inspection.getId());
             } catch (Exception e) {
-                log.error("[Blockchain] Failed to append block for batchId={}, inspectionId={}",
+                log.error("[Blockchain] Failed to append block for batchId={}, inspectionId={} — scheduling retry",
                         inspection.getBatchId(), inspection.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", "INSPECTION", inspection.getId(), "CREATE",
+                        snapshot, null, null, e.getMessage());
             }
         });
 

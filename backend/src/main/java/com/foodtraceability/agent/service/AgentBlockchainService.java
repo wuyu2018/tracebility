@@ -201,6 +201,7 @@ public class AgentBlockchainService {
         String currentHash = calculateBlockHash(
             chainType, entityType, entityId, action, previousHash, dataHash, now);
         String signature = signHash(currentHash);
+        String refMasterChainHash = getLatestMasterChainHash(chainType);
 
         BlockchainLog block = BlockchainLog.createOptimizedBlock(
             chainType,
@@ -214,7 +215,8 @@ public class AgentBlockchainService {
             now,
             operatorId,
             dataHash,
-            offchainStorage.getFoodId()
+            offchainStorage.getFoodId(),
+            refMasterChainHash
         );
         block.setBlockHeader(header);
         block = blockchainLogRepo.save(block);
@@ -245,6 +247,13 @@ public class AgentBlockchainService {
         return blockchainLogRepo.findTopByChainTypeOrderByTimestampDesc(chainType)
                 .map(BlockchainLog::getCurrentHash)
                 .orElse("GENESIS");
+    }
+
+    private String getLatestMasterChainHash(String chainType) {
+        String oppositeChain = "MATERIAL".equals(chainType) ? "BATCH" : "MATERIAL";
+        return blockchainLogRepo.findTopByChainTypeOrderByTimestampDesc(oppositeChain)
+                .map(BlockchainLog::getCurrentHash)
+                .orElse(null);
     }
 
     private String calculateBlockHash(String chainType, String entityType, Long entityId,

@@ -78,9 +78,9 @@ public class BlockchainLog {
     }
 
     public static BlockchainLog createOptimizedBlock(String chainType, Long batchId, String entityType, Long entityId,
-                                                      String action, String previousHash, String currentHash,
-                                                      String signature, LocalDateTime timestamp, Long operatorId,
-                                                      String dataHash, String offchainRef) {
+                                                       String action, String previousHash, String currentHash,
+                                                       String signature, LocalDateTime timestamp, Long operatorId,
+                                                       String dataHash, String offchainRef, String refMasterChainHash) {
         BlockchainLog block = new BlockchainLog();
         block.chainType = chainType;
         block.batchId = batchId;
@@ -94,6 +94,7 @@ public class BlockchainLog {
         block.operatorId = operatorId;
         block.dataHash = dataHash;
         block.offchainReference = offchainRef;
+        block.refMasterChainHash = refMasterChainHash;
         return block;
     }
 }
