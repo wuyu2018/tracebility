@@ -68,14 +68,31 @@
         <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="qrDialogVisible" title="产品二维码" width="420px" @closed="closeQrDialog">
+      <div style="text-align: center;">
+        <p style="margin-bottom: 16px; font-weight: 500;">{{ currentProductName }}</p>
+        <canvas ref="qrCanvas" style="border: 1px solid #eee; padding: 8px;"></canvas>
+        <p style="margin-top: 12px; font-size: 13px; color: #909399; word-break: break-all;">
+          {{ currentQrCode }}
+        </p>
+      </div>
+      <template #footer>
+        <el-button @click="closeQrDialog">关闭</el-button>
+        <el-button type="primary" @click="downloadQrCode">
+          <el-icon><Download /></el-icon>下载二维码
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { nextTick, ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProducts, createProduct, updateProduct, deleteProduct, generateQrcode } from '@/api/admin'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, Download } from '@element-plus/icons-vue'
+import QRCode from 'qrcode'
 
 const list = ref([])
 const loading = ref(false)
@@ -97,6 +114,11 @@ const rules = {
   name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
   specification: [{ required: true, message: '请输入规格', trigger: 'blur' }]
 }
+
+const qrDialogVisible = ref(false)
+const qrCanvas = ref(null)
+const currentQrCode = ref('')
+const currentProductName = ref('')
 
 async function fetchList() {
   loading.value = true
@@ -163,9 +185,39 @@ async function handleDelete(id) {
 
 async function handleGenerateQr(row) {
   try {
-    await generateQrcode(row.id)
-    ElMessage.success('二维码生成成功')
+    const res = await generateQrcode(row.id)
+    const code = res?.codes?.[0]
+    if (code) {
+      currentQrCode.value = code
+      currentProductName.value = row.name
+      qrDialogVisible.value = true
+      await nextTick()
+      await QRCode.toCanvas(qrCanvas.value, code, { width: 300, margin: 2 })
+      ElMessage.success('二维码生成成功')
+    } else {
+      ElMessage.error('二维码生成失败：未获取到防伪码')
+    }
   } catch { /* */ }
+}
+
+function downloadQrCode() {
+  const canvas = qrCanvas.value
+  if (!canvas) return
+  const link = document.createElement('a')
+  link.download = `qrcode-${currentProductName.value || currentQrCode.value}.png`
+  link.href = canvas.toDataURL('image/png')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+function closeQrDialog() {
+  qrDialogVisible.value = false
+  const canvas = qrCanvas.value
+  if (canvas) {
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
 }
 
 fetchList()
