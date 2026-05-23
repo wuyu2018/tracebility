@@ -35,7 +35,6 @@ public class TraceInfoDTO {
         private String imageUrl;
         private String contactPhone;
         private String contactEmail;
-        private String antiFakeCode;
     }
 
     @Data

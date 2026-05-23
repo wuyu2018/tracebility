@@ -14,16 +14,13 @@ public class DeletionPolicy {
 
     private final ProductionBatchRepository batchRepository;
     private final SecurityCodeRepository securityCodeRepository;
-    private final ProductMaterialRelationRepository pmrRepository;
     private final ProductRepository productRepository;
 
     public DeletionPolicy(ProductionBatchRepository batchRepository,
                           SecurityCodeRepository securityCodeRepository,
-                          ProductMaterialRelationRepository pmrRepository,
                           ProductRepository productRepository) {
         this.batchRepository = batchRepository;
         this.securityCodeRepository = securityCodeRepository;
-        this.pmrRepository = pmrRepository;
         this.productRepository = productRepository;
     }
 
@@ -59,7 +56,6 @@ public class DeletionPolicy {
         Long productId = product.getId();
         log.info("[DeletionPolicy] 物理删除产品 - ID: {}", productId);
 
-        pmrRepository.deleteByProductId(productId);
         productRepository.delete(product);
 
         log.info("[DeletionPolicy] 产品已物理删除 - ID: {}", productId);
@@ -69,7 +65,6 @@ public class DeletionPolicy {
         Long productId = product.getId();
         log.info("[DeletionPolicy] 软删除产品 - ID: {}", productId);
 
-        pmrRepository.deleteByProductId(productId);
         product.softDelete();
         productRepository.save(product);
 

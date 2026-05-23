@@ -37,12 +37,6 @@ public class Product {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
-    @Column(name = "anti_fake_code", length = 100)
-    private String antiFakeCode;
-
-    @Column(name = "qr_code_url", length = 500)
-    private String qrCodeUrl;
-
     @Column(name = "company_id")
     private Long companyId;
 
@@ -76,19 +70,5 @@ public class Product {
 
     public void changeContactEmail(String contactEmail) {
         if (contactEmail != null) this.contactEmail = contactEmail;
-    }
-
-    public void changeQrCodeUrl(String qrCodeUrl) {
-        if (qrCodeUrl != null) this.qrCodeUrl = qrCodeUrl;
-    }
-
-    public void clearQrCode() {
-        this.antiFakeCode = null;
-        this.qrCodeUrl = null;
-    }
-
-    public void assignQrCode(String antiFakeCode, String qrCodeUrl) {
-        this.antiFakeCode = antiFakeCode;
-        this.qrCodeUrl = qrCodeUrl;
     }
 }

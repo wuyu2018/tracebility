@@ -2,11 +2,9 @@ package com.foodtraceability.validator;
 
 import com.foodtraceability.entity.*;
 import com.foodtraceability.exception.BusinessException;
-import com.foodtraceability.repository.BatchMaterialRelationRepository;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
-import com.foodtraceability.service.ProductMaterialRelationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,19 +25,17 @@ class BatchMaterialValidatorTest {
     private ProductRepository productRepository;
     @Mock
     private MaterialPurchaseRepository materialPurchaseRepository;
-    @Mock
-    private ProductMaterialRelationService pmrService;
 
     private BatchMaterialValidator validator;
 
     @BeforeEach
     void setUp() {
         validator = new BatchMaterialValidator(
-                batchRepository, productRepository, materialPurchaseRepository, pmrService);
+                batchRepository, productRepository, materialPurchaseRepository);
     }
 
     @Test
-    void validate_passes_whenMaterialVisible() {
+    void validate_passes_whenEntitiesExist() {
         Product product = createProduct(1L, "有机纯牛奶");
         Material material = createMaterial(10L, "有机生牛乳");
         MaterialPurchase purchase = createMaterialPurchase(100L, material);
@@ -48,26 +44,8 @@ class BatchMaterialValidatorTest {
         when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
-        when(pmrService.isMaterialVisibleToProduct(1L, 10L)).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(50L, 100L));
-    }
-
-    @Test
-    void validate_throws_whenMaterialHidden() {
-        Product product = createProduct(1L, "有机纯牛奶");
-        Material material = createMaterial(10L, "有机生牛乳");
-        MaterialPurchase purchase = createMaterialPurchase(100L, material);
-        ProductionBatch batch = createBatch(50L, product);
-
-        when(batchRepository.findById(50L)).thenReturn(Optional.of(batch));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(materialPurchaseRepository.findById(100L)).thenReturn(Optional.of(purchase));
-        when(pmrService.isMaterialVisibleToProduct(1L, 10L)).thenReturn(false);
-
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> validator.validate(50L, 100L));
-        assertTrue(ex.getMessage().contains("未授权"));
     }
 
     @Test

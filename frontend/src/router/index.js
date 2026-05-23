@@ -49,11 +49,6 @@ const routes = [
         component: () => import('@/views/admin/MaterialManage.vue')
       },
       {
-        path: 'bindings',
-        name: 'ProductMaterial',
-        component: () => import('@/views/admin/ProductMaterial.vue')
-      },
-      {
         path: 'batches',
         name: 'BatchManage',
         component: () => import('@/views/admin/BatchManage.vue')

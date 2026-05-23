@@ -20,8 +20,6 @@ class DeletionPolicyTest {
     @Mock
     private SecurityCodeRepository securityCodeRepository;
     @Mock
-    private ProductMaterialRelationRepository pmrRepository;
-    @Mock
     private ProductRepository productRepository;
 
     private DeletionPolicy deletionPolicy;
@@ -29,7 +27,7 @@ class DeletionPolicyTest {
     @BeforeEach
     void setUp() {
         deletionPolicy = new DeletionPolicy(
-                batchRepository, securityCodeRepository, pmrRepository, productRepository);
+                batchRepository, securityCodeRepository, productRepository);
     }
 
     @Test
@@ -39,7 +37,6 @@ class DeletionPolicyTest {
 
         deletionPolicy.deleteProduct(product);
 
-        verify(pmrRepository).deleteByProductId(1L);
         verify(productRepository).save(product);
         assertTrue(product.isDeleted());
         verify(productRepository, never()).delete(any());
@@ -53,7 +50,6 @@ class DeletionPolicyTest {
 
         deletionPolicy.deleteProduct(product);
 
-        verify(pmrRepository).deleteByProductId(2L);
         verify(productRepository).save(product);
         assertTrue(product.isDeleted());
         verify(productRepository, never()).delete(any());
@@ -67,7 +63,6 @@ class DeletionPolicyTest {
 
         deletionPolicy.deleteProduct(product);
 
-        verify(pmrRepository).deleteByProductId(3L);
         verify(productRepository).delete(product);
         verify(productRepository, never()).save(any());
     }
@@ -80,7 +75,6 @@ class DeletionPolicyTest {
 
         deletionPolicy.hardDeleteProduct(product);
 
-        verify(pmrRepository).deleteByProductId(4L);
         verify(productRepository).delete(product);
     }
 

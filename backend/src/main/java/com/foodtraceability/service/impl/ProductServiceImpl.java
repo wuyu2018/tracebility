@@ -52,7 +52,6 @@ public class ProductServiceImpl implements ProductService {
         target.changeImageUrl(source.getImageUrl());
         target.changeContactPhone(source.getContactPhone());
         target.changeContactEmail(source.getContactEmail());
-        target.changeQrCodeUrl(source.getQrCodeUrl());
     }
 
     @Override
@@ -74,15 +73,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @Transactional
-    public void clearQrCode(Long id) {
-        Product entity = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("产品不存在"));
-        entity.clearQrCode();
-        repository.save(entity);
-    }
-
-    @Override
     public List<Product> listAllProducts() {
         return repository.findByIsDeletedFalse();
     }
@@ -99,11 +89,5 @@ public class ProductServiceImpl implements ProductService {
     public Product getProductById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new BusinessException("产品不存在"));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Optional<Product> getProductByAntiFakeCode(String antiFakeCode) {
-        return repository.findByAntiFakeCode(antiFakeCode);
     }
 }

@@ -81,12 +81,6 @@ public class SecurityCode {
         return securityCode;
     }
 
-    public static SecurityCode createForProduct(ProductionBatch batch, Product product) {
-        SecurityCode securityCode = create(batch);
-        product.setAntiFakeCode(securityCode.code);
-        return securityCode;
-    }
-
     public boolean isActivated() {
         return STATUS_ACTIVE.equals(this.status);
     }

@@ -28,10 +28,6 @@
             <el-icon><Box /></el-icon>
             <span>原料管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/bindings">
-            <el-icon><Connection /></el-icon>
-            <span>产品原料关联</span>
-          </el-menu-item>
           <el-menu-item index="/manage/batches">
             <el-icon><List /></el-icon>
             <span>生产批次管理</span>
@@ -106,7 +102,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/stores/auth'
 import {
-  Odometer, Goods, Box, Connection, List, OfficeBuilding, Van,
+  Odometer, Goods, Box, List, OfficeBuilding, Van,
   Checked, WarningFilled, Link, Monitor, UserFilled, Fold, Expand
 } from '@element-plus/icons-vue'
 

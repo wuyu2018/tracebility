@@ -44,18 +44,6 @@ export function hardDeleteProduct(id) {
   return request.delete(`/products/${id}/hard`)
 }
 
-export function generateQrcode(productId) {
-  return request.post(`/insert/products/${productId}/generate-qrcode`)
-}
-
-export function batchGenerateQrcode(productIds) {
-  return request.post('/insert/products/batch-generate-qrcode', productIds)
-}
-
-export function batchClearQrcode(productIds) {
-  return request.post('/insert/products/batch-delete', productIds)
-}
-
 export function getMaterialVarieties(params) {
   return request.get('/v2/material-varieties', { params })
 }
@@ -102,22 +90,6 @@ export function updateMaterialPurchase(id, data) {
 
 export function deleteMaterialPurchase(id) {
   return request.delete(`/v2/material-purchases/${id}`)
-}
-
-export function getProductMaterials(params) {
-  return request.get('/product-materials', { params })
-}
-
-export function bindProductMaterial(data) {
-  return request.post('/product-materials', data)
-}
-
-export function unbindProductMaterial(productId, materialId) {
-  return request.delete('/product-materials', { params: { productId, materialId } })
-}
-
-export function toggleProductMaterialVisibility(id) {
-  return request.patch(`/product-materials/${id}/visibility`)
 }
 
 export function getBatches(params) {

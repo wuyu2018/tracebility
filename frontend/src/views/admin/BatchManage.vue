@@ -199,7 +199,7 @@ async function showCodeDialog(row) {
 async function handleGenerate() {
   generating.value = true
   try {
-    await generateSecurityCodes(selectedBatch.value.id, generateForm.count)
+    await generateSecurityCodes(selectedBatch.value.id, { quantity: generateForm.count })
     ElMessage.success('生成成功')
     generateDialogVisible.value = false
     const res = await getSecurityCodes(selectedBatch.value.id)

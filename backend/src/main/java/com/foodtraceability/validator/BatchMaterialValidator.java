@@ -5,7 +5,6 @@ import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.MaterialPurchaseRepository;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
-import com.foodtraceability.service.ProductMaterialRelationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -17,16 +16,13 @@ public class BatchMaterialValidator {
     private final ProductionBatchRepository batchRepository;
     private final ProductRepository productRepository;
     private final MaterialPurchaseRepository materialPurchaseRepository;
-    private final ProductMaterialRelationService pmrService;
 
     public BatchMaterialValidator(ProductionBatchRepository batchRepository,
                                   ProductRepository productRepository,
-                                  MaterialPurchaseRepository materialPurchaseRepository,
-                                  ProductMaterialRelationService pmrService) {
+                                  MaterialPurchaseRepository materialPurchaseRepository) {
         this.batchRepository = batchRepository;
         this.productRepository = productRepository;
         this.materialPurchaseRepository = materialPurchaseRepository;
-        this.pmrService = pmrService;
     }
 
     public void validate(Long batchId, Long materialPurchaseId) {
@@ -44,17 +40,7 @@ public class BatchMaterialValidator {
             throw new BusinessException("原料采购记录未关联原料品种");
         }
 
-        boolean visible = pmrService.isMaterialVisibleToProduct(product.getId(), material.getId());
-
-        if (!visible) {
-            log.warn("[原料授权校验] 拒绝 - 产品:{} 原料品种:{} 不可见",
-                    product.getName(), material.getName());
-            throw new BusinessException(
-                    String.format("原料品种'%s'未授权给产品'%s'，请在产品管理中先绑定该原料",
-                            material.getName(), product.getName()));
-        }
-
-        log.debug("[原料授权校验] 通过 - 产品:{} 原料品种:{}",
+        log.debug("[原料校验] 通过 - 产品:{} 原料品种:{}",
                 product.getName(), material.getName());
     }
 }
