@@ -1,18 +1,20 @@
 package com.foodtraceability.agent.core;
 
 import com.foodtraceability.agent.consensus.PbftConsensus;
-import com.foodtraceability.agent.contract.SmartContract;
 import com.foodtraceability.agent.credential.CertificateAuthority;
-import com.foodtraceability.agent.impl.*;
+import com.foodtraceability.agent.impl.CertificateAuthorityAgent;
+import com.foodtraceability.agent.impl.CirculationAgent;
+import com.foodtraceability.agent.impl.ProductionAgent;
+import com.foodtraceability.agent.impl.SalesAgent;
 import com.foodtraceability.agent.ledger.ServiceLedger;
 import com.foodtraceability.agent.ledger.TransactionLedger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -33,7 +35,6 @@ public class MultiAgentCoordinator {
     private final SalesAgent salesAgent;
     private final CertificateAuthorityAgent caAgent;
     
-    @Autowired
     public MultiAgentCoordinator(
             CertificateAuthority certificateAuthority,
             PbftConsensus pbftConsensus,

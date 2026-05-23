@@ -251,7 +251,7 @@ public class PbftConsensus {
             return false;
         }
 
-        // Simulate broadcast to replicas
+        //step3: Simulate broadcast to replicas
         for (String replicaId : replicaNodeIds) {
             if (!isPrimary(replicaId)) {
                 PbftMessage prepare = new PbftMessage(
@@ -271,7 +271,7 @@ public class PbftConsensus {
             return false;
         }
 
-        // Commit phase
+        //Phase 4: Commit phase
         for (String replicaId : replicaNodeIds) {
             PbftMessage commit = new PbftMessage(
                 PbftMessage.MessageType.COMMIT, view,

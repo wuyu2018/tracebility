@@ -1,5 +1,6 @@
 package com.foodtraceability.agent.service;
 
+import com.foodtraceability.agent.core.Agent;
 import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.consensus.PbftConsensus;
 import com.foodtraceability.agent.contract.DataOnChainContract;
@@ -66,7 +67,7 @@ public class AgentBlockchainService {
         log.info("Appending block with consensus: type={}, entity={}, id={}",
                 chainType, entityType, entityId);
 
-        var currentAgent = getCurrentAgentForChainType(chainType);
+        Agent currentAgent = getCurrentAgentForChainType(chainType);
 
         if (!currentAgent.isAuthorized()) {
             throw new IllegalStateException("Agent not authorized for blockchain operation");
@@ -199,7 +200,7 @@ public class AgentBlockchainService {
         return "FOOD-" + entityType + "-" + entityId + "-" + System.currentTimeMillis();
     }
 
-    private com.foodtraceability.agent.core.Agent getCurrentAgentForChainType(String chainType) {
+    private Agent getCurrentAgentForChainType(String chainType) {
         switch (chainType) {
             case "MATERIAL":
                 return agentCoordinator.getProductionAgent();
