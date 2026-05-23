@@ -108,6 +108,11 @@ public class DataEncryptionService {
     }
     
     private PublicKey getAgentPublicKey(String agentId) {
+        java.security.PublicKey resolved = resolveAgentPublicKey(agentId);
+        return resolved != null ? resolved : this.publicKey;
+    }
+
+    private java.security.PublicKey resolveAgentPublicKey(String agentId) {
         return this.publicKey;
     }
     

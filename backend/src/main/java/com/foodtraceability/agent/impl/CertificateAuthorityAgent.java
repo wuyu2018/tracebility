@@ -1,13 +1,11 @@
 package com.foodtraceability.agent.impl;
 
 import com.foodtraceability.agent.core.AbstractAgent;
-import com.foodtraceability.agent.core.Agent;
 import com.foodtraceability.agent.credential.CertificateAuthority;
 import com.foodtraceability.agent.credential.AgentCertificate;
 import com.foodtraceability.agent.credential.MemberServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,7 +17,6 @@ public class CertificateAuthorityAgent extends AbstractAgent {
     private final CertificateAuthority certificateAuthority;
     private boolean msVerified = false;
 
-    @Autowired
     public CertificateAuthorityAgent(MemberServices memberServices,
                                       CertificateAuthority certificateAuthority) {
         super("CA-" + System.currentTimeMillis(), AgentType.CERTIFICATE_AUTHORITY);

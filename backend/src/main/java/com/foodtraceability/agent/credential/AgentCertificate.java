@@ -1,7 +1,6 @@
 package com.foodtraceability.agent.credential;
 
 import java.security.KeyPair;
-import java.security.cert.X509Certificate;
 import java.math.BigInteger;
 import java.util.Date;
 

@@ -1,7 +1,6 @@
 package com.foodtraceability.agent.impl;
 
 import com.foodtraceability.agent.core.AbstractAgent;
-import com.foodtraceability.agent.core.Agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

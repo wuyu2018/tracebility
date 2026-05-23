@@ -1,18 +1,23 @@
 package com.foodtraceability.agent.service;
 
-import com.foodtraceability.agent.core.Agent;
-import com.foodtraceability.agent.core.MultiAgentCoordinator;
+import com.foodtraceability.agent.consensus.Endorsement;
 import com.foodtraceability.agent.consensus.PbftConsensus;
+import com.foodtraceability.agent.consensus.grpc.ConsensusPeerConfig;
+import com.foodtraceability.agent.consensus.transport.ConsensusTransport;
 import com.foodtraceability.agent.contract.DataOnChainContract;
 import com.foodtraceability.agent.contract.PermissionControlContract;
+import com.foodtraceability.agent.core.Agent;
+import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.entity.BlockHeader;
 import com.foodtraceability.entity.BlockchainLog;
 import com.foodtraceability.entity.OffchainStorage;
 import com.foodtraceability.repository.BlockHeaderRepository;
 import com.foodtraceability.repository.BlockchainLogRepository;
 import com.foodtraceability.repository.OffchainStorageRepository;
-import com.foodtraceability.security.DataEncryptionService;
-import com.foodtraceability.security.FoodBloomFilter;
+import com.foodtraceability.security.AgentKeyManager;
+import com.foodtraceability.security.BloomFilterManager;
+import com.foodtraceability.security.MerkleTree;
+import com.foodtraceability.service.BlockchainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,39 +25,55 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AgentBlockchainService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentBlockchainService.class);
+    private static final Duration CONSENSUS_WAIT_TIMEOUT = Duration.ofSeconds(60);
 
     private final MultiAgentCoordinator agentCoordinator;
     private final DataOnChainContract dataOnChainContract;
     private final PermissionControlContract permissionControlContract;
     private final OffchainStorageRepository offchainStorageRepo;
-    private final DataEncryptionService encryptionService;
-    private final FoodBloomFilter bloomFilter;
+    private final AgentKeyManager keyManager;
+    private final BloomFilterManager bloomFilterManager;
     private final BlockHeaderRepository blockHeaderRepo;
     private final BlockchainLogRepository blockchainLogRepo;
+    private final PbftConsensus pbftConsensus;
+    private final ConsensusTransport consensusTransport;
+    private final ConsensusPeerConfig peerConfig;
+    private final BlockchainService blockchainService;
 
     public AgentBlockchainService(
             MultiAgentCoordinator agentCoordinator,
             DataOnChainContract dataOnChainContract,
             PermissionControlContract permissionControlContract,
             OffchainStorageRepository offchainStorageRepo,
-            DataEncryptionService encryptionService,
-            FoodBloomFilter bloomFilter,
+            AgentKeyManager keyManager,
+            BloomFilterManager bloomFilterManager,
             BlockHeaderRepository blockHeaderRepo,
-            BlockchainLogRepository blockchainLogRepo) {
+            BlockchainLogRepository blockchainLogRepo,
+            PbftConsensus pbftConsensus,
+            ConsensusTransport consensusTransport,
+            ConsensusPeerConfig peerConfig,
+            BlockchainService blockchainService) {
         this.agentCoordinator = agentCoordinator;
         this.dataOnChainContract = dataOnChainContract;
         this.permissionControlContract = permissionControlContract;
         this.offchainStorageRepo = offchainStorageRepo;
-        this.encryptionService = encryptionService;
-        this.bloomFilter = bloomFilter;
+        this.keyManager = keyManager;
+        this.bloomFilterManager = bloomFilterManager;
         this.blockHeaderRepo = blockHeaderRepo;
         this.blockchainLogRepo = blockchainLogRepo;
+        this.pbftConsensus = pbftConsensus;
+        this.consensusTransport = consensusTransport;
+        this.peerConfig = peerConfig;
+        this.blockchainService = blockchainService;
     }
 
     @Transactional
@@ -67,7 +88,7 @@ public class AgentBlockchainService {
         log.info("Appending block with consensus: type={}, entity={}, id={}",
                 chainType, entityType, entityId);
 
-        Agent currentAgent = getCurrentAgentForChainType(chainType);
+        var currentAgent = getCurrentAgentForChainType(chainType);
 
         if (!currentAgent.isAuthorized()) {
             throw new IllegalStateException("Agent not authorized for blockchain operation");
@@ -80,9 +101,12 @@ public class AgentBlockchainService {
             throw new IllegalStateException("Data on-chain validation failed");
         }
 
-        // Full consensus: endorsement → PBFT (PrePrepare → Prepare → Commit)
-        PbftConsensus pbft = agentCoordinator.getPbftConsensus();
-        boolean consensusReached = pbft.runFullConsensus(
+        if (peerConfig.isGrpcEnabled()) {
+            return appendBlockWithGrpcConsensus(chainType, entityType, entityId, action,
+                    context, dataHash, rawData, operatorId, currentAgent);
+        }
+
+        boolean consensusReached = pbftConsensus.runFullConsensus(
                 context,
                 agentCoordinator.getAllAgents().stream().toList(),
                 permissionControlContract,
@@ -94,17 +118,62 @@ public class AgentBlockchainService {
             throw new IllegalStateException("Consensus not reached for block append");
         }
 
+        return saveBlockWithEncryption(chainType, entityType, entityId, action,
+                rawData, dataHash, operatorId, currentAgent);
+    }
+
+    private BlockchainLog appendBlockWithGrpcConsensus(
+            String chainType, String entityType, Long entityId, String action,
+            String context, String dataHash, String rawData, Long operatorId, Agent currentAgent) {
+
+        List<String> agentIds = peerConfig.getPeers().stream()
+                .map(ConsensusPeerConfig.Peer::getId)
+                .toList();
+
+        List<Endorsement> endorsements;
+        try {
+            endorsements = consensusTransport.endorseAll(context, dataHash, agentIds)
+                    .get(CONSENSUS_WAIT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("Endorsement failed", e);
+            throw new IllegalStateException("Endorsement failed: " + e.getMessage());
+        }
+
+        long approvedCount = endorsements.stream().filter(Endorsement::approved).count();
+        if (approvedCount < 2 * PbftConsensus.MAX_FAULTY_NODES + 1) {
+            log.warn("Endorsement rejected: only {}/{} approved", approvedCount, endorsements.size());
+            throw new IllegalStateException("Not enough endorsements for consensus: " + approvedCount + "/" + endorsements.size());
+        }
+
+        log.info("Endorsement passed: {}/{} approved", approvedCount, endorsements.size());
+
+        return saveBlockWithEncryption(chainType, entityType, entityId, action,
+                rawData, dataHash, operatorId, currentAgent);
+    }
+
+    private BlockchainLog saveBlockWithEncryption(
+            String chainType, String entityType, Long entityId, String action,
+            String rawData, String dataHash, Long operatorId, Agent currentAgent) {
+
         String foodId = generateFoodId(entityType, entityId);
-        bloomFilter.add(foodId);
+        bloomFilterManager.add(chainType, foodId);
 
         String encryptedData;
         String aesKey;
         try {
-            aesKey = encryptionService.generateAesKey();
-            encryptedData = encryptionService.encryptData(rawData, aesKey);
+            aesKey = keyManager.generateAesKey();
+            encryptedData = keyManager.encryptData(rawData, aesKey);
         } catch (Exception e) {
             log.error("Failed to encrypt data", e);
             throw new RuntimeException("Data encryption failed", e);
+        }
+
+        String encryptedAesKey;
+        try {
+            encryptedAesKey = keyManager.encryptAesKeyForAgent(aesKey, currentAgent.getAgentId());
+        } catch (Exception e) {
+            log.error("Failed to encrypt AES key", e);
+            throw new RuntimeException("AES key encryption failed", e);
         }
 
         OffchainStorage offchainStorage = new OffchainStorage();
@@ -114,24 +183,23 @@ public class AgentBlockchainService {
         offchainStorage.setStorageKey("blockchain_log:" + entityId);
         offchainStorage.setEncryptionMethod("AES-256-GCM");
         offchainStorage.setEncryptedData(encryptedData);
+        offchainStorage.setEncryptedAesKey(encryptedAesKey);
         offchainStorage.setOwnerAgentId(Long.parseLong(currentAgent.getAgentId().split("-")[1]));
         offchainStorageRepo.save(offchainStorage);
 
-        // Step 1: Create BlockHeader with merged Bloom Filter
         String previousHash = getPreviousBlockHash(chainType);
-        String merkleRoot = dataHash;
+        String merkleRoot = MerkleTree.computeRoot(List.of(dataHash));
         String metadataIndex = String.format(
                 "{\"entityType\":\"%s\",\"entityId\":%d,\"action\":\"%s\"}", entityType, entityId, action);
         LocalDateTime now = LocalDateTime.now();
 
         BlockHeader header = BlockHeader.create(chainType, previousHash, merkleRoot,
-                bloomFilter.toBytes(), metadataIndex, 1);
+                bloomFilterManager.toBytes(chainType), metadataIndex, 1);
         blockHeaderRepo.save(header);
 
-        // Step 2: Create BlockchainLog linked to the header
         String currentHash = calculateBlockHash(
             chainType, entityType, entityId, action, previousHash, dataHash, now);
-        String signature = sign(currentHash);
+        String signature = signHash(currentHash);
 
         BlockchainLog block = BlockchainLog.createOptimizedBlock(
             chainType,
@@ -152,7 +220,16 @@ public class AgentBlockchainService {
 
         currentAgent.updateCreditScore(1);
 
-        log.info("Block appended successfully after consensus: blockHash={}, logHash={}, foodId={}",
+        if (peerConfig.isGrpcEnabled()) {
+            List<String> agentIds = peerConfig.getPeers().stream()
+                    .map(ConsensusPeerConfig.Peer::getId)
+                    .filter(id -> !id.equals(peerConfig.getAgentId()))
+                    .toList();
+            consensusTransport.notifyBlock(agentIds, header.getBlockHash(), foodId,
+                    chainType, header.getId());
+        }
+
+        log.info("Block appended successfully: blockHash={}, logHash={}, foodId={}",
                 header.getBlockHash(), currentHash, foodId);
 
         return block;
@@ -192,12 +269,16 @@ public class AgentBlockchainService {
             byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);
         } catch (Exception e) {
-            return Integer.toHexString(data.hashCode());
+            throw new RuntimeException("SHA-256 not available", e);
         }
     }
 
     private String generateFoodId(String entityType, Long entityId) {
         return "FOOD-" + entityType + "-" + entityId + "-" + System.currentTimeMillis();
+    }
+
+    private String signHash(String hash) {
+        return blockchainService.sign(hash);
     }
 
     private Agent getCurrentAgentForChainType(String chainType) {
@@ -213,9 +294,5 @@ public class AgentBlockchainService {
             default:
                 return agentCoordinator.getProductionAgent();
         }
-    }
-
-    private String sign(String hash) {
-        return Integer.toHexString(hash.hashCode());
     }
 }

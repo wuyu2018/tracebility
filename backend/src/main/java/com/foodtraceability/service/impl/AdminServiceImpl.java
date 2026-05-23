@@ -9,7 +9,6 @@ import com.foodtraceability.service.AdminService;
 import com.foodtraceability.service.LoginAttemptService;
 import com.foodtraceability.util.CaptchaStorage;
 import com.foodtraceability.util.JwtTokenProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,6 @@ public class AdminServiceImpl implements AdminService {
     private final CaptchaStorage captchaStorage;
     private final LoginAttemptService loginAttemptService;
 
-    @Autowired
     public AdminServiceImpl(AdminRepository adminRepository,
                            PasswordEncoder passwordEncoder,
                            JwtTokenProvider jwtTokenProvider,

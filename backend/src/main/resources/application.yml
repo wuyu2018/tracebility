@@ -97,6 +97,26 @@ blockchain:
     public-key-path: ${BLOCKCHAIN_RSA_PUBLIC_KEY:}
   genesis-hash: ${BLOCKCHAIN_GENESIS_HASH:0000000000000000000000000000000000000000000000000000000000000000}
 
+consensus:
+  grpc-enabled: ${CONSENSUS_GRPC_ENABLED:false}
+  grpc-server-start: ${CONSENSUS_GRPC_SERVER_START:false}
+  grpc-server-port: ${CONSENSUS_GRPC_PORT:50051}
+  agent-id: ${CONSENSUS_AGENT_ID:ca-agent-0}
+  agent-role: ${CONSENSUS_AGENT_ROLE:PRIMARY}
+  peers:
+    - id: ca-agent-0
+      host: ${CONSENSUS_PEER0_HOST:localhost}
+      grpc-port: ${CONSENSUS_PEER0_PORT:50051}
+    - id: production-agent-1
+      host: ${CONSENSUS_PEER1_HOST:localhost}
+      grpc-port: ${CONSENSUS_PEER1_PORT:50052}
+    - id: circulation-agent-2
+      host: ${CONSENSUS_PEER2_HOST:localhost}
+      grpc-port: ${CONSENSUS_PEER2_PORT:50053}
+    - id: sales-agent-3
+      host: ${CONSENSUS_PEER3_HOST:localhost}
+      grpc-port: ${CONSENSUS_PEER3_PORT:50054}
+
 logging:
   level:
     root: INFO

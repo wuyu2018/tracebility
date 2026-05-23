@@ -98,7 +98,8 @@ public class TraceabilityQueryApplicationService {
                 ? storageRepo.findById(batch.getStorageId()).orElse(null)
                 : null;
         StorageDto storageDto = storage != null
-                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime())
+                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime(),
+                        storage.getWarehouseLocation())
                 : null;
 
         TransportSale transportSale = batch.getTransportSaleId() != null
@@ -106,7 +107,7 @@ public class TraceabilityQueryApplicationService {
                 : null;
         TransportSaleDto transportSaleDto = transportSale != null
                 ? new TransportSaleDto(transportSale.getTime(),
-                        transportSale.getSalesRegion())
+                        transportSale.getSalesRegion(), transportSale.getTransportCompany())
                 : null;
 
         String status = sc != null ? sc.getStatus() : "未扫码";
@@ -146,9 +147,11 @@ public class TraceabilityQueryApplicationService {
                                  String sampleSpecification, String imageUrl,
                                  String inspectorName, LocalDateTime inspectionTime) {}
 
-    public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime) {}
+    public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime,
+                              String warehouseLocation) {}
 
-    public record TransportSaleDto(LocalDateTime time, String salesRegion) {}
+    public record TransportSaleDto(LocalDateTime time, String salesRegion,
+                                    String transportCompany) {}
 
     public record MaterialInfo(String materialName, String batchNumber,
                                 String supplierName, String producerName,

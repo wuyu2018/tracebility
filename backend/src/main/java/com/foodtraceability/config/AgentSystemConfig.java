@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -18,7 +17,6 @@ public class AgentSystemConfig {
     
     private final MultiAgentCoordinator agentCoordinator;
     
-    @Autowired
     public AgentSystemConfig(MultiAgentCoordinator agentCoordinator) {
         this.agentCoordinator = agentCoordinator;
     }

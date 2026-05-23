@@ -61,12 +61,173 @@ services:
       DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD}
       BLOCKCHAIN_RSA_PRIVATE_KEY: ${BLOCKCHAIN_RSA_PRIVATE_KEY:-/app/keys/private.pem}
       BLOCKCHAIN_RSA_PUBLIC_KEY: ${BLOCKCHAIN_RSA_PUBLIC_KEY:-/app/keys/public.pem}
+      CONSENSUS_GRPC_ENABLED: ${CONSENSUS_GRPC_ENABLED:-false}
+      CONSENSUS_GRPC_SERVER_START: ${CONSENSUS_GRPC_SERVER_START:-false}
+      CONSENSUS_AGENT_ID: ${CONSENSUS_AGENT_ID:-ca-agent-0}
+      CONSENSUS_AGENT_ROLE: ${CONSENSUS_AGENT_ROLE:-PRIMARY}
+      CONSENSUS_GRPC_PORT: ${CONSENSUS_GRPC_PORT:-50051}
+      CONSENSUS_PEER0_HOST: ${CONSENSUS_PEER0_HOST:-peer-0}
+      CONSENSUS_PEER0_PORT: ${CONSENSUS_PEER0_PORT:-50051}
+      CONSENSUS_PEER1_HOST: ${CONSENSUS_PEER1_HOST:-peer-1}
+      CONSENSUS_PEER1_PORT: ${CONSENSUS_PEER1_PORT:-50052}
+      CONSENSUS_PEER2_HOST: ${CONSENSUS_PEER2_HOST:-peer-2}
+      CONSENSUS_PEER2_PORT: ${CONSENSUS_PEER2_PORT:-50053}
+      CONSENSUS_PEER3_HOST: ${CONSENSUS_PEER3_HOST:-peer-3}
+      CONSENSUS_PEER3_PORT: ${CONSENSUS_PEER3_PORT:-50054}
       ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
       ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
       ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     volumes:
       - backend_logs:/app/logs
       - ./keys:/app/keys:ro
+    networks:
+      - traceability-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  peer-0:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-traceability-peer-0-ca
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      CONSENSUS_GRPC_ENABLED: "true"
+      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_PORT: "50051"
+      CONSENSUS_AGENT_ID: ca-agent-0
+      CONSENSUS_AGENT_ROLE: PRIMARY
+      CONSENSUS_PEER0_HOST: peer-0
+      CONSENSUS_PEER0_PORT: "50051"
+      CONSENSUS_PEER1_HOST: peer-1
+      CONSENSUS_PEER1_PORT: "50052"
+      CONSENSUS_PEER2_HOST: peer-2
+      CONSENSUS_PEER2_PORT: "50053"
+      CONSENSUS_PEER3_HOST: peer-3
+      CONSENSUS_PEER3_PORT: "50054"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&sslMode=PREFERRED&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "50051:50051"
+    networks:
+      - traceability-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  peer-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-traceability-peer-1-production
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      CONSENSUS_GRPC_ENABLED: "true"
+      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_PORT: "50052"
+      CONSENSUS_AGENT_ID: production-agent-1
+      CONSENSUS_AGENT_ROLE: REPLICA
+      CONSENSUS_PEER0_HOST: peer-0
+      CONSENSUS_PEER0_PORT: "50051"
+      CONSENSUS_PEER1_HOST: peer-1
+      CONSENSUS_PEER1_PORT: "50052"
+      CONSENSUS_PEER2_HOST: peer-2
+      CONSENSUS_PEER2_PORT: "50053"
+      CONSENSUS_PEER3_HOST: peer-3
+      CONSENSUS_PEER3_PORT: "50054"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&sslMode=PREFERRED&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "50052:50052"
+    networks:
+      - traceability-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  peer-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-traceability-peer-2-circulation
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      CONSENSUS_GRPC_ENABLED: "true"
+      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_PORT: "50053"
+      CONSENSUS_AGENT_ID: circulation-agent-2
+      CONSENSUS_AGENT_ROLE: REPLICA
+      CONSENSUS_PEER0_HOST: peer-0
+      CONSENSUS_PEER0_PORT: "50051"
+      CONSENSUS_PEER1_HOST: peer-1
+      CONSENSUS_PEER1_PORT: "50052"
+      CONSENSUS_PEER2_HOST: peer-2
+      CONSENSUS_PEER2_PORT: "50053"
+      CONSENSUS_PEER3_HOST: peer-3
+      CONSENSUS_PEER3_PORT: "50054"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&sslMode=PREFERRED&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "50053:50053"
+    networks:
+      - traceability-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  peer-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-traceability-peer-3-sales
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      CONSENSUS_GRPC_ENABLED: "true"
+      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_PORT: "50054"
+      CONSENSUS_AGENT_ID: sales-agent-3
+      CONSENSUS_AGENT_ROLE: REPLICA
+      CONSENSUS_PEER0_HOST: peer-0
+      CONSENSUS_PEER0_PORT: "50051"
+      CONSENSUS_PEER1_HOST: peer-1
+      CONSENSUS_PEER1_PORT: "50052"
+      CONSENSUS_PEER2_HOST: peer-2
+      CONSENSUS_PEER2_PORT: "50053"
+      CONSENSUS_PEER3_HOST: peer-3
+      CONSENSUS_PEER3_PORT: "50054"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&sslMode=PREFERRED&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "50054:50054"
     networks:
       - traceability-network
     depends_on:

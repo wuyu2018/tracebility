@@ -1,7 +1,6 @@
 package com.foodtraceability.agent.core;
 
 import java.time.Instant;
-import java.util.Optional;
 
 public class ServiceRecord {
     private final String serviceId;

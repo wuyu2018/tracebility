@@ -1,17 +1,25 @@
 package com.foodtraceability.agent.consensus;
 
+import com.foodtraceability.agent.consensus.grpc.ConsensusPeerConfig;
+import com.foodtraceability.agent.consensus.transport.ConsensusTransport;
 import com.foodtraceability.agent.contract.DataOnChainContract;
 import com.foodtraceability.agent.contract.PermissionControlContract;
 import com.foodtraceability.agent.core.Agent;
 import com.foodtraceability.agent.impl.CertificateAuthorityAgent;
+import com.foodtraceability.entity.ConsensusRecord;
+import com.foodtraceability.repository.ConsensusRecordRepository;
+import com.foodtraceability.service.BlockchainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Component
@@ -27,14 +35,26 @@ public class PbftConsensus {
     private final Map<Long, ConsensusState> consensusStates;
     private final Map<Long, List<Endorsement>> endorsementPool;
 
-    private static final int MAX_FAULTY_NODES = 1;
+    public static final int MAX_FAULTY_NODES = 1;
+    private static final Duration PHASE_TIMEOUT = Duration.ofSeconds(30);
 
-    public PbftConsensus() {
+    private final ConsensusTransport transport;
+    private final ConsensusPeerConfig peerConfig;
+    private final ConsensusRecordRepository consensusRecordRepo;
+    private final BlockchainService blockchainService;
+
+    public PbftConsensus(ConsensusTransport transport, ConsensusPeerConfig peerConfig,
+                          ConsensusRecordRepository consensusRecordRepo,
+                          BlockchainService blockchainService) {
         this.sequenceNumber = new AtomicLong(0);
         this.view = "0";
         this.consensusStates = new ConcurrentHashMap<>();
         this.endorsementPool = new ConcurrentHashMap<>();
         this.replicaNodeIds = new ArrayList<>();
+        this.transport = transport;
+        this.peerConfig = peerConfig;
+        this.consensusRecordRepo = consensusRecordRepo;
+        this.blockchainService = blockchainService;
     }
 
     public void initialize(String caAgentId, List<String> replicaIds) {
@@ -53,7 +73,176 @@ public class PbftConsensus {
         return primaryAgentId;
     }
 
-    // ========== Endorsement Phase ==========
+    public long getNextSequenceNumber() {
+        return sequenceNumber.incrementAndGet();
+    }
+
+    public List<String> getReplicaNodeIds() {
+        return Collections.unmodifiableList(replicaNodeIds);
+    }
+
+    // ========== Transport-aware Consensus Methods (gRPC mode) ==========
+
+    public long createAndPersistRequest(String digest) {
+        long seqNum = sequenceNumber.incrementAndGet();
+        getOrCreateState(seqNum).startedAt = Instant.now();
+
+        ConsensusRecord record = new ConsensusRecord();
+        record.setSequenceNumber(seqNum);
+        record.setView(view);
+        record.setDigest(digest);
+        record.setPhase(ConsensusRecord.ConsensusPhase.PRE_PREPARE);
+        record.setStatus(ConsensusRecord.ConsensusStatus.PENDING);
+        consensusRecordRepo.save(record);
+
+        log.info("Consensus request created: seq={}, digest={}", seqNum, digest);
+        return seqNum;
+    }
+
+    public PbftMessage createPrePrepare(long seqNum, String digest) {
+        PbftMessage prePrepare = new PbftMessage(
+                PbftMessage.MessageType.PRE_PREPARE,
+                view,
+                seqNum,
+                digest,
+                primaryAgentId
+        );
+
+        ConsensusState state = getOrCreateState(seqNum);
+        state.addPrePrepare(prePrepare);
+        state.setPrePrepareAccepted(true);
+
+        updateConsensusRecord(seqNum, ConsensusRecord.ConsensusPhase.PRE_PREPARE, ConsensusRecord.ConsensusStatus.ACCEPTED);
+
+        log.debug("Created PRE-PREPARE message: seq={}", seqNum);
+        return prePrepare;
+    }
+
+    public void broadcastPrePrepareViaTransport(PbftMessage prePrepare) {
+        List<String> peerIds = new ArrayList<>(replicaNodeIds);
+        peerIds.remove(peerConfig.getAgentId());
+
+        CompletableFuture.runAsync(() -> {
+            transport.broadcastPrePrepare(prePrepare, peerIds).thenAccept(success -> {
+                if (success) {
+                    updateConsensusRecord(prePrepare.getSequenceNumber(),
+                            ConsensusRecord.ConsensusPhase.PREPARE, ConsensusRecord.ConsensusStatus.PENDING);
+                }
+            });
+        });
+    }
+
+    public void handleIncomingPrePrepare(PbftMessage msg) {
+        long seqNum = msg.getSequenceNumber();
+        log.info("Handling incoming PRE-PREPARE: seq={}, from={}", seqNum, msg.getSenderId());
+
+        ConsensusState state = getOrCreateState(seqNum);
+        state.startedAt = Instant.now();
+        state.addPrePrepare(msg);
+
+        if (validatePrePrepare(msg)) {
+            state.setPrePrepareAccepted(true);
+            updateConsensusRecord(seqNum, ConsensusRecord.ConsensusPhase.PRE_PREPARE, ConsensusRecord.ConsensusStatus.ACCEPTED);
+
+            List<String> peerIds = new ArrayList<>(replicaNodeIds);
+            peerIds.remove(peerConfig.getAgentId());
+            PbftMessage prepare = new PbftMessage(
+                    PbftMessage.MessageType.PREPARE, view,
+                    seqNum, msg.getDigest(), peerConfig.getAgentId());
+            state.addPrepare(prepare);
+
+            CompletableFuture.runAsync(() -> {
+                transport.broadcastPrepare(prepare, peerIds);
+            });
+        } else {
+            updateConsensusRecord(seqNum, ConsensusRecord.ConsensusPhase.PRE_PREPARE, ConsensusRecord.ConsensusStatus.REJECTED);
+        }
+    }
+
+    public void handleIncomingPrepare(PbftMessage msg) {
+        long seqNum = msg.getSequenceNumber();
+        log.debug("Handling incoming PREPARE: seq={}, from={}", seqNum, msg.getSenderId());
+
+        ConsensusState state = getOrCreateState(seqNum);
+        state.addPrepare(msg);
+
+        int prepareCount = state.getPrepareCount();
+        updateConsensusRecordPrepare(seqNum, prepareCount);
+
+        if (state.isPrepared() && !state.isCommitBroadcasted()) {
+            state.setCommitBroadcasted(true);
+            List<String> peerIds = new ArrayList<>(replicaNodeIds);
+            peerIds.remove(peerConfig.getAgentId());
+
+            PbftMessage commit = new PbftMessage(
+                    PbftMessage.MessageType.COMMIT, view,
+                    seqNum, msg.getDigest(), peerConfig.getAgentId());
+            state.addCommit(commit);
+
+            CompletableFuture.runAsync(() -> {
+                transport.broadcastCommit(commit, peerIds);
+                updateConsensusRecord(seqNum, ConsensusRecord.ConsensusPhase.COMMIT, ConsensusRecord.ConsensusStatus.PENDING);
+            });
+        }
+    }
+
+    public void handleIncomingCommit(PbftMessage msg) {
+        long seqNum = msg.getSequenceNumber();
+        log.debug("Handling incoming COMMIT: seq={}, from={}", seqNum, msg.getSenderId());
+
+        ConsensusState state = getOrCreateState(seqNum);
+        state.addCommit(msg);
+
+        int commitCount = state.getCommitCount();
+        updateConsensusRecordCommit(seqNum, commitCount);
+
+        if (canExecute(seqNum)) {
+            markExecuted(seqNum);
+            log.info("Consensus completed for seq: {}", seqNum);
+        }
+    }
+
+    public void handleBlockNotification(String blockHash, String foodId, String chainType, Long blockHeaderId) {
+        log.info("Block notification received: hash={}, foodId={}, chainType={}",
+                blockHash, foodId, chainType);
+    }
+
+    public Long getExecutedSequenceNumber() {
+        return sequenceNumber.get();
+    }
+
+    // ========== Consensus State Persistence ==========
+
+    private void updateConsensusRecord(long seqNum, ConsensusRecord.ConsensusPhase phase, ConsensusRecord.ConsensusStatus status) {
+        consensusRecordRepo.findBySequenceNumber(seqNum).ifPresentOrElse(record -> {
+            record.setPhase(phase);
+            record.setStatus(status);
+            consensusRecordRepo.save(record);
+        }, () -> {
+            ConsensusRecord record = new ConsensusRecord();
+            record.setSequenceNumber(seqNum);
+            record.setView(view);
+            record.setPhase(phase);
+            record.setStatus(status);
+            consensusRecordRepo.save(record);
+        });
+    }
+
+    private void updateConsensusRecordPrepare(long seqNum, int prepareCount) {
+        consensusRecordRepo.findBySequenceNumber(seqNum).ifPresent(record -> {
+            record.setPrepareCount(prepareCount);
+            consensusRecordRepo.save(record);
+        });
+    }
+
+    private void updateConsensusRecordCommit(long seqNum, int commitCount) {
+        consensusRecordRepo.findBySequenceNumber(seqNum).ifPresent(record -> {
+            record.setCommitCount(commitCount);
+            consensusRecordRepo.save(record);
+        });
+    }
+
+    // ========== Original Endorsement Phase ==========
 
     public boolean requestEndorsement(String context, List<Agent> agents,
                                        PermissionControlContract permissionContract,
@@ -86,7 +275,7 @@ public class PbftConsensus {
                 reason = "Data validation failed";
             }
 
-            String signature = simulateSign(digest, agent.getAgentId());
+            String signature = signMessage(digest, agent.getAgentId());
             results.add(new Endorsement(agent.getAgentId(), approved, signature, reason));
 
             log.debug("Endorsement from {}: approved={}, reason={}",
@@ -113,7 +302,7 @@ public class PbftConsensus {
         return true;
     }
 
-    // ========== PBFT Message Flow ==========
+    // ========== Original PBFT Message Flow ==========
 
     public PbftMessage createRequest(String clientRequest) {
         long seqNum = sequenceNumber.incrementAndGet();
@@ -224,18 +413,18 @@ public class PbftConsensus {
         return state.isPrepared() && state.getCommitCount() >= requiredCommits;
     }
 
+    // ========== Full Consensus (In-Process / Dev mode) ==========
+
     public boolean runFullConsensus(String context, List<Agent> allAgents,
                                      PermissionControlContract permissionContract,
                                      DataOnChainContract dataContract,
                                      CertificateAuthorityAgent caAgent,
                                      String requestingAgentId) {
-        // Phase 1: Endorsement
         if (!requestEndorsement(context, allAgents, permissionContract, dataContract, caAgent)) {
             log.warn("Consensus failed at endorsement phase");
             return false;
         }
 
-        // Phase 2: PBFT
         PbftMessage request = createRequest(context);
 
         if (!isPrimary(requestingAgentId)) {
@@ -251,7 +440,6 @@ public class PbftConsensus {
             return false;
         }
 
-        //step3: Simulate broadcast to replicas
         for (String replicaId : replicaNodeIds) {
             if (!isPrimary(replicaId)) {
                 PbftMessage prepare = new PbftMessage(
@@ -261,7 +449,6 @@ public class PbftConsensus {
             }
         }
 
-        // Primary also sends prepare
         PbftMessage primaryPrepare = createPrepare(prePrepare);
         receivePrepare(primaryPrepare);
 
@@ -271,7 +458,6 @@ public class PbftConsensus {
             return false;
         }
 
-        //Phase 4: Commit phase
         for (String replicaId : replicaNodeIds) {
             PbftMessage commit = new PbftMessage(
                 PbftMessage.MessageType.COMMIT, view,
@@ -294,6 +480,11 @@ public class PbftConsensus {
         if (state != null) {
             state.setExecuted(true);
             endorsementPool.remove(sequenceNumber);
+            consensusRecordRepo.findBySequenceNumber(sequenceNumber).ifPresent(record -> {
+                record.setPhase(ConsensusRecord.ConsensusPhase.EXECUTED);
+                record.setStatus(ConsensusRecord.ConsensusStatus.COMMITTED);
+                consensusRecordRepo.save(record);
+            });
             log.info("Consensus reached for sequence: {}", sequenceNumber);
         }
     }
@@ -314,12 +505,8 @@ public class PbftConsensus {
             byte[] hash = digest.digest(data.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);
         } catch (Exception e) {
-            return Integer.toHexString(data.hashCode());
+            throw new RuntimeException("SHA-256 not available", e);
         }
-    }
-
-    private String simulateSign(String digest, String agentId) {
-        return Integer.toHexString((digest + agentId).hashCode());
     }
 
     private String bytesToHex(byte[] bytes) {
@@ -330,24 +517,32 @@ public class PbftConsensus {
         return sb.toString();
     }
 
+    String signMessage(String digest, String agentId) {
+        return blockchainService.sign(digest);
+    }
+
     public enum ConsensusResult {
         ACCEPTED,
         REJECTED,
         PENDING
     }
 
-    private static class ConsensusState {
+    static class ConsensusState {
         private PbftMessage prePrepare;
         private final Map<String, PbftMessage> prepares;
         private final Map<String, PbftMessage> commits;
         private volatile boolean prePrepareAccepted;
         private volatile boolean executed;
+        private volatile boolean commitBroadcasted;
+        private volatile Instant startedAt;
 
         private ConsensusState() {
             this.prepares = new ConcurrentHashMap<>();
             this.commits = new ConcurrentHashMap<>();
             this.prePrepareAccepted = false;
             this.executed = false;
+            this.commitBroadcasted = false;
+            this.startedAt = Instant.now();
         }
 
         public void addPrePrepare(PbftMessage message) { this.prePrepare = message; }
@@ -360,5 +555,10 @@ public class PbftConsensus {
         public void setPrePrepareAccepted(boolean accepted) { this.prePrepareAccepted = accepted; }
         public boolean isExecuted() { return executed; }
         public void setExecuted(boolean executed) { this.executed = executed; }
+        public boolean isCommitBroadcasted() { return commitBroadcasted; }
+        public void setCommitBroadcasted(boolean broadcasted) { this.commitBroadcasted = broadcasted; }
+        public boolean isExpired() {
+            return Duration.between(startedAt, Instant.now()).compareTo(PHASE_TIMEOUT) > 0;
+        }
     }
 }
