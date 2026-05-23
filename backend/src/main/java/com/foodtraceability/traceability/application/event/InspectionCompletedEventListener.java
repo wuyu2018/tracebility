@@ -34,7 +34,7 @@ public class InspectionCompletedEventListener {
         this.agentBlockchainService = agentBlockchainService;
         this.blockchainRetryService = blockchainRetryService;
     }
-
+    // “质检完成”事件处理器：当生产批次的质检完成后，根据质检结果更新批次的状态，如果质检不合格则冻结相关防伪码，并通过智能合约记录质检信息到区块链，同时通知生产代理进行信用评分调整。
     @TransactionalEventListener
     public void onInspectionCompleted(InspectionCompleted event) {
         log.info("[Event] InspectionCompleted: inspectionId={}, batchId={}, qualified={}",

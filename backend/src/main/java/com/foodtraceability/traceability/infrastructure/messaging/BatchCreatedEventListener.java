@@ -34,7 +34,7 @@ public class BatchCreatedEventListener {
         this.blockchainRetryService = blockchainRetryService;
         this.batchRepo = batchRepo;
     }
-
+    // “生产批次创建”事件处理器：当新的生产批次被创建时，通过智能合约记录批次信息到区块链，同时通知生产代理进行后续处理（如生成防伪码、更新信用评分等）。
     @TransactionalEventListener
     public void handleBatchCreated(BatchCreated event) {
         log.info("Handling BatchCreated event: batchId={}, productId={}",

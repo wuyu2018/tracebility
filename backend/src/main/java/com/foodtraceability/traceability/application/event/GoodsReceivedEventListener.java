@@ -33,7 +33,7 @@ public class GoodsReceivedEventListener {
         this.agentBlockchainService = agentBlockchainService;
         this.blockchainRetryService = blockchainRetryService;
     }
-
+    // “收货入库”事件处理器：当生产批次完成生产并入库时，更新批次的storageId，并通过智能合约记录入库信息到区块链，同时通知流通代理进行后续处理。
     @TransactionalEventListener
     public void onGoodsReceived(GoodsReceived event) {
         log.info("[Event] GoodsReceived: storageId={}, batchId={}", event.storageId(), event.batchId());

@@ -18,9 +18,14 @@ import com.foodtraceability.security.AgentKeyManager;
 import com.foodtraceability.security.BloomFilterManager;
 import com.foodtraceability.security.MerkleTree;
 import com.foodtraceability.service.BlockchainService;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
@@ -32,6 +37,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class AgentBlockchainService {
+    @PersistenceContext
+    private EntityManager em;
 
     private static final Logger log = LoggerFactory.getLogger(AgentBlockchainService.class);
     private static final Duration CONSENSUS_WAIT_TIMEOUT = Duration.ofSeconds(60);
@@ -76,7 +83,7 @@ public class AgentBlockchainService {
         this.blockchainService = blockchainService;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public BlockchainLog appendBlockWithConsensus(
             String chainType,
             String entityType,
@@ -231,7 +238,7 @@ public class AgentBlockchainService {
             consensusTransport.notifyBlock(agentIds, header.getBlockHash(), foodId,
                     chainType, header.getId());
         }
-
+        em.flush();  // 强制发送所有 INSERT 到数据库
         log.info("Block appended successfully: blockHash={}, logHash={}, foodId={}",
                 header.getBlockHash(), currentHash, foodId);
 
@@ -259,8 +266,8 @@ public class AgentBlockchainService {
     private String calculateBlockHash(String chainType, String entityType, Long entityId,
                                       String action, String previousHash, String dataHash,
                                       LocalDateTime timestamp) {
-        String input = chainType + "|" + entityType + "|" + entityId + "|" + action +
-                      "|" + previousHash + "|" + dataHash + "|" + timestamp.truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+String input = chainType + "|" + entityType + "|" + entityId + "|" + action +
+              "|" + previousHash + "|" + dataHash + "|" + timestamp.truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));

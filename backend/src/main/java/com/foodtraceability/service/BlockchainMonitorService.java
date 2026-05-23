@@ -153,7 +153,7 @@ public class BlockchainMonitorService {
                     + entity.getEntityId() + "|" + entity.getAction() + "|"
                     + (entity.getPreviousHash() != null ? entity.getPreviousHash() : "") + "|"
                     + (entity.getDataHash() != null ? entity.getDataHash() : "") + "|"
-                    + entity.getTimestamp().truncatedTo(ChronoUnit.MICROS);
+                    + entity.getTimestamp().truncatedTo(ChronoUnit.MILLIS);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);

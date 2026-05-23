@@ -65,7 +65,7 @@ public class BlockHeader {
         header.txCount = txCount;
         header.timestamp = timestamp;
         String raw = chainType + "|" + (previousHash != null ? previousHash : "") + "|"
-                     + merkleRoot + "|" + timestamp + "|" + txCount;
+                     + merkleRoot + "|" + timestamp.truncatedTo(java.time.temporal.ChronoUnit.MILLIS) + "|" + txCount;
         header.blockHash = sha256Hex(raw);
         return header;
     }

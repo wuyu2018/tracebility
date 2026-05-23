@@ -31,7 +31,7 @@ public class MaterialChangedEventListener {
         this.blockchainRetryService = blockchainRetryService;
         this.objectMapper = new ObjectMapper();
     }
-
+    // “原料变更”事件处理器：当原料信息发生变更（如新增、修改、停用）时，通过智能合约记录变更信息到区块链，同时如果是停用操作则通知相关代理进行后续处理。
     @TransactionalEventListener
     public void onMaterialChanged(MaterialChanged event) {
         log.info("[Event] MaterialChanged: id={}, action={}", event.materialId(), event.action());

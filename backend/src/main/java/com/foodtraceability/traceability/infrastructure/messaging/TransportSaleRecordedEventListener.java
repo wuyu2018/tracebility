@@ -34,7 +34,7 @@ public class TransportSaleRecordedEventListener {
         this.blockchainRetryService = blockchainRetryService;
         this.transportSaleRepo = transportSaleRepo;
     }
-
+    // “运输销售信息记录”事件处理器：当运输销售信息被记录后，通过智能合约记录相关信息到区块链，同时通知流通代理和销售代理进行后续处理（如更新信用评分、生成溯源码等）。
     @TransactionalEventListener
     public void handleTransportSaleRecorded(TransportSaleRecorded event) {
         log.info("Handling TransportSaleRecorded event: saleId={}, batchId={}",
