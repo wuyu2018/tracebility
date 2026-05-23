@@ -96,8 +96,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      CONSENSUS_GRPC_ENABLED: "true"
-      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_ENABLED: ${CONSENSUS_GRPC_ENABLED:-false}
+      CONSENSUS_GRPC_SERVER_START: ${CONSENSUS_GRPC_SERVER_START:-false}
       CONSENSUS_GRPC_PORT: "50051"
       CONSENSUS_AGENT_ID: ca-agent-0
       CONSENSUS_AGENT_ROLE: PRIMARY
@@ -137,8 +137,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      CONSENSUS_GRPC_ENABLED: "true"
-      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_ENABLED: ${CONSENSUS_GRPC_ENABLED:-false}
+      CONSENSUS_GRPC_SERVER_START: ${CONSENSUS_GRPC_SERVER_START:-false}
       CONSENSUS_GRPC_PORT: "50052"
       CONSENSUS_AGENT_ID: production-agent-1
       CONSENSUS_AGENT_ROLE: REPLICA
@@ -178,8 +178,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      CONSENSUS_GRPC_ENABLED: "true"
-      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_ENABLED: ${CONSENSUS_GRPC_ENABLED:-false}
+      CONSENSUS_GRPC_SERVER_START: ${CONSENSUS_GRPC_SERVER_START:-false}
       CONSENSUS_GRPC_PORT: "50053"
       CONSENSUS_AGENT_ID: circulation-agent-2
       CONSENSUS_AGENT_ROLE: REPLICA
@@ -219,8 +219,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      CONSENSUS_GRPC_ENABLED: "true"
-      CONSENSUS_GRPC_SERVER_START: "true"
+      CONSENSUS_GRPC_ENABLED: ${CONSENSUS_GRPC_ENABLED:-false}
+      CONSENSUS_GRPC_SERVER_START: ${CONSENSUS_GRPC_SERVER_START:-false}
       CONSENSUS_GRPC_PORT: "50054"
       CONSENSUS_AGENT_ID: sales-agent-3
       CONSENSUS_AGENT_ROLE: REPLICA
