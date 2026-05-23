@@ -124,6 +124,10 @@ export function getBatches(params) {
   return request.get('/v2/batches', { params })
 }
 
+export function getBatchSelectOptions(params) {
+  return request.get('/v2/batches/select-options', { params })
+}
+
 export function getBatch(id) {
   return request.get(`/v2/batches/${id}`)
 }

@@ -8,6 +8,7 @@ import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.traceability.application.dto.CreateBatchRequest;
 import com.foodtraceability.traceability.application.dto.CreateBatchResponse;
+import com.foodtraceability.traceability.interfaces.dto.BatchSelectOption;
 import com.foodtraceability.traceability.domain.event.BatchCreated;
 import com.foodtraceability.traceability.domain.service.BatchCreationValidator;
 import com.foodtraceability.traceability.domain.vo.BatchNumber;
@@ -115,6 +116,26 @@ public class ProductionBatchApplicationService {
     public ProductionBatch getBatchByBatchNumber(String batchNumber) {
         return batchRepo.findByBatchNumberAndIsDeletedFalse(batchNumber)
                 .orElseThrow(() -> new BusinessException("批次不存在: " + batchNumber));
+    }
+
+    @Transactional(readOnly = true)
+    public List<BatchSelectOption> getSelectOptions(Long companyId, String keyword) {
+        List<ProductionBatch> batches;
+        if (companyId != null) {
+            batches = batchRepo.findByCompanyIdAndIsDeletedFalse(companyId);
+        } else {
+            batches = batchRepo.findByIsDeletedFalse();
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            batches = batches.stream()
+                    .filter(b -> b.getBatchNumber().contains(keyword))
+                    .toList();
+        }
+        return batches.stream()
+                .map(b -> new BatchSelectOption(b.getId(), b.getBatchNumber(),
+                        b.getProductId(),
+                        b.getProduct() != null ? b.getProduct().getName() : null))
+                .toList();
     }
 
     public void deleteBatch(Long id) {

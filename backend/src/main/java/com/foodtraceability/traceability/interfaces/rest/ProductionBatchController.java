@@ -65,6 +65,16 @@ public class ProductionBatchController {
         }
     }
 
+    @GetMapping("/batches/select-options")
+    public ResponseEntity<?> getSelectOptions(@RequestParam(required = false) String keyword) {
+        try {
+            Long companyId = securityUtils.getCurrentCompanyId();
+            return ResponseEntity.ok(appService.getSelectOptions(companyId, keyword));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/batches")
     public ResponseEntity<?> createBatch(@RequestBody CreateBatchRequest req) {
         log.info("[v2] 创建批次 productId={}", req.getProductId());

@@ -15,7 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,7 +30,8 @@ public class StorageApplicationService {
 
     public record StorageListResponse(Long id, Long batchId, LocalDateTime storageTime,
                                        LocalDateTime outboundTime, Double quantity,
-                                       String unit, String warehouseLocation) {}
+                                       String unit, String warehouseLocation,
+                                       String batchNumber, String productName) {}
 
     public StorageApplicationService(StorageRepository storageRepo,
                                      ProductionBatchRepository batchRepo,
@@ -72,9 +74,18 @@ public class StorageApplicationService {
         } else {
             storages = storageRepo.findAll();
         }
+        Set<Long> batchIds = storages.stream().map(Storage::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
+                .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
         return storages.stream()
-                .map(s -> new StorageListResponse(s.getId(), s.getBatchId(), s.getStorageTime(),
-                        s.getOutboundTime(), s.getQuantity(), s.getUnit(), s.getWarehouseLocation()))
+                .map(s -> {
+                    ProductionBatch b = batchMap.get(s.getBatchId());
+                    String bn = b != null ? b.getBatchNumber() : null;
+                    String pn = b != null && b.getProduct() != null ? b.getProduct().getName() : null;
+                    return new StorageListResponse(s.getId(), s.getBatchId(), s.getStorageTime(),
+                            s.getOutboundTime(), s.getQuantity(), s.getUnit(), s.getWarehouseLocation(),
+                            bn, pn);
+                })
                 .toList();
     }
 

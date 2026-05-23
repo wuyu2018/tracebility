@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,7 +32,8 @@ public class InspectionApplicationService {
     public record InspectionListResponse(Long id, Long batchId, String sampleName,
                                           Integer sampleQuantity, String sampleSpecification,
                                           String imageUrl, String resultStatus, String resultDetail,
-                                          String inspectorName, LocalDateTime inspectionTime) {}
+                                          String inspectorName, LocalDateTime inspectionTime,
+                                          String batchNumber, String productName) {}
 
     public InspectionApplicationService(InspectionRepository inspectionRepo,
                                         ProductionBatchRepository batchRepo,
@@ -81,11 +83,19 @@ public class InspectionApplicationService {
         } else {
             inspections = inspectionRepo.findAll();
         }
+        Set<Long> batchIds = inspections.stream().map(Inspection::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
+                .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
         return inspections.stream()
-                .map(i -> new InspectionListResponse(i.getId(), i.getBatchId(), i.getSampleName(),
-                        i.getSampleQuantity(), i.getSampleSpecification(), i.getImageUrl(),
-                        i.getResultStatus(), i.getResultDetail(), i.getInspectorName(),
-                        i.getInspectionTime()))
+                .map(i -> {
+                    ProductionBatch b = batchMap.get(i.getBatchId());
+                    String bn = b != null ? b.getBatchNumber() : null;
+                    String pn = b != null && b.getProduct() != null ? b.getProduct().getName() : null;
+                    return new InspectionListResponse(i.getId(), i.getBatchId(), i.getSampleName(),
+                            i.getSampleQuantity(), i.getSampleSpecification(), i.getImageUrl(),
+                            i.getResultStatus(), i.getResultDetail(), i.getInspectorName(),
+                            i.getInspectionTime(), bn, pn);
+                })
                 .toList();
     }
 

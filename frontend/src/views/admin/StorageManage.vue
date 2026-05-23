@@ -9,8 +9,11 @@
 
     <el-table :data="list" v-loading="loading" border stripe>
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column label="批次" width="160">
-        <template #default="{ row }">{{ row.batch?.batchNumber || row.batchNumber || row.batchId || '-' }}</template>
+      <el-table-column label="批次" min-width="200">
+        <template #default="{ row }">
+          <span v-if="row.batchNumber">{{ row.batchNumber }}<br><small style="color:#909399">{{ row.productName || '' }}</small></span>
+          <span v-else>{{ row.batch?.batchNumber || row.batchId || '-' }}</span>
+        </template>
       </el-table-column>
       <el-table-column prop="storageTime" label="入库时间" width="180" />
       <el-table-column prop="outboundTime" label="出库时间" width="180" />
@@ -22,9 +25,7 @@
     <el-dialog v-model="dialogVisible" title="新增仓储记录" width="460px" @closed="resetForm">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="选择批次" prop="batchId">
-          <el-select v-model="form.batchId" placeholder="请选择批次" filterable style="width:100%">
-            <el-option v-for="b in batches" :key="b.id" :label="b.batchNumber" :value="b.id" />
-          </el-select>
+          <BatchSelect v-model="form.batchId" />
         </el-form-item>
         <el-form-item label="入库时间" prop="storageTime">
           <el-date-picker v-model="form.storageTime" type="datetime" placeholder="选择时间" value-format="YYYY-MM-DDTHH:mm:ss" style="width:100%" />
@@ -53,13 +54,13 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getStorages, createStorage, getBatches } from '@/api/admin'
+import { getStorages, createStorage } from '@/api/admin'
+import BatchSelect from '@/components/admin/BatchSelect.vue'
 import { Plus } from '@element-plus/icons-vue'
 
 const list = ref([])
 const loading = ref(false)
 const saving = ref(false)
-const batches = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = reactive({ batchId: '', storageTime: '', outboundTime: '', quantity: 0, unit: '', warehouseLocation: '' })
@@ -78,8 +79,6 @@ async function fetchList() {
 }
 
 async function openDialog() {
-  const res = await getBatches()
-  batches.value = Array.isArray(res) ? res : res?.data || res?.records || []
   resetForm()
   dialogVisible.value = true
 }

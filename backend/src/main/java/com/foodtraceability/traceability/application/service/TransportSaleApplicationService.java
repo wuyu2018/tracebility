@@ -15,7 +15,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -50,7 +51,8 @@ public class TransportSaleApplicationService {
                                               String receiverContact,
                                               Double environmentTemperature,
                                               Double productTemperature,
-                                              String recorderName) {}
+                                              String recorderName,
+                                              String batchNumber, String productName) {}
 
     public RecordTransportSaleResponse recordTransportSale(RecordTransportSaleRequest req) {
         if (req.batchId() == null) {
@@ -95,12 +97,20 @@ public class TransportSaleApplicationService {
         } else {
             sales = transportSaleRepo.findAll();
         }
+        Set<Long> batchIds = sales.stream().map(TransportSale::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
+                .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
         return sales.stream()
-                .map(t -> new TransportSaleListResponse(t.getId(), t.getBatchId(),
-                        t.getTransportCompany(), t.getVehicleNumber(), t.getTime(),
-                        t.getSalesRegion(), t.getReceiverName(), t.getReceiverContact(),
-                        t.getEnvironmentTemperature(), t.getProductTemperature(),
-                        t.getRecorderName()))
+                .map(t -> {
+                    ProductionBatch b = batchMap.get(t.getBatchId());
+                    String bn = b != null ? b.getBatchNumber() : null;
+                    String pn = b != null && b.getProduct() != null ? b.getProduct().getName() : null;
+                    return new TransportSaleListResponse(t.getId(), t.getBatchId(),
+                            t.getTransportCompany(), t.getVehicleNumber(), t.getTime(),
+                            t.getSalesRegion(), t.getReceiverName(), t.getReceiverContact(),
+                            t.getEnvironmentTemperature(), t.getProductTemperature(),
+                            t.getRecorderName(), bn, pn);
+                })
                 .toList();
     }
 
