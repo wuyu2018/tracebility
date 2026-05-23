@@ -27,13 +27,14 @@ public class MaterialChangedAgentHandler {
         
         try {
             switch (event.action()) {
-                case "CREATED":
+                case "CREATE":
                     handleMaterialCreation(event);
                     break;
-                case "UPDATED":
+                case "UPDATE":
+                case "ACTIVATE":
                     handleMaterialUpdate(event);
                     break;
-                case "DELETED":
+                case "DEACTIVATE":
                     handleMaterialDeletion(event);
                     break;
                 default:

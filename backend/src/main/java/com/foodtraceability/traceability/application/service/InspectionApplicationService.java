@@ -60,11 +60,12 @@ public class InspectionApplicationService {
             inspection.setImageUrl(req.imageUrl());
         }
 
+        inspection = inspectionRepo.save(inspection);
+
         InspectionResult result = req.qualified()
                 ? InspectionResult.pass()
                 : InspectionResult.fail(req.failReason());
         inspection.complete(result, req.inspectorName());
-
         inspection = inspectionRepo.save(inspection);
 
         DomainEvent event = inspection.pullEvents().get(0);

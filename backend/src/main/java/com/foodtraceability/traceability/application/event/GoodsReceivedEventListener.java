@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Component
 public class GoodsReceivedEventListener {
 
@@ -45,14 +48,21 @@ public class GoodsReceivedEventListener {
         });
 
         storageRepo.findById(event.storageId()).ifPresent(storage -> {
-            String snapshot = String.format(
-                    "{\"storageId\":%d,\"batchId\":%d,\"storageTime\":\"%s\",\"outboundTime\":\"%s\",\"quantity\":%.2f,\"unit\":\"%s\",\"warehouseLocation\":\"%s\"}",
-                    storage.getId(), storage.getBatchId(),
-                    storage.getStorageTime() != null ? storage.getStorageTime() : "",
-                    storage.getOutboundTime() != null ? storage.getOutboundTime() : "",
-                    storage.getQuantity() != null ? storage.getQuantity() : 0.0,
-                    storage.getUnit() != null ? storage.getUnit() : "",
-                    storage.getWarehouseLocation() != null ? storage.getWarehouseLocation() : "");
+            String snapshot;
+            try {
+                Map<String, Object> data = new LinkedHashMap<>();
+                data.put("storageId", storage.getId());
+                data.put("batchId", storage.getBatchId());
+                data.put("storageTime", storage.getStorageTime() != null ? storage.getStorageTime().toString() : null);
+                data.put("outboundTime", storage.getOutboundTime() != null ? storage.getOutboundTime().toString() : null);
+                data.put("quantity", storage.getQuantity() != null ? storage.getQuantity() : 0.0);
+                data.put("unit", storage.getUnit() != null ? storage.getUnit() : "");
+                data.put("warehouseLocation", storage.getWarehouseLocation() != null ? storage.getWarehouseLocation() : "");
+                snapshot = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(data);
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to build snapshot for Storage id={}", storage.getId(), e);
+                return;
+            }
             try {
                 agentBlockchainService.appendBlockWithConsensus(
                         "BATCH", "STORAGE", storage.getId(), "CREATE",

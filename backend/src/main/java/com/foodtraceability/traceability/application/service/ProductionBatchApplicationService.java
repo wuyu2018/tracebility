@@ -10,6 +10,7 @@ import com.foodtraceability.traceability.application.dto.CreateBatchRequest;
 import com.foodtraceability.traceability.application.dto.CreateBatchResponse;
 import com.foodtraceability.traceability.interfaces.dto.BatchSelectOption;
 import com.foodtraceability.traceability.domain.event.BatchCreated;
+import com.foodtraceability.traceability.domain.event.BatchSoftDeleted;
 import com.foodtraceability.traceability.domain.service.BatchCreationValidator;
 import com.foodtraceability.traceability.domain.vo.BatchNumber;
 import com.foodtraceability.traceability.domain.vo.Quantity;
@@ -143,6 +144,8 @@ public class ProductionBatchApplicationService {
                 .orElseThrow(() -> new BusinessException("批次不存在: " + id));
         batch.softDelete();
         batchRepo.save(batch);
+
+        eventPublisher.publish(new BatchSoftDeleted(id));
         log.info("Batch soft-deleted: id={}", id);
     }
 

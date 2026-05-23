@@ -64,7 +64,7 @@ public class TransportSaleRecordedEventListener {
             );
 
             transportSaleRepo.findById(event.transportSaleId()).ifPresent(ts -> {
-                String snapshotJson = null;
+                String snapshotJson;
                 try {
                     Map<String, Object> snapshot = new LinkedHashMap<>();
                     snapshot.put("id", ts.getId());
@@ -80,6 +80,12 @@ public class TransportSaleRecordedEventListener {
                     snapshot.put("time", ts.getTime() != null ? ts.getTime().toString() : null);
                     snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
                             .writeValueAsString(snapshot);
+                } catch (Exception e) {
+                    log.error("[Blockchain] Failed to build snapshot for transportSaleId={}", ts.getId(), e);
+                    return;
+                }
+
+                try {
                     agentBlockchainService.appendBlockWithConsensus(
                             "BATCH", "TRANSPORT_SALE", ts.getId(), "CREATE",
                             snapshotJson, null);

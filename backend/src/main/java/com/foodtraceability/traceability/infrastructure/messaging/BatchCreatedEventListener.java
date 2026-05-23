@@ -5,6 +5,7 @@ import com.foodtraceability.agent.service.AgentBlockchainService;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.service.BlockchainRetryService;
 import com.foodtraceability.traceability.domain.event.BatchCreated;
+import com.foodtraceability.traceability.domain.event.BatchSoftDeleted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ public class BatchCreatedEventListener {
             productionAgent.updateCreditScore(5);
 
             batchRepo.findById(event.batchId()).ifPresent(batch -> {
-                String snapshotJson = null;
+                String snapshotJson;
                 try {
                     Map<String, Object> snapshot = new LinkedHashMap<>();
                     snapshot.put("id", batch.getId());
@@ -69,6 +70,12 @@ public class BatchCreatedEventListener {
                     snapshot.put("unit", batch.getUnit());
                     snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
                             .writeValueAsString(snapshot);
+                } catch (Exception e) {
+                    log.error("[Blockchain] Failed to build snapshot for batchId={}", batch.getId(), e);
+                    return;
+                }
+
+                try {
                     agentBlockchainService.appendBlockWithConsensus(
                             "BATCH", "PRODUCTION_BATCH", batch.getId(), "CREATE",
                             snapshotJson, null);
@@ -89,5 +96,39 @@ public class BatchCreatedEventListener {
             log.error("Failed to handle BatchCreated event", e);
             throw e;
         }
+    }
+
+    @TransactionalEventListener
+    public void handleBatchSoftDeleted(BatchSoftDeleted event) {
+        log.info("[Event] BatchSoftDeleted: batchId={}", event.batchId());
+
+        batchRepo.findById(event.batchId()).ifPresent(batch -> {
+            String snapshotJson;
+            try {
+                Map<String, Object> snapshot = new LinkedHashMap<>();
+                snapshot.put("id", batch.getId());
+                snapshot.put("batchNumber", batch.getBatchNumber());
+                snapshot.put("productId", batch.getProductId());
+                snapshot.put("isDeleted", true);
+                snapshotJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(snapshot);
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to build snapshot for deleted batchId={}", batch.getId(), e);
+                return;
+            }
+
+            try {
+                agentBlockchainService.appendBlockWithConsensus(
+                        "BATCH", "PRODUCTION_BATCH", batch.getId(), "SOFT_DELETE",
+                        snapshotJson, null);
+                log.info("[Blockchain] Batch soft-delete block appended: batchId={}", batch.getId());
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to append soft-delete block for batchId={} — scheduling retry",
+                        batch.getId(), e);
+                blockchainRetryService.scheduleRetry(
+                        "BATCH", "PRODUCTION_BATCH", batch.getId(), "SOFT_DELETE",
+                        snapshotJson, null, null, e.getMessage());
+            }
+        });
     }
 }

@@ -123,6 +123,8 @@ public class TransportSaleApplicationService {
                             eventPublisher.publish(event);
                         }
                     });
+        } else {
+            eventPublisher.publish(event);
         }
     }
 }

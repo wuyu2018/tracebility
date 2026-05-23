@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Component
 public class InspectionCompletedEventListener {
 
@@ -45,16 +48,24 @@ public class InspectionCompletedEventListener {
         }
 
         inspectionRepo.findById(event.inspectionId()).ifPresent(inspection -> {
-            String snapshot = String.format(
-                    "{\"inspectionId\":%d,\"batchId\":%d,\"sampleName\":\"%s\",\"sampleQuantity\":%d,\"sampleSpecification\":\"%s\",\"resultStatus\":\"%s\",\"resultDetail\":\"%s\",\"inspectorName\":\"%s\",\"inspectionTime\":\"%s\"}",
-                    inspection.getId(), inspection.getBatchId(),
-                    inspection.getSampleName() != null ? inspection.getSampleName() : "",
-                    inspection.getSampleQuantity() != null ? inspection.getSampleQuantity() : 0,
-                    inspection.getSampleSpecification() != null ? inspection.getSampleSpecification() : "",
-                    inspection.getResultStatus() != null ? inspection.getResultStatus() : "",
-                    inspection.getResultDetail() != null ? inspection.getResultDetail() : "",
-                    inspection.getInspectorName() != null ? inspection.getInspectorName() : "",
-                    inspection.getInspectionTime() != null ? inspection.getInspectionTime().toString() : "");
+            String snapshot;
+            try {
+                Map<String, Object> data = new LinkedHashMap<>();
+                data.put("inspectionId", inspection.getId());
+                data.put("batchId", inspection.getBatchId());
+                data.put("sampleName", inspection.getSampleName());
+                data.put("sampleQuantity", inspection.getSampleQuantity());
+                data.put("sampleSpecification", inspection.getSampleSpecification());
+                data.put("resultStatus", inspection.getResultStatus());
+                data.put("resultDetail", inspection.getResultDetail());
+                data.put("inspectorName", inspection.getInspectorName());
+                data.put("inspectionTime", inspection.getInspectionTime() != null
+                        ? inspection.getInspectionTime().toString() : null);
+                snapshot = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(data);
+            } catch (Exception e) {
+                log.error("[Blockchain] Failed to build snapshot for Inspection id={}", inspection.getId(), e);
+                return;
+            }
             try {
                 agentBlockchainService.appendBlockWithConsensus(
                         "BATCH", "INSPECTION", inspection.getId(), "CREATE",

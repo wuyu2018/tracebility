@@ -8,7 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.security.MessageDigest;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,11 +25,14 @@ public class BlockchainMonitorService {
 
     private final BlockchainLogRepository blockchainLogRepo;
     private final BlockchainAnchorRepository anchorRepo;
+    private final PublicKey blockchainPublicKey;
 
     public BlockchainMonitorService(BlockchainLogRepository blockchainLogRepo,
-                                    BlockchainAnchorRepository anchorRepo) {
+                                    BlockchainAnchorRepository anchorRepo,
+                                    KeyPair blockchainKeyPair) {
         this.blockchainLogRepo = blockchainLogRepo;
         this.anchorRepo = anchorRepo;
+        this.blockchainPublicKey = blockchainKeyPair.getPublic();
     }
 
     public Map<String, Object> getSummary() {
@@ -137,6 +143,8 @@ public class BlockchainMonitorService {
                 String sig = log.getSignature();
                 if (sig == null || sig.isEmpty()) {
                     r.errors.add("missing signature");
+                } else if (!verifySignature(log.getCurrentHash(), sig)) {
+                    r.errors.add("invalid signature");
                 }
             }
 
@@ -160,6 +168,18 @@ public class BlockchainMonitorService {
         } catch (Exception e) {
             log.warn("Failed to recalculate hash for block {}: {}", entity.getId(), e.getMessage());
             return null;
+        }
+    }
+
+    private boolean verifySignature(String hash, String signatureBase64) {
+        try {
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initVerify(blockchainPublicKey);
+            sig.update(hash.getBytes(StandardCharsets.UTF_8));
+            return sig.verify(java.util.Base64.getDecoder().decode(signatureBase64));
+        } catch (Exception e) {
+            log.warn("Failed to verify signature: {}", e.getMessage());
+            return false;
         }
     }
 
