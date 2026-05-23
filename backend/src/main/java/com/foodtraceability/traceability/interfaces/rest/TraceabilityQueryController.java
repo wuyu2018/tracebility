@@ -78,12 +78,16 @@ public class TraceabilityQueryController {
                         r.inspection().sampleSpecification(), r.inspection().imageUrl(),
                         r.inspection().inspectorName(),
                         r.inspection().inspectionTime() != null
-                                ? r.inspection().inspectionTime().toString() : null) : null,
+                                ? r.inspection().inspectionTime().toString() : null,
+                        r.inspection().resultStatus(),
+                        r.inspection().resultDetail()) : null,
                 r.storage() != null ? new TraceabilityQueryResponse.StorageInfo(
-                        r.storage().storageTime(), r.storage().outboundTime()) : null,
+                        r.storage().storageTime(), r.storage().outboundTime(),
+                        r.storage().warehouseLocation()) : null,
                 r.transportSale() != null ? new TraceabilityQueryResponse.TransportSaleInfo(
                         r.transportSale().time(),
-                        r.transportSale().salesRegion()) : null,
+                        r.transportSale().salesRegion(),
+                        r.transportSale().transportCompany()) : null,
                 r.status(),
                 r.isRepeatedQuery(),
                 r.scanCount(),

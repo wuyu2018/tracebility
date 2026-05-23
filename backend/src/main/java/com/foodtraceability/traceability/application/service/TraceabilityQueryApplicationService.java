@@ -91,7 +91,8 @@ public class TraceabilityQueryApplicationService {
         InspectionDto inspectionDto = inspection != null
                 ? new InspectionDto(inspection.getSampleName(), inspection.getSampleQuantity(),
                         inspection.getSampleSpecification(), inspection.getImageUrl(),
-                        inspection.getInspectorName(), inspection.getInspectionTime())
+                        inspection.getInspectorName(), inspection.getInspectionTime(),
+                        inspection.getResultStatus(), inspection.getResultDetail())
                 : null;
 
         Storage storage = batch.getStorageId() != null
@@ -145,7 +146,8 @@ public class TraceabilityQueryApplicationService {
 
     public record InspectionDto(String sampleName, Integer sampleQuantity,
                                  String sampleSpecification, String imageUrl,
-                                 String inspectorName, LocalDateTime inspectionTime) {}
+                                 String inspectorName, LocalDateTime inspectionTime,
+                                 String resultStatus, String resultDetail) {}
 
     public record StorageDto(LocalDateTime storageTime, LocalDateTime outboundTime,
                               String warehouseLocation) {}

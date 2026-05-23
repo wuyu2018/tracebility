@@ -130,15 +130,20 @@ public class TraceabilityQueryResponse {
         private final String imageUrl;
         private final String inspectorName;
         private final String inspectionTime;
+        private final String resultStatus;
+        private final String resultDetail;
 
         public InspectionInfo(String sampleName, Integer sampleQuantity, String sampleSpecification,
-                              String imageUrl, String inspectorName, String inspectionTime) {
+                              String imageUrl, String inspectorName, String inspectionTime,
+                              String resultStatus, String resultDetail) {
             this.sampleName = sampleName;
             this.sampleQuantity = sampleQuantity;
             this.sampleSpecification = sampleSpecification;
             this.imageUrl = imageUrl;
             this.inspectorName = inspectorName;
             this.inspectionTime = inspectionTime;
+            this.resultStatus = resultStatus;
+            this.resultDetail = resultDetail;
         }
 
         public String getSampleName() { return sampleName; }
@@ -147,31 +152,39 @@ public class TraceabilityQueryResponse {
         public String getImageUrl() { return imageUrl; }
         public String getInspectorName() { return inspectorName; }
         public String getInspectionTime() { return inspectionTime; }
+        public String getResultStatus() { return resultStatus; }
+        public String getResultDetail() { return resultDetail; }
     }
 
     public static class StorageInfo {
         private final LocalDateTime storageTime;
         private final LocalDateTime outboundTime;
+        private final String warehouseLocation;
 
-        public StorageInfo(LocalDateTime storageTime, LocalDateTime outboundTime) {
+        public StorageInfo(LocalDateTime storageTime, LocalDateTime outboundTime, String warehouseLocation) {
             this.storageTime = storageTime;
             this.outboundTime = outboundTime;
+            this.warehouseLocation = warehouseLocation;
         }
 
         public LocalDateTime getStorageTime() { return storageTime; }
         public LocalDateTime getOutboundTime() { return outboundTime; }
+        public String getWarehouseLocation() { return warehouseLocation; }
     }
 
     public static class TransportSaleInfo {
         private final LocalDateTime transportTime;
         private final String salesRegion;
+        private final String transportCompany;
 
-        public TransportSaleInfo(LocalDateTime transportTime, String salesRegion) {
+        public TransportSaleInfo(LocalDateTime transportTime, String salesRegion, String transportCompany) {
             this.transportTime = transportTime;
             this.salesRegion = salesRegion;
+            this.transportCompany = transportCompany;
         }
 
         public LocalDateTime getTransportTime() { return transportTime; }
         public String getSalesRegion() { return salesRegion; }
+        public String getTransportCompany() { return transportCompany; }
     }
 }
