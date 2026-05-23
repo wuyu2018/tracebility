@@ -1,9 +1,11 @@
 package com.foodtraceability.traceability.application.service;
 
 import com.foodtraceability.entity.ProductionBatch;
+import com.foodtraceability.entity.TraceabilityLink;
 import com.foodtraceability.entity.TransportSale;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.repository.TransportSaleRepository;
 import com.foodtraceability.traceability.domain.event.TransportSaleRecorded;
 import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
@@ -26,13 +28,16 @@ public class TransportSaleApplicationService {
 
     private final TransportSaleRepository transportSaleRepo;
     private final ProductionBatchRepository batchRepo;
+    private final TraceabilityLinkRepository linkRepo;
     private final DomainEventPublisherImpl eventPublisher;
 
     public TransportSaleApplicationService(TransportSaleRepository transportSaleRepo,
                                             ProductionBatchRepository batchRepo,
+                                            TraceabilityLinkRepository linkRepo,
                                             DomainEventPublisherImpl eventPublisher) {
         this.transportSaleRepo = transportSaleRepo;
         this.batchRepo = batchRepo;
+        this.linkRepo = linkRepo;
         this.eventPublisher = eventPublisher;
     }
 
@@ -80,6 +85,10 @@ public class TransportSaleApplicationService {
         Long tsId = ts.getId();
         batch.associateTransportSale(ts);
         batchRepo.save(batch);
+
+        if (!linkRepo.existsByBatchIdAndEntityTypeAndEntityId(req.batchId(), "TRANSPORT_SALE", tsId)) {
+            linkRepo.save(TraceabilityLink.create(req.batchId(), "TRANSPORT_SALE", tsId));
+        }
 
         var event = new TransportSaleRecorded(tsId, req.batchId(), req.time(),
                 req.transportCompany(), req.salesRegion());

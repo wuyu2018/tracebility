@@ -5,6 +5,7 @@ import com.foodtraceability.entity.ProductionBatch;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.InspectionRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.traceability.application.dto.CompleteInspectionRequest;
 import com.foodtraceability.traceability.application.dto.CompleteInspectionResponse;
 import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
@@ -25,13 +26,14 @@ class InspectionApplicationServiceTest {
 
     @Mock private InspectionRepository inspectionRepo;
     @Mock private ProductionBatchRepository batchRepo;
+    @Mock private TraceabilityLinkRepository linkRepo;
     @Mock private DomainEventPublisherImpl eventPublisher;
 
     private InspectionApplicationService service;
 
     @BeforeEach
     void setUp() {
-        service = new InspectionApplicationService(inspectionRepo, batchRepo, eventPublisher);
+        service = new InspectionApplicationService(inspectionRepo, batchRepo, linkRepo, eventPublisher);
     }
 
     @Test

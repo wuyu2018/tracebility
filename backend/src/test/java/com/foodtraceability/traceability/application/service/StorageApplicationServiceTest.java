@@ -5,6 +5,7 @@ import com.foodtraceability.entity.Storage;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.traceability.application.dto.RecordStorageRequest;
 import com.foodtraceability.traceability.application.dto.RecordStorageResponse;
 import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
@@ -28,6 +29,7 @@ class StorageApplicationServiceTest {
 
     @Mock private StorageRepository storageRepo;
     @Mock private ProductionBatchRepository batchRepo;
+    @Mock private TraceabilityLinkRepository linkRepo;
     @Mock private DomainEventPublisherImpl eventPublisher;
 
     private StorageApplicationService service;
@@ -36,7 +38,7 @@ class StorageApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new StorageApplicationService(storageRepo, batchRepo, eventPublisher);
+        service = new StorageApplicationService(storageRepo, batchRepo, linkRepo, eventPublisher);
     }
 
     @Test

@@ -10,7 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TraceabilityQueryApplicationService {
@@ -26,6 +27,7 @@ public class TraceabilityQueryApplicationService {
     private final InspectionRepository inspectionRepo;
     private final StorageRepository storageRepo;
     private final TransportSaleRepository transportSaleRepo;
+    private final TraceabilityLinkRepository linkRepo;
 
     public TraceabilityQueryApplicationService(SecurityCodeRepository securityCodeRepo,
                                                 ProductionBatchRepository batchRepo,
@@ -35,7 +37,8 @@ public class TraceabilityQueryApplicationService {
                                                 MaterialRepository materialRepo,
                                                 InspectionRepository inspectionRepo,
                                                 StorageRepository storageRepo,
-                                                TransportSaleRepository transportSaleRepo) {
+                                                TransportSaleRepository transportSaleRepo,
+                                                TraceabilityLinkRepository linkRepo) {
         this.securityCodeRepo = securityCodeRepo;
         this.batchRepo = batchRepo;
         this.productRepo = productRepo;
@@ -45,6 +48,7 @@ public class TraceabilityQueryApplicationService {
         this.inspectionRepo = inspectionRepo;
         this.storageRepo = storageRepo;
         this.transportSaleRepo = transportSaleRepo;
+        this.linkRepo = linkRepo;
     }
 
     @Transactional
@@ -84,32 +88,19 @@ public class TraceabilityQueryApplicationService {
         BatchDto batchDto = new BatchDto(batch.getId(), batch.getBatchNumber(),
                 batch.getProductionDate(), batch.getShelfLife(), batch.getCreatedAt());
 
-        List<MaterialInfo> materials = buildMaterialInfos(batch.getId());
+        Map<String, List<Long>> links = groupLinksByEntityType(batch.getId());
 
-        List<Inspection> inspections = inspectionRepo.findByBatch_Id(batch.getId());
-        Inspection inspection = inspections.isEmpty() ? null : inspections.get(0);
-        InspectionDto inspectionDto = inspection != null
-                ? new InspectionDto(inspection.getSampleName(), inspection.getSampleQuantity(),
-                        inspection.getSampleSpecification(), inspection.getImageUrl(),
-                        inspection.getInspectorName(), inspection.getInspectionTime(),
-                        inspection.getResultStatus(), inspection.getResultDetail())
-                : null;
+        List<MaterialInfo> materials = buildMaterialInfos(batch.getId(), links);
 
-        Storage storage = batch.getStorageId() != null
-                ? storageRepo.findById(batch.getStorageId()).orElse(null)
-                : null;
-        StorageDto storageDto = storage != null
-                ? new StorageDto(storage.getStorageTime(), storage.getOutboundTime(),
-                        storage.getWarehouseLocation())
-                : null;
+        InspectionDto inspectionDto = buildInspection(batch.getId(), links);
 
-        TransportSale transportSale = batch.getTransportSaleId() != null
-                ? transportSaleRepo.findById(batch.getTransportSaleId()).orElse(null)
-                : null;
-        TransportSaleDto transportSaleDto = transportSale != null
-                ? new TransportSaleDto(transportSale.getTime(),
-                        transportSale.getSalesRegion(), transportSale.getTransportCompany())
-                : null;
+        StorageDto storageDto = buildStorage(batch.getId(), links);
+
+        TransportSaleDto transportSaleDto = buildTransportSale(batch.getId(), links);
+
+        log.info("[TraceQuery] batchId={} materialCount={} inspectionFound={} storageFound={} transportFound={}",
+                batch.getId(), materials.size(), inspectionDto != null,
+                storageDto != null, transportSaleDto != null);
 
         String status = sc != null ? sc.getStatus() : "未扫码";
         Boolean isRepeatedQuery = sc != null && sc.isRepeatedQuery();
@@ -122,7 +113,105 @@ public class TraceabilityQueryApplicationService {
                 transportSaleDto, status, isRepeatedQuery, scanCount, firstScanTime);
     }
 
-    private List<MaterialInfo> buildMaterialInfos(Long batchId) {
+    private Map<String, List<Long>> groupLinksByEntityType(Long batchId) {
+        List<TraceabilityLink> links = linkRepo.findByBatchId(batchId);
+        if (links == null || links.isEmpty()) {
+            return Map.of();
+        }
+        return links.stream()
+                .collect(Collectors.groupingBy(
+                        TraceabilityLink::getEntityType,
+                        Collectors.mapping(TraceabilityLink::getEntityId, Collectors.toList())));
+    }
+
+    private List<Long> getEntityIds(Map<String, List<Long>> links, String entityType) {
+        List<Long> ids = links.getOrDefault(entityType, List.of());
+        return ids.isEmpty() ? null : ids;
+    }
+
+    private List<MaterialInfo> buildMaterialInfos(Long batchId, Map<String, List<Long>> links) {
+        List<Long> materialIds = getEntityIds(links, "MATERIAL_PURCHASE");
+
+        if (materialIds == null) {
+            return buildMaterialInfosLegacy(batchId);
+        }
+
+        return materialIds.stream()
+                .map(id -> {
+                    MaterialPurchase mp = materialPurchaseRepo.findById(id).orElse(null);
+                    if (mp == null) return new MaterialInfo(null, null, null, null, null, null);
+                    String materialName = mp.getMaterial() != null ? mp.getMaterial().getName() : null;
+                    return new MaterialInfo(materialName, mp.getBatchNumber(),
+                            mp.getSupplierName(), mp.getProducerName(),
+                            mp.getProducerAddress(), mp.getPurchaseDate());
+                })
+                .toList();
+    }
+
+    private InspectionDto buildInspection(Long batchId, Map<String, List<Long>> links) {
+        List<Long> inspectionIds = getEntityIds(links, "INSPECTION");
+
+        if (inspectionIds == null) {
+            List<Inspection> inspections = inspectionRepo.findByBatch_Id(batchId);
+            Inspection inspection = inspections.isEmpty() ? null : inspections.get(0);
+            return inspection != null ? inspectionToDto(inspection) : null;
+        }
+
+        return inspectionRepo.findById(inspectionIds.get(0))
+                .map(this::inspectionToDto)
+                .orElse(null);
+    }
+
+    private InspectionDto inspectionToDto(Inspection inspection) {
+        return new InspectionDto(inspection.getSampleName(), inspection.getSampleQuantity(),
+                inspection.getSampleSpecification(), inspection.getImageUrl(),
+                inspection.getInspectorName(), inspection.getInspectionTime(),
+                inspection.getResultStatus(), inspection.getResultDetail());
+    }
+
+    private StorageDto buildStorage(Long batchId, Map<String, List<Long>> links) {
+        List<Long> storageIds = getEntityIds(links, "STORAGE");
+
+        if (storageIds == null) {
+            Storage storage = batchRepo.findById(batchId)
+                    .map(b -> b.getStorageId() != null
+                            ? storageRepo.findById(b.getStorageId()).orElse(null)
+                            : null)
+                    .orElse(null);
+            return storage != null ? storageToDto(storage) : null;
+        }
+
+        return storageRepo.findById(storageIds.get(0))
+                .map(this::storageToDto)
+                .orElse(null);
+    }
+
+    private StorageDto storageToDto(Storage s) {
+        return new StorageDto(s.getStorageTime(), s.getOutboundTime(), s.getWarehouseLocation());
+    }
+
+    private TransportSaleDto buildTransportSale(Long batchId, Map<String, List<Long>> links) {
+        List<Long> transportIds = getEntityIds(links, "TRANSPORT_SALE");
+
+        if (transportIds == null) {
+            TransportSale ts = batchRepo.findById(batchId)
+                    .map(b -> b.getTransportSaleId() != null
+                            ? transportSaleRepo.findById(b.getTransportSaleId()).orElse(null)
+                            : null)
+                    .orElse(null);
+            return ts != null ? transportSaleToDto(ts) : null;
+        }
+
+        return transportSaleRepo.findById(transportIds.get(0))
+                .map(this::transportSaleToDto)
+                .orElse(null);
+    }
+
+    private TransportSaleDto transportSaleToDto(TransportSale ts) {
+        return new TransportSaleDto(ts.getTime(), ts.getSalesRegion(), ts.getTransportCompany());
+    }
+
+    private List<MaterialInfo> buildMaterialInfosLegacy(Long batchId) {
         List<BatchMaterialRelation> relations = relationRepo.findById_BatchId(batchId);
         return relations.stream()
                 .map(r -> {

@@ -2,10 +2,12 @@ package com.foodtraceability.traceability.application.service;
 
 import com.foodtraceability.entity.BatchMaterialRelation;
 import com.foodtraceability.entity.ProductionBatch;
+import com.foodtraceability.entity.TraceabilityLink;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.BatchMaterialRelationRepository;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.traceability.application.dto.CreateBatchRequest;
 import com.foodtraceability.traceability.application.dto.CreateBatchResponse;
 import com.foodtraceability.traceability.interfaces.dto.BatchSelectOption;
@@ -33,16 +35,19 @@ public class ProductionBatchApplicationService {
     private final ProductionBatchRepository batchRepo;
     private final ProductRepository productRepo;
     private final BatchMaterialRelationRepository relationRepo;
+    private final TraceabilityLinkRepository linkRepo;
     private final BatchCreationValidator validator;
     private final DomainEventPublisherImpl eventPublisher;
 
     public ProductionBatchApplicationService(ProductionBatchRepository batchRepo,
                                              ProductRepository productRepo,
                                              BatchMaterialRelationRepository relationRepo,
+                                             TraceabilityLinkRepository linkRepo,
                                              DomainEventPublisherImpl eventPublisher) {
         this.batchRepo = batchRepo;
         this.productRepo = productRepo;
         this.relationRepo = relationRepo;
+        this.linkRepo = linkRepo;
         this.validator = new BatchCreationValidator();
         this.eventPublisher = eventPublisher;
     }
@@ -82,6 +87,9 @@ public class ProductionBatchApplicationService {
         Long batchId = batch.getId();
         for (Long mpId : req.materialPurchaseIds()) {
             relationRepo.save(BatchMaterialRelation.create(batchId, mpId));
+            if (!linkRepo.existsByBatchIdAndEntityTypeAndEntityId(batchId, "MATERIAL_PURCHASE", mpId)) {
+                linkRepo.save(TraceabilityLink.create(batchId, "MATERIAL_PURCHASE", mpId));
+            }
         }
 
         var event = new BatchCreated(batchId, batchNo, req.productId(), req.materialPurchaseIds());

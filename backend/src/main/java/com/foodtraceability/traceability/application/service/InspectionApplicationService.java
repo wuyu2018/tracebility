@@ -2,9 +2,11 @@ package com.foodtraceability.traceability.application.service;
 
 import com.foodtraceability.entity.Inspection;
 import com.foodtraceability.entity.ProductionBatch;
+import com.foodtraceability.entity.TraceabilityLink;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.InspectionRepository;
 import com.foodtraceability.repository.ProductionBatchRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.traceability.application.dto.CompleteInspectionRequest;
 import com.foodtraceability.traceability.application.dto.CompleteInspectionResponse;
 import com.foodtraceability.traceability.domain.vo.InspectionResult;
@@ -27,6 +29,7 @@ public class InspectionApplicationService {
 
     private final InspectionRepository inspectionRepo;
     private final ProductionBatchRepository batchRepo;
+    private final TraceabilityLinkRepository linkRepo;
     private final DomainEventPublisherImpl eventPublisher;
 
     public record InspectionListResponse(Long id, Long batchId, String sampleName,
@@ -37,9 +40,11 @@ public class InspectionApplicationService {
 
     public InspectionApplicationService(InspectionRepository inspectionRepo,
                                         ProductionBatchRepository batchRepo,
+                                        TraceabilityLinkRepository linkRepo,
                                         DomainEventPublisherImpl eventPublisher) {
         this.inspectionRepo = inspectionRepo;
         this.batchRepo = batchRepo;
+        this.linkRepo = linkRepo;
         this.eventPublisher = eventPublisher;
     }
 
@@ -67,6 +72,10 @@ public class InspectionApplicationService {
                 : InspectionResult.fail(req.failReason());
         inspection.complete(result, req.inspectorName());
         inspection = inspectionRepo.save(inspection);
+
+        if (!linkRepo.existsByBatchIdAndEntityTypeAndEntityId(req.batchId(), "INSPECTION", inspection.getId())) {
+            linkRepo.save(TraceabilityLink.create(req.batchId(), "INSPECTION", inspection.getId()));
+        }
 
         DomainEvent event = inspection.pullEvents().get(0);
         eventPublisher.publish(event);

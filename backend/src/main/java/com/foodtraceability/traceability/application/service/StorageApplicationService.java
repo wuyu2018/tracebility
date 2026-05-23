@@ -2,9 +2,11 @@ package com.foodtraceability.traceability.application.service;
 
 import com.foodtraceability.entity.ProductionBatch;
 import com.foodtraceability.entity.Storage;
+import com.foodtraceability.entity.TraceabilityLink;
 import com.foodtraceability.exception.BusinessException;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.StorageRepository;
+import com.foodtraceability.repository.TraceabilityLinkRepository;
 import com.foodtraceability.traceability.application.dto.RecordStorageRequest;
 import com.foodtraceability.traceability.application.dto.RecordStorageResponse;
 import com.foodtraceability.traceability.domain.event.GoodsReceived;
@@ -26,6 +28,7 @@ public class StorageApplicationService {
 
     private final StorageRepository storageRepo;
     private final ProductionBatchRepository batchRepo;
+    private final TraceabilityLinkRepository linkRepo;
     private final DomainEventPublisherImpl eventPublisher;
 
     public record StorageListResponse(Long id, Long batchId, LocalDateTime storageTime,
@@ -35,9 +38,11 @@ public class StorageApplicationService {
 
     public StorageApplicationService(StorageRepository storageRepo,
                                      ProductionBatchRepository batchRepo,
+                                     TraceabilityLinkRepository linkRepo,
                                      DomainEventPublisherImpl eventPublisher) {
         this.storageRepo = storageRepo;
         this.batchRepo = batchRepo;
+        this.linkRepo = linkRepo;
         this.eventPublisher = eventPublisher;
     }
 
@@ -58,6 +63,10 @@ public class StorageApplicationService {
         Long storageId = storage.getId();
         batch.setStorageId(storageId);
         batchRepo.save(batch);
+
+        if (!linkRepo.existsByBatchIdAndEntityTypeAndEntityId(req.batchId(), "STORAGE", storageId)) {
+            linkRepo.save(TraceabilityLink.create(req.batchId(), "STORAGE", storageId));
+        }
 
         var event = new GoodsReceived(storageId, req.batchId(), req.storageTime());
         eventPublisher.publish(event);

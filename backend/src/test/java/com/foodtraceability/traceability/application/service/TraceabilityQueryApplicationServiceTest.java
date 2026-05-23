@@ -30,6 +30,7 @@ class TraceabilityQueryApplicationServiceTest {
     @Mock private InspectionRepository inspectionRepo;
     @Mock private StorageRepository storageRepo;
     @Mock private TransportSaleRepository transportSaleRepo;
+    @Mock private TraceabilityLinkRepository linkRepo;
 
     private TraceabilityQueryApplicationService service;
 
@@ -38,7 +39,7 @@ class TraceabilityQueryApplicationServiceTest {
         service = new TraceabilityQueryApplicationService(
                 securityCodeRepo, batchRepo, productRepo, relationRepo,
                 materialPurchaseRepo, materialRepo, inspectionRepo,
-                storageRepo, transportSaleRepo);
+                storageRepo, transportSaleRepo, linkRepo);
     }
 
     @Test
