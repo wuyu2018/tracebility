@@ -32,7 +32,7 @@ public class TraceabilityQueryController {
             if (repeated) {
                 log.warn("[v2 追溯] 重复查询: {}", maskCode(code));
                 return ResponseEntity.ok(Map.of(
-                        "valid", false,
+                        "valid", true,
                         "data", response,
                         "message", "该产品已被查询过 " + (result.scanCount() - 1) + " 次，首次查询时间："
                                 + result.firstScanTime() + "，该产品可能是伪品，请谨慎购买！"

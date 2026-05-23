@@ -43,8 +43,8 @@
 
         <template v-else-if="resultData">
           <el-alert
-            v-if="resultData.scanCount && resultData.scanCount > 1"
-            title="提示：该防伪码已被多次查询，请注意核实产品真伪"
+            v-if="resultData.queryTip"
+            :title="resultData.queryTip"
             type="warning"
             show-icon
             :closable="false"
@@ -57,13 +57,15 @@
               产品信息
             </h3>
             <el-descriptions :column="1" border>
-              <el-descriptions-item label="产品名称">{{ resultData.product?.name }}</el-descriptions-item>
+              <el-descriptions-item label="产品名称">{{ resultData.product?.name || '-' }}</el-descriptions-item>
               <el-descriptions-item label="规格">{{ resultData.product?.specification || '-' }}</el-descriptions-item>
               <el-descriptions-item label="保质期">{{ resultData.product?.shelfLife || '-' }}</el-descriptions-item>
               <el-descriptions-item label="生产日期">{{ resultData.batch?.productionDate || '-' }}</el-descriptions-item>
               <el-descriptions-item label="批次号">{{ resultData.batch?.batchNumber || '-' }}</el-descriptions-item>
               <el-descriptions-item v-if="resultData.product?.imageUrl" label="产品图片">
-                <el-image :src="resultData.product.imageUrl" style="width:120px" fit="contain" />
+                <el-image :src="resultData.product.imageUrl" style="width:120px" fit="contain">
+                  <template #error><el-icon><Picture /></el-icon></template>
+                </el-image>
               </el-descriptions-item>
               <el-descriptions-item label="厂家电话">{{ resultData.product?.contactPhone || '-' }}</el-descriptions-item>
             </el-descriptions>
@@ -92,8 +94,8 @@
                 <el-descriptions-item label="检验员">{{ resultData.inspection.inspectorName || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="检验时间">{{ resultData.inspection.inspectionTime || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="检验结果" :span="2">
-                  <el-tag :type="resultData.inspection.resultStatus === '合格' ? 'success' : 'danger'">
-                    {{ resultData.inspection.resultStatus === '合格' ? '合格' : '不合格' }}
+                  <el-tag :type="resultData.inspection.resultStatus === '合格' ? 'success' : 'info'">
+                    {{ resultData.inspection.resultStatus || '待定' }}
                   </el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="检验详情" :span="2">{{ resultData.inspection.resultDetail || '-' }}</el-descriptions-item>
@@ -141,8 +143,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { verifyCode } from '@/api/consumer'
-import { Search, Ticket, Camera, Goods, Box, Checked, OfficeBuilding, Van, WarningFilled } from '@element-plus/icons-vue'
+import { Search, Ticket, Camera, Goods, Box, Checked, OfficeBuilding, Van, WarningFilled, Picture } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const code = ref('')
@@ -158,7 +161,10 @@ onMounted(() => {
 })
 
 async function doVerify() {
-  if (!code.value.trim()) return
+  if (!code.value.trim()) {
+    ElMessage.warning('请输入防伪码')
+    return
+  }
   loading.value = true
   result.value = null
   resultData.value = null
