@@ -12,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -43,7 +41,7 @@ public class MaterialApplicationService {
         }
         entity = repository.save(entity);
 
-        publishAfterCommit(new MaterialChanged(entity.getId(), "CREATE"));
+        eventPublisher.publish(new MaterialChanged(entity.getId(), "CREATE"));
         log.info("[V2 物料品种] 创建 - ID: {}, 名称: {}", entity.getId(), entity.getName());
         return toResponse(entity);
     }
@@ -69,7 +67,7 @@ public class MaterialApplicationService {
         }
         entity = repository.save(entity);
 
-        publishAfterCommit(new MaterialChanged(entity.getId(), action));
+        eventPublisher.publish(new MaterialChanged(entity.getId(), action));
         log.info("[V2 物料品种] 更新 - ID: {}, action: {}", entity.getId(), action);
         return toResponse(entity);
     }
@@ -88,7 +86,7 @@ public class MaterialApplicationService {
         entity.deactivate();
         repository.save(entity);
 
-        publishAfterCommit(new MaterialChanged(entity.getId(), "DEACTIVATE"));
+        eventPublisher.publish(new MaterialChanged(entity.getId(), "DEACTIVATE"));
         log.info("[V2 物料品种] 删除(停用) - ID: {}", id);
     }
 
@@ -119,15 +117,4 @@ public class MaterialApplicationService {
                 entity.getCreatedAt(), entity.getUpdatedAt());
     }
 
-    private void publishAfterCommit(MaterialChanged event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publish(event);
-                        }
-                    });
-        }
-    }
 }

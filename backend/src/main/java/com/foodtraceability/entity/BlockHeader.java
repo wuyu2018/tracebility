@@ -54,7 +54,8 @@ public class BlockHeader {
     }
 
     public static BlockHeader create(String chainType, String previousHash, String merkleRoot,
-                                      byte[] bloomFilter, String metadataIndex, Integer txCount) {
+                                      byte[] bloomFilter, String metadataIndex, Integer txCount,
+                                      LocalDateTime timestamp) {
         BlockHeader header = new BlockHeader();
         header.chainType = chainType;
         header.previousHash = previousHash;
@@ -62,9 +63,9 @@ public class BlockHeader {
         header.bloomFilter = bloomFilter;
         header.metadataIndex = metadataIndex;
         header.txCount = txCount;
-        header.timestamp = LocalDateTime.now();
+        header.timestamp = timestamp;
         String raw = chainType + "|" + (previousHash != null ? previousHash : "") + "|"
-                     + merkleRoot + "|" + header.timestamp + "|" + txCount;
+                     + merkleRoot + "|" + timestamp + "|" + txCount;
         header.blockHash = sha256Hex(raw);
         return header;
     }

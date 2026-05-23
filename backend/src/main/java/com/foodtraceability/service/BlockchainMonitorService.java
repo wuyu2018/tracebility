@@ -149,12 +149,11 @@ public class BlockchainMonitorService {
 
     private String recalculateHash(BlockchainLog entity) {
         try {
-            String dataHash = entity.getDataHash() != null ? entity.getDataHash() : "";
-            String prevHash = entity.getPreviousHash() != null ? entity.getPreviousHash() : "";
             String input = entity.getChainType() + "|" + entity.getEntityType() + "|"
                     + entity.getEntityId() + "|" + entity.getAction() + "|"
-                    + prevHash + "|" + dataHash + "|"
-                    + entity.getTimestamp().truncatedTo(ChronoUnit.MICROS).toString();
+                    + (entity.getPreviousHash() != null ? entity.getPreviousHash() : "") + "|"
+                    + (entity.getDataHash() != null ? entity.getDataHash() : "") + "|"
+                    + entity.getTimestamp().truncatedTo(ChronoUnit.MICROS);
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(hash);

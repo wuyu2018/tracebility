@@ -17,8 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -85,7 +83,7 @@ public class ProductionBatchApplicationService {
         }
 
         var event = new BatchCreated(batchId, batchNo, req.productId(), req.materialPurchaseIds());
-        publishAfterCommit(event);
+        eventPublisher.publish(event);
 
         log.info("Batch created: {} (productId={})", batchNo, req.productId());
         return new CreateBatchResponse(batchId, batchNo.value(), product.getName());
@@ -127,15 +125,4 @@ public class ProductionBatchApplicationService {
         log.info("Batch soft-deleted: id={}", id);
     }
 
-    private void publishAfterCommit(BatchCreated event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publish(event);
-                        }
-                    });
-        }
-    }
 }

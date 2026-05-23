@@ -14,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 
@@ -50,7 +48,7 @@ public class MaterialPurchaseApplicationService {
         }
         entity = repository.save(entity);
 
-        publishAfterCommit(new MaterialPurchaseChanged(entity.getId(), "CREATE"));
+        eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "CREATE"));
         log.info("[V2 采购单] 创建 - ID: {}, 物料: {}", entity.getId(), material.getName());
         return toResponse(entity);
     }
@@ -68,7 +66,7 @@ public class MaterialPurchaseApplicationService {
                 req.purchaseDate(), req.quantity(), req.unit());
         entity = repository.save(entity);
 
-        publishAfterCommit(new MaterialPurchaseChanged(entity.getId(), "UPDATE"));
+        eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "UPDATE"));
         log.info("[V2 采购单] 更新 - ID: {}", entity.getId());
         return toResponse(entity);
     }
@@ -79,7 +77,7 @@ public class MaterialPurchaseApplicationService {
         entity.softDelete();
         repository.save(entity);
 
-        publishAfterCommit(new MaterialPurchaseChanged(entity.getId(), "SOFT_DELETE"));
+        eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "SOFT_DELETE"));
         log.info("[V2 采购单] 软删除 - ID: {}", id);
     }
 
@@ -123,15 +121,4 @@ public class MaterialPurchaseApplicationService {
                 entity.isDeleted());
     }
 
-    private void publishAfterCommit(MaterialPurchaseChanged event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publish(event);
-                        }
-                    });
-        }
-    }
 }

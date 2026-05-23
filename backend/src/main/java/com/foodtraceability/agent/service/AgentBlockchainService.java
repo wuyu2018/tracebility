@@ -195,7 +195,7 @@ public class AgentBlockchainService {
         LocalDateTime now = LocalDateTime.now();
 
         BlockHeader header = BlockHeader.create(chainType, previousHash, merkleRoot,
-                bloomFilterManager.toBytes(chainType), metadataIndex, 1);
+                bloomFilterManager.toBytes(chainType), metadataIndex, 1, now);
         blockHeaderRepo.save(header);
 
         String currentHash = calculateBlockHash(

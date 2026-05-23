@@ -21,4 +21,6 @@ public interface BlockchainLogRepository extends JpaRepository<BlockchainLog, Lo
     long countByChainType(String chainType);
 
     boolean existsByChainType(String chainType);
+
+    boolean existsByChainTypeAndEntityTypeAndEntityIdAndAction(String chainType, String entityType, Long entityId, String action);
 }

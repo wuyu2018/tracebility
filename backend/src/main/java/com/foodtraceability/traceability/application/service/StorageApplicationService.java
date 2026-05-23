@@ -13,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,7 +58,7 @@ public class StorageApplicationService {
         batchRepo.save(batch);
 
         var event = new GoodsReceived(storageId, req.batchId(), req.storageTime());
-        publishAfterCommit(event);
+        eventPublisher.publish(event);
 
         log.info("Storage recorded: id={}, batchId={}", storageId, req.batchId());
         return new RecordStorageResponse(storageId, req.batchId(), req.warehouseLocation());
@@ -80,15 +78,4 @@ public class StorageApplicationService {
                 .toList();
     }
 
-    private void publishAfterCommit(GoodsReceived event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publish(event);
-                        }
-                    });
-        }
-    }
 }
