@@ -9,7 +9,6 @@ import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.ProductRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
 import com.foodtraceability.service.SecurityCodeService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +21,6 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
     private final ProductionBatchRepository batchRepository;
     private final ProductRepository productRepository;
 
-    @Autowired
     public SecurityCodeServiceImpl(SecurityCodeRepository codeRepository,
                                  ProductionBatchRepository batchRepository,
                                  ProductRepository productRepository) {
