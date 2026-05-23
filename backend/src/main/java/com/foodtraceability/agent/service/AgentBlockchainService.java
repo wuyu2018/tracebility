@@ -187,7 +187,8 @@ public class AgentBlockchainService {
         offchainStorage.setOwnerAgentId(Long.parseLong(currentAgent.getAgentId().split("-")[1]));
         offchainStorageRepo.save(offchainStorage);
 
-        String previousHash = getPreviousBlockHash(chainType);
+        String previousHash = getPreviousBlockHash(chainType,
+                "MATERIAL".equals(chainType) ? null : entityId);
         String merkleRoot = MerkleTree.computeRoot(List.of(dataHash));
         String metadataIndex = String.format(
                 "{\"entityType\":\"%s\",\"entityId\":%d,\"action\":\"%s\"}", entityType, entityId, action);
@@ -235,9 +236,14 @@ public class AgentBlockchainService {
         return block;
     }
 
-    private String getPreviousBlockHash(String chainType) {
-        return blockHeaderRepo.findTopByChainTypeOrderByIdDesc(chainType)
-                .map(BlockHeader::getBlockHash)
+    private String getPreviousBlockHash(String chainType, Long batchId) {
+        if ("BATCH".equals(chainType) && batchId != null) {
+            return blockchainLogRepo.findTopByChainTypeAndBatchIdOrderByTimestampDesc(chainType, batchId)
+                    .map(BlockchainLog::getCurrentHash)
+                    .orElse("GENESIS");
+        }
+        return blockchainLogRepo.findTopByChainTypeOrderByTimestampDesc(chainType)
+                .map(BlockchainLog::getCurrentHash)
                 .orElse("GENESIS");
     }
 
