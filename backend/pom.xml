@@ -25,6 +25,10 @@
         <protoc.version>3.25.3</protoc.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+        <!-- gRPC proto stub generation from source tree — pre-generated stubs are
+             committed to src/main/java so Docker builds skip this plugin entirely.
+             Regenerate locally with:  mvn protobuf:compile -Dskip.protobuf=false -->
+        <skip.protobuf>true</skip.protobuf>
     </properties>
 
     <dependencies>
@@ -158,6 +162,7 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>${protobuf-maven-plugin.version}</version>
                 <configuration>
+                    <skip>${skip.protobuf}</skip>
                     <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>

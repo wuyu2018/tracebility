@@ -24,7 +24,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 384M
+          memory: 256M
 
   redis:
     image: redis:7-alpine
@@ -115,6 +115,10 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
+      ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     ports:
       - "50051:50051"
     networks:
@@ -152,6 +156,10 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
+      ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     ports:
       - "50052:50052"
     networks:
@@ -189,6 +197,10 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
+      ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     ports:
       - "50053:50053"
     networks:
@@ -226,6 +238,10 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      ANCHOR_DATASOURCE_URL: jdbc:mysql://mysql:3306/${ANCHOR_MYSQL_DATABASE:-food_traceability_anchor}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      ANCHOR_DATASOURCE_USERNAME: ${ANCHOR_MYSQL_USER:-anchor_app_user}
+      ANCHOR_DATASOURCE_PASSWORD: ${ANCHOR_MYSQL_PASSWORD}
     ports:
       - "50054:50054"
     networks:
