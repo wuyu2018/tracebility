@@ -53,7 +53,7 @@ class StorageApplicationServiceTest {
         when(storageRepo.save(any(Storage.class))).thenReturn(saved);
 
         RecordStorageResponse result = service.recordStorage(
-                new RecordStorageRequest(10L, LocalDateTime.now(), null, 100.0, "箱", "A区", null));
+                new RecordStorageRequest(10L, LocalDateTime.now(), null, 100.0, "箱", "A区"));
 
         assertNotNull(result);
         assertEquals(1L, result.id());
@@ -68,7 +68,7 @@ class StorageApplicationServiceTest {
 
         assertThrows(BusinessException.class,
                 () -> service.recordStorage(
-                        new RecordStorageRequest(999L, LocalDateTime.now(), null, 100.0, "箱", "A区", null)));
+                        new RecordStorageRequest(999L, LocalDateTime.now(), null, 100.0, "箱", "A区")));
         verify(storageRepo, never()).save(any());
     }
 }

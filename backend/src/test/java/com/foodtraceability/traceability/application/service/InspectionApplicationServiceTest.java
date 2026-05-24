@@ -49,7 +49,7 @@ class InspectionApplicationServiceTest {
         });
 
         CompleteInspectionResponse result = service.completeInspection(
-                new CompleteInspectionRequest(10L, "样本A", 5, "250ml", null, true, null, null, null));
+                new CompleteInspectionRequest(10L, "样本A", 5, "250ml", null, true, null, null));
 
         assertNotNull(result);
         assertEquals("合格", result.resultStatus());
@@ -69,7 +69,7 @@ class InspectionApplicationServiceTest {
         });
 
         CompleteInspectionResponse result = service.completeInspection(
-                new CompleteInspectionRequest(20L, "样本B", 3, "500ml", null, false, "微生物超标", null, null));
+                new CompleteInspectionRequest(20L, "样本B", 3, "500ml", null, false, "微生物超标", null));
 
         assertEquals("不合格", result.resultStatus());
     }
@@ -80,7 +80,7 @@ class InspectionApplicationServiceTest {
 
         assertThrows(BusinessException.class,
                 () -> service.completeInspection(
-                        new CompleteInspectionRequest(999L, "x", 1, "x", null, true, null, null, null)));
+                        new CompleteInspectionRequest(999L, "x", 1, "x", null, true, null, null)));
         verify(inspectionRepo, never()).save(any());
     }
 }
