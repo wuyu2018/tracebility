@@ -37,9 +37,6 @@ public class Product {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
-    @Column(name = "company_id")
-    private Long companyId;
-
     public boolean isDeleted() {
         return Boolean.TRUE.equals(this.isDeleted);
     }

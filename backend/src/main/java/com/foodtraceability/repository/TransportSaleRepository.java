@@ -10,6 +10,4 @@ import java.util.List;
 @Repository
 public interface TransportSaleRepository extends JpaRepository<TransportSale, Long> {
     List<TransportSale> findByBatch(ProductionBatch batch);
-
-    List<TransportSale> findByCompanyId(Long companyId);
 }

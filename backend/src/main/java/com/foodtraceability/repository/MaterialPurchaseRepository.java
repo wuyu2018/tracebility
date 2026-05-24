@@ -10,8 +10,6 @@ import java.util.Optional;
 @Repository
 public interface MaterialPurchaseRepository extends JpaRepository<MaterialPurchase, Long> {
     List<MaterialPurchase> findByIsDeletedFalse();
-    List<MaterialPurchase> findByCompanyIdAndIsDeletedFalse(Long companyId);
     List<MaterialPurchase> findByMaterialIdAndIsDeletedFalse(Long materialId);
-    List<MaterialPurchase> findByMaterialIdAndCompanyIdAndIsDeletedFalse(Long materialId, Long companyId);
     Optional<MaterialPurchase> findByBatchNumberAndIsDeletedFalse(String batchNumber);
 }

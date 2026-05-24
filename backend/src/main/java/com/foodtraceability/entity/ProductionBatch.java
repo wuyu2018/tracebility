@@ -64,9 +64,6 @@ public class ProductionBatch {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "company_id")
-    private Long companyId;
-
     @Transient
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 

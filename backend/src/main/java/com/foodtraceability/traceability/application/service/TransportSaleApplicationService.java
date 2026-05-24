@@ -46,7 +46,7 @@ public class TransportSaleApplicationService {
                                               String transportCompany, String vehicleNumber,
                                               String salesRegion, String receiverName,
                                               String receiverContact,
-                                              String recorderName, Long companyId) {}
+                                              String recorderName) {}
 
     public record RecordTransportSaleResponse(Long id, Long batchId, String transportCompany, String salesRegion) {}
 
@@ -77,9 +77,6 @@ public class TransportSaleApplicationService {
         ts.setSalesRegion(req.salesRegion());
         ts.setReceiverName(req.receiverName());
         ts.setReceiverContact(req.receiverContact());
-        if (req.companyId() != null) {
-            ts.setCompanyId(req.companyId());
-        }
         ts = transportSaleRepo.save(ts);
 
         Long tsId = ts.getId();
@@ -99,13 +96,8 @@ public class TransportSaleApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransportSaleListResponse> listTransportSales(Long companyId) {
-        List<TransportSale> sales;
-        if (companyId != null) {
-            sales = transportSaleRepo.findByCompanyId(companyId);
-        } else {
-            sales = transportSaleRepo.findAll();
-        }
+    public List<TransportSaleListResponse> listTransportSales() {
+        List<TransportSale> sales = transportSaleRepo.findAll();
         Set<Long> batchIds = sales.stream().map(TransportSale::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
                 .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
@@ -122,15 +114,6 @@ public class TransportSaleApplicationService {
                 })
                 .toList();
     }
-
-    private void publishAfterCommit(TransportSaleRecorded event) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publish(event);
-                        }
                     });
         } else {
             eventPublisher.publish(event);

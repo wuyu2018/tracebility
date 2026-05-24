@@ -79,9 +79,6 @@ public class ProductionBatchApplicationService {
 
         ProductionBatch batch = ProductionBatch.create(
                 batchNo, req.productId(), req.productionDate(), shelfLife, qty);
-        if (req.companyId() != null) {
-            batch.setCompanyId(req.companyId());
-        }
         batch = batchRepo.save(batch);
 
         Long batchId = batch.getId();
@@ -100,13 +97,8 @@ public class ProductionBatchApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductionBatch> listBatches(Long productId, Long companyId) {
-        List<ProductionBatch> batches;
-        if (companyId != null) {
-            batches = batchRepo.findByCompanyIdAndIsDeletedFalse(companyId);
-        } else {
-            batches = batchRepo.findByIsDeletedFalse();
-        }
+    public List<ProductionBatch> listBatches(Long productId) {
+        List<ProductionBatch> batches = batchRepo.findByIsDeletedFalse();
         if (productId != null) {
             batches = batches.stream()
                     .filter(b -> b.getProductId().equals(productId))
@@ -128,18 +120,8 @@ public class ProductionBatchApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<BatchSelectOption> getSelectOptions(Long companyId, String keyword) {
-        List<ProductionBatch> batches;
-        if (companyId != null) {
-            batches = batchRepo.findByCompanyIdAndIsDeletedFalse(companyId);
-        } else {
-            batches = batchRepo.findByIsDeletedFalse();
-        }
-        if (keyword != null && !keyword.isBlank()) {
-            batches = batches.stream()
-                    .filter(b -> b.getBatchNumber().contains(keyword))
-                    .toList();
-        }
+    public List<BatchSelectOption> getSelectOptions(String keyword) {
+        List<ProductionBatch> batches = batchRepo.findByIsDeletedFalse();
         return batches.stream()
                 .map(b -> new BatchSelectOption(b.getId(), b.getBatchNumber(),
                         b.getProductId(),

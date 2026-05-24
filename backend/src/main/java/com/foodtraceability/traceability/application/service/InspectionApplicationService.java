@@ -58,9 +58,6 @@ public class InspectionApplicationService {
         Inspection inspection = Inspection.create(
                 req.batchId(), req.sampleName(), req.sampleQuantity(),
                 req.sampleSpecification());
-        if (req.companyId() != null) {
-            inspection.setCompanyId(req.companyId());
-        }
         if (req.imageUrl() != null) {
             inspection.setImageUrl(req.imageUrl());
         }
@@ -86,13 +83,8 @@ public class InspectionApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<InspectionListResponse> listInspections(Long companyId) {
-        List<Inspection> inspections;
-        if (companyId != null) {
-            inspections = inspectionRepo.findByCompanyId(companyId);
-        } else {
-            inspections = inspectionRepo.findAll();
-        }
+    public List<InspectionListResponse> listInspections() {
+        List<Inspection> inspections = inspectionRepo.findAll();
         Set<Long> batchIds = inspections.stream().map(Inspection::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
                 .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
@@ -108,5 +100,3 @@ public class InspectionApplicationService {
                 })
                 .toList();
     }
-
-}

@@ -27,9 +27,9 @@ public class CompleteInspectionRequest {
     public String getInspectorName() { return inspectorName; }
     public void setInspectorName(String inspectorName) { this.inspectorName = inspectorName; }
 
-    public com.foodtraceability.traceability.application.dto.CompleteInspectionRequest toAppRequest(Long companyId) {
+    public com.foodtraceability.traceability.application.dto.CompleteInspectionRequest toAppRequest() {
         return new com.foodtraceability.traceability.application.dto.CompleteInspectionRequest(
                 batchId, sampleName, sampleQuantity, sampleSpecification, imageUrl,
-                qualified != null && qualified, failReason, inspectorName, companyId);
+                qualified != null && qualified, failReason, inspectorName);
     }
 }

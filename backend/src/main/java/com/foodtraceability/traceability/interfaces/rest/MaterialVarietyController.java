@@ -10,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v2/material-varieties")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
 public class MaterialVarietyController {
 
     private static final Logger log = LoggerFactory.getLogger(MaterialVarietyController.class);
@@ -33,8 +35,7 @@ public class MaterialVarietyController {
     public ResponseEntity<?> createMaterialVariety(@RequestBody CreateMaterialVarietyRequest req) {
         log.info("[V2] 创建物料品种: {}", req.getName());
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            var result = appService.createMaterial(req.toAppRequest(companyId));
+            var result = appService.createMaterial(req.toAppRequest());
             return ResponseEntity.status(HttpStatus.CREATED).body(MaterialVarietyResponse.from(result));
         } catch (Exception e) {
             log.error("[V2] 创建物料品种失败 - {}", e.getMessage());
@@ -46,9 +47,8 @@ public class MaterialVarietyController {
     public ResponseEntity<?> listMaterialVarieties(
             @RequestParam(required = false) Boolean activeOnly) {
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
             return ResponseEntity.ok(
-                    appService.listMaterials(activeOnly, companyId).stream()
+                    appService.listMaterials(activeOnly).stream()
                             .map(MaterialVarietyResponse::from).toList());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

@@ -9,17 +9,15 @@ public class RecordStorageRequest {
     private final Double quantity;
     private final String unit;
     private final String warehouseLocation;
-    private final Long companyId;
 
     public RecordStorageRequest(Long batchId, LocalDateTime storageTime, LocalDateTime outboundTime,
-                                 Double quantity, String unit, String warehouseLocation, Long companyId) {
+                                 Double quantity, String unit, String warehouseLocation) {
         this.batchId = batchId;
         this.storageTime = storageTime;
         this.outboundTime = outboundTime;
         this.quantity = quantity;
         this.unit = unit;
         this.warehouseLocation = warehouseLocation;
-        this.companyId = companyId;
     }
 
     public Long batchId() { return batchId; }
@@ -28,5 +26,4 @@ public class RecordStorageRequest {
     public Double quantity() { return quantity; }
     public String unit() { return unit; }
     public String warehouseLocation() { return warehouseLocation; }
-    public Long companyId() { return companyId; }
 }

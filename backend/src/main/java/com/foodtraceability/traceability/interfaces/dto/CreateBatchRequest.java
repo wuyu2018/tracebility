@@ -24,8 +24,8 @@ public class CreateBatchRequest {
     public List<Long> getMaterialPurchaseIds() { return materialPurchaseIds; }
     public void setMaterialPurchaseIds(List<Long> materialPurchaseIds) { this.materialPurchaseIds = materialPurchaseIds; }
 
-    public com.foodtraceability.traceability.application.dto.CreateBatchRequest toAppRequest(Long companyId) {
+    public com.foodtraceability.traceability.application.dto.CreateBatchRequest toAppRequest() {
         return new com.foodtraceability.traceability.application.dto.CreateBatchRequest(
-                productId, productionDate, shelfLife, quantity, unit, materialPurchaseIds, companyId);
+                productId, productionDate, shelfLife, quantity, unit, materialPurchaseIds);
     }
 }

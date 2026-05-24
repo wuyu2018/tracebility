@@ -46,11 +46,13 @@ const routes = [
       {
         path: 'materials',
         name: 'MaterialManage',
+        meta: { requiredAgentTypes: ['PRODUCTION'] },
         component: () => import('@/views/admin/MaterialManage.vue')
       },
       {
         path: 'batches',
         name: 'BatchManage',
+        meta: { requiredAgentTypes: ['PRODUCTION'] },
         component: () => import('@/views/admin/BatchManage.vue')
       },
       {
@@ -62,21 +64,25 @@ const routes = [
       {
         path: 'storages',
         name: 'StorageManage',
+        meta: { requiredAgentTypes: ['CIRCULATION'] },
         component: () => import('@/views/admin/StorageManage.vue')
       },
       {
         path: 'transports',
         name: 'TransportManage',
+        meta: { requiredAgentTypes: ['CIRCULATION', 'SALES'] },
         component: () => import('@/views/admin/TransportManage.vue')
       },
       {
         path: 'inspections',
         name: 'InspectionManage',
+        meta: { requiredAgentTypes: ['PRODUCTION'] },
         component: () => import('@/views/admin/InspectionManage.vue')
       },
       {
         path: 'complaints',
         name: 'ComplaintManage',
+        meta: { requiredAgentTypes: ['SALES'] },
         component: () => import('@/views/admin/ComplaintManage.vue')
       },
       {
@@ -133,6 +139,17 @@ router.beforeEach((to, from, next) => {
     const user = JSON.parse(localStorage.getItem('admin_user') || 'null')
     if (user?.role !== 'SUPER_ADMIN') {
       ElMessage.warning('仅超级管理员可访问')
+      return next({ name: 'Dashboard' })
+    }
+  }
+  if (to.meta.requiredAgentTypes) {
+    const user = JSON.parse(localStorage.getItem('admin_user') || 'null')
+    if (user?.role === 'SUPER_ADMIN') {
+      return next()
+    }
+    const allowed = to.meta.requiredAgentTypes
+    if (!allowed.includes(user?.agentType)) {
+      ElMessage.warning('无权限访问该模块')
       return next({ name: 'Dashboard' })
     }
   }

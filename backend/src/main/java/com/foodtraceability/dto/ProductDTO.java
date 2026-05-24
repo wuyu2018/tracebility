@@ -11,5 +11,4 @@ public class ProductDTO {
     private String imageUrl;
     private String contactPhone;
     private String contactEmail;
-    private Long companyId;
 }

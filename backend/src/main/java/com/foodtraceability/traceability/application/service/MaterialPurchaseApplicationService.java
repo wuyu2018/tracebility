@@ -43,27 +43,6 @@ public class MaterialPurchaseApplicationService {
                 material, req.batchNumber(), req.supplierName(),
                 req.producerName(), req.producerAddress(),
                 req.purchaseDate(), req.quantity(), req.unit());
-        if (req.companyId() != null) {
-            entity.setCompanyId(req.companyId());
-        }
-        entity = repository.save(entity);
-
-        eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "CREATE"));
-        log.info("[V2 采购单] 创建 - ID: {}, 物料: {}", entity.getId(), material.getName());
-        return toResponse(entity);
-    }
-
-    public MaterialPurchaseResponse updateMaterialPurchase(Long id, UpdateMaterialPurchaseRequest req) {
-        MaterialPurchase entity = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("采购单不存在: " + id));
-        if (entity.isDeleted()) {
-            throw new BusinessException("采购单已删除，禁止修改: " + id);
-        }
-
-        entity.updatePurchaseDetails(
-                req.batchNumber(), req.supplierName(),
-                req.producerName(), req.producerAddress(),
-                req.purchaseDate(), req.quantity(), req.unit());
         entity = repository.save(entity);
 
         eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "UPDATE"));
@@ -82,16 +61,9 @@ public class MaterialPurchaseApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaterialPurchaseResponse> listMaterialPurchases(Long materialId, Long companyId) {
+    public List<MaterialPurchaseResponse> listMaterialPurchases(Long materialId) {
         List<MaterialPurchase> purchases;
-        if (companyId != null) {
-            purchases = repository.findByCompanyIdAndIsDeletedFalse(companyId);
-            if (materialId != null) {
-                purchases = purchases.stream()
-                        .filter(p -> p.getMaterial().getId().equals(materialId))
-                        .toList();
-            }
-        } else if (materialId != null) {
+        if (materialId != null) {
             purchases = repository.findByMaterialIdAndIsDeletedFalse(materialId);
         } else {
             purchases = repository.findByIsDeletedFalse();

@@ -51,9 +51,6 @@ public class SecurityCode {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "company_id")
-    private Long companyId;
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

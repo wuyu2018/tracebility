@@ -30,9 +30,6 @@ public class Admin {
     @Column(name = "agent_type", length = 20)
     private String agentType;  // PRODUCTION / CIRCULATION / SALES / null
 
-    @Column(name = "company_id")
-    private Long companyId;
-
     public boolean validatePassword(String rawPassword, PasswordEncoder encoder) {
         return encoder.matches(rawPassword, this.password);
     }

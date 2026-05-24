@@ -8,6 +8,7 @@ import com.foodtraceability.traceability.interfaces.dto.UpdateMaterialPurchaseRe
 import com.foodtraceability.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v2/material-purchases")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
 public class MaterialPurchaseController {
 
     private static final Logger log = LoggerFactory.getLogger(MaterialPurchaseController.class);
@@ -33,8 +35,7 @@ public class MaterialPurchaseController {
     public ResponseEntity<?> createMaterialPurchase(@RequestBody CreateMaterialPurchaseRequest req) {
         log.info("[V2] 创建采购单: materialId={}", req.getMaterialId());
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            var result = appService.createMaterialPurchase(req.toAppRequest(companyId));
+            var result = appService.createMaterialPurchase(req.toAppRequest());
             return ResponseEntity.status(HttpStatus.CREATED).body(MaterialPurchaseResponse.from(result));
         } catch (Exception e) {
             log.error("[V2] 创建采购单失败 - {}", e.getMessage());
@@ -46,8 +47,7 @@ public class MaterialPurchaseController {
     public ResponseEntity<?> listMaterialPurchases(
             @RequestParam(required = false) Long materialId) {
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            var results = appService.listMaterialPurchases(materialId, companyId);
+            var results = appService.listMaterialPurchases(materialId);
             return ResponseEntity.ok(results.stream().map(MaterialPurchaseResponse::from).toList());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

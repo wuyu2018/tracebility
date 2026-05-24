@@ -24,13 +24,22 @@ public class SecurityUtils {
         if (isSuperAdmin(auth)) {
             return null;
         }
-        String username = auth.getName();
-        if (username == null || "anonymousUser".equals(username)) {
+        return null;
+    }
+
+    public String getCurrentAgentType() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
             return null;
         }
-        Admin admin = adminRepository.findByUsername(username).orElse(null);
-        if (admin != null && admin.getCompanyId() != null) {
-            return admin.getCompanyId();
+        if (isSuperAdmin(auth)) {
+            return null;
+        }
+        for (GrantedAuthority authority : auth.getAuthorities()) {
+            String authStr = authority.getAuthority();
+            if (authStr != null && authStr.startsWith("AGENT_TYPE_")) {
+                return authStr.substring("AGENT_TYPE_".length());
+            }
         }
         return null;
     }
@@ -48,5 +57,11 @@ public class SecurityUtils {
             }
         }
         return false;
+    }
+
+    public boolean hasAgentType(String agentType) {
+        if (isSuperAdmin()) return true;
+        String current = getCurrentAgentType();
+        return agentType.equals(current);
     }
 }

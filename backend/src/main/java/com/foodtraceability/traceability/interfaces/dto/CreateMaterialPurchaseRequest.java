@@ -29,9 +29,9 @@ public class CreateMaterialPurchaseRequest {
     public String getUnit() { return unit; }
     public void setUnit(String unit) { this.unit = unit; }
 
-    public com.foodtraceability.traceability.application.dto.CreateMaterialPurchaseRequest toAppRequest(Long companyId) {
+    public com.foodtraceability.traceability.application.dto.CreateMaterialPurchaseRequest toAppRequest() {
         return new com.foodtraceability.traceability.application.dto.CreateMaterialPurchaseRequest(
                 materialId, batchNumber, supplierName, producerName, producerAddress,
-                purchaseDate, quantity, unit, companyId);
+                purchaseDate, quantity, unit);
     }
 }

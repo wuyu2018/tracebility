@@ -47,37 +47,18 @@ public class JwtTokenProvider {
         return generateToken(username, "ADMIN");
     }
 
-    public String generateToken(String username, String role, String agentType, Long companyId) {
+    public String generateToken(String username, String role, String agentType) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        var builder = Jwts.builder()
+        return Jwts.builder()
                 .subject(username)
                 .claim("role", role)
                 .claim("agent_type", agentType)
                 .issuedAt(now)
-                .expiration(expiryDate);
-        if (companyId != null) {
-            builder.claim("company_id", companyId);
-        }
-        return builder.signWith(getSigningKey()).compact();
-    }
-
-    public String generateToken(String username, String role, String agentType) {
-        return generateToken(username, role, agentType, null);
-    }
-
-    public Long getCompanyIdFromToken(String token) {
-        try {
-            return Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .get("company_id", Long.class);
-        } catch (Exception e) {
-            return null;
-        }
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
     }
 
     public String generateToken(String username, String role) {

@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -45,9 +46,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     String agentType = tokenProvider.getAgentTypeFromToken(jwt);
 
-                    List<SimpleGrantedAuthority> authorities = role != null
-                        ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                        : List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                    if (role != null) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                    } else {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    }
+                    if (agentType != null && !agentType.isEmpty()) {
+                        authorities.add(new SimpleGrantedAuthority("AGENT_TYPE_" + agentType));
+                    }
 
                     UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(username, null, authorities);

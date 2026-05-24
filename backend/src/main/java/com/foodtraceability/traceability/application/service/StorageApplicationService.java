@@ -55,9 +55,6 @@ public class StorageApplicationService {
 
         Storage storage = Storage.create(
                 req.batchId(), req.storageTime(), req.outboundTime(), req.quantity(), req.unit(), req.warehouseLocation());
-        if (req.companyId() != null) {
-            storage.setCompanyId(req.companyId());
-        }
         storage = storageRepo.save(storage);
 
         Long storageId = storage.getId();
@@ -76,13 +73,8 @@ public class StorageApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<StorageListResponse> listStorages(Long companyId) {
-        List<Storage> storages;
-        if (companyId != null) {
-            storages = storageRepo.findByCompanyId(companyId);
-        } else {
-            storages = storageRepo.findAll();
-        }
+    public List<StorageListResponse> listStorages() {
+        List<Storage> storages = storageRepo.findAll();
         Set<Long> batchIds = storages.stream().map(Storage::getBatchId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<Long, ProductionBatch> batchMap = batchRepo.findAllById(batchIds).stream()
                 .collect(Collectors.toMap(ProductionBatch::getId, b -> b));
@@ -97,5 +89,3 @@ public class StorageApplicationService {
                 })
                 .toList();
     }
-
-}

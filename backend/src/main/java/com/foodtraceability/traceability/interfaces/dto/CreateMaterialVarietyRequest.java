@@ -8,7 +8,7 @@ public class CreateMaterialVarietyRequest {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public CreateMaterialRequest toAppRequest(Long companyId) {
-        return new CreateMaterialRequest(name, companyId);
+    public CreateMaterialRequest toAppRequest() {
+        return new CreateMaterialRequest(name);
     }
 }

@@ -12,6 +12,4 @@ public interface InspectionRepository extends JpaRepository<Inspection, Long> {
     List<Inspection> findByBatch(ProductionBatch batch);
 
     List<Inspection> findByBatch_Id(Long batchId);
-
-    List<Inspection> findByCompanyId(Long companyId);
 }

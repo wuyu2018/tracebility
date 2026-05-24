@@ -16,51 +16,51 @@
           text-color="#bfcbd9"
           active-text-color="#409eff"
         >
-          <el-menu-item index="/manage/dashboard">
+          <el-menu-item index="/manage/dashboard" v-if="hasMenuAccess('dashboard')">
             <el-icon><Odometer /></el-icon>
             <span>数据看板</span>
           </el-menu-item>
-          <el-menu-item index="/manage/products">
+          <el-menu-item index="/manage/products" v-if="hasMenuAccess('products')">
             <el-icon><Goods /></el-icon>
             <span>产品管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/materials">
+          <el-menu-item index="/manage/materials" v-if="hasMenuAccess('materials')">
             <el-icon><Box /></el-icon>
             <span>原料管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/batches">
+          <el-menu-item index="/manage/batches" v-if="hasMenuAccess('batches')">
             <el-icon><List /></el-icon>
             <span>生产批次管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/storages">
+          <el-menu-item index="/manage/storages" v-if="hasMenuAccess('storages')">
             <el-icon><OfficeBuilding /></el-icon>
             <span>仓储管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/transports">
+          <el-menu-item index="/manage/transports" v-if="hasMenuAccess('transports')">
             <el-icon><Van /></el-icon>
             <span>运输销售管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/inspections">
+          <el-menu-item index="/manage/inspections" v-if="hasMenuAccess('inspections')">
             <el-icon><Checked /></el-icon>
             <span>质检管理</span>
           </el-menu-item>
-          <el-menu-item index="/manage/complaints">
+          <el-menu-item index="/manage/complaints" v-if="hasMenuAccess('complaints')">
             <el-icon><WarningFilled /></el-icon>
             <span>投诉管理</span>
           </el-menu-item>
-          <el-menu-item v-if="auth.user?.role === 'SUPER_ADMIN'" index="/manage/blockchain">
+          <el-menu-item v-if="hasMenuAccess('blockchain')" index="/manage/blockchain">
             <el-icon><Link /></el-icon>
             <span>区块链监控</span>
           </el-menu-item>
-          <el-menu-item v-if="auth.user?.role === 'SUPER_ADMIN'" index="/manage/agents">
+          <el-menu-item v-if="hasMenuAccess('agents')" index="/manage/agents">
             <el-icon><Monitor /></el-icon>
             <span>溯源智能体</span>
           </el-menu-item>
-          <el-menu-item v-if="auth.user?.role === 'SUPER_ADMIN'" index="/manage/companies">
+          <el-menu-item v-if="hasMenuAccess('companies')" index="/manage/companies">
             <el-icon><OfficeBuilding /></el-icon>
             <span>公司管理</span>
           </el-menu-item>
-          <el-menu-item v-if="auth.user?.role === 'SUPER_ADMIN'" index="/manage/admins">
+          <el-menu-item v-if="hasMenuAccess('admins')" index="/manage/admins">
             <el-icon><UserFilled /></el-icon>
             <span>管理员管理</span>
           </el-menu-item>
@@ -80,10 +80,6 @@
             </el-icon>
           </div>
           <div class="header-right">
-            <span v-if="auth.user?.companyName" class="company-name">
-              <el-icon><OfficeBuilding /></el-icon>
-              {{ auth.user.companyName }}
-            </span>
             <span class="user-info">{{ auth.user?.username }}</span>
             <el-button text @click="handleLogout">退出</el-button>
           </div>
@@ -108,7 +104,7 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const { auth, logout } = useAuth()
+const { auth, logout, hasMenuAccess } = useAuth()
 
 const isCollapse = ref(false)
 

@@ -36,35 +36,6 @@ public class MaterialApplicationService {
         Material entity = new Material();
         entity.setName(req.name());
         entity.setIsActive(true);
-        if (req.companyId() != null) {
-            entity.setCompanyId(req.companyId());
-        }
-        entity = repository.save(entity);
-
-        eventPublisher.publish(new MaterialChanged(entity.getId(), "CREATE"));
-        log.info("[V2 物料品种] 创建 - ID: {}, 名称: {}", entity.getId(), entity.getName());
-        return toResponse(entity);
-    }
-
-    public MaterialResponse updateMaterial(Long id, UpdateMaterialRequest req) {
-        Material entity = repository.findById(id)
-                .orElseThrow(() -> new BusinessException("原料品种不存在: " + id));
-        if (!entity.isActive()) {
-            throw new BusinessException("原料品种已停用，禁止修改: " + id);
-        }
-
-        String action = "UPDATE";
-        if (req.name() != null) {
-            entity.changeName(req.name());
-        }
-        if (req.isActive() != null) {
-            if (req.isActive() && !entity.isActive()) {
-                action = "ACTIVATE";
-            } else if (!req.isActive() && entity.isActive()) {
-                action = "DEACTIVATE";
-            }
-            entity.setActiveStatus(req.isActive());
-        }
         entity = repository.save(entity);
 
         eventPublisher.publish(new MaterialChanged(entity.getId(), action));
@@ -91,17 +62,10 @@ public class MaterialApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaterialResponse> listMaterials(Boolean activeOnly, Long companyId) {
-        List<Material> materials;
-        if (companyId != null) {
-            materials = Boolean.TRUE.equals(activeOnly)
-                    ? repository.findByCompanyIdAndIsActiveTrue(companyId)
-                    : repository.findByCompanyId(companyId);
-        } else {
-            materials = Boolean.TRUE.equals(activeOnly)
-                    ? repository.findByIsActiveTrue()
-                    : repository.findAll();
-        }
+    public List<MaterialResponse> listMaterials(Boolean activeOnly) {
+        List<Material> materials = Boolean.TRUE.equals(activeOnly)
+                ? repository.findByIsActiveTrue()
+                : repository.findAll();
         return materials.stream().map(this::toResponse).toList();
     }
 

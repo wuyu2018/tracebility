@@ -7,6 +7,7 @@ import com.foodtraceability.repository.*;
 import com.foodtraceability.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,27 +23,22 @@ public class DataManagementController {
     private final ProductService productService;
     private final SecurityCodeService securityCodeService;
     private final com.foodtraceability.util.SecurityUtils securityUtils;
-    private final ProductRepository productRepository;
 
     public DataManagementController(ProductService productService,
                                    SecurityCodeService securityCodeService,
-                                   com.foodtraceability.util.SecurityUtils securityUtils,
-                                   ProductRepository productRepository) {
+                                   com.foodtraceability.util.SecurityUtils securityUtils) {
         this.productService = productService;
         this.securityCodeService = securityCodeService;
         this.securityUtils = securityUtils;
-        this.productRepository = productRepository;
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @PostMapping("/products")
     @OperationLog(entityType = "PRODUCT", action = "CREATE")
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO dto) {
         log.info("[产品管理] 创建产品 - 名称: {}", dto.getName());
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            if (companyId != null) {
-                dto.setCompanyId(companyId);
-            }
+            // companyId removed
             Product created = productService.createProduct(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
@@ -51,6 +47,7 @@ public class DataManagementController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @PutMapping("/products/{id}")
     @OperationLog(entityType = "PRODUCT", action = "UPDATE")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductDTO dto) {
@@ -64,6 +61,7 @@ public class DataManagementController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @DeleteMapping("/products/{id}")
     @OperationLog(entityType = "PRODUCT", action = "DELETE")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
@@ -77,6 +75,7 @@ public class DataManagementController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @DeleteMapping("/products/{id}/hard")
     @OperationLog(entityType = "PRODUCT", action = "HARD_DELETE")
     public ResponseEntity<?> hardDeleteProduct(@PathVariable Long id) {
@@ -92,15 +91,8 @@ public class DataManagementController {
 
     @GetMapping("/products")
     public ResponseEntity<?> listProducts(@RequestParam(required = false) String keyword) {
-        Long companyId = securityUtils.getCurrentCompanyId();
         if (keyword != null && !keyword.trim().isEmpty()) {
-            if (companyId != null) {
-                return ResponseEntity.ok(productRepository.findByNameContainingAndCompanyIdAndIsDeletedFalse(keyword.trim(), companyId));
-            }
             return ResponseEntity.ok(productService.searchProducts(keyword.trim()));
-        }
-        if (companyId != null) {
-            return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
         }
         return ResponseEntity.ok(productService.listAllProducts());
     }
@@ -110,13 +102,6 @@ public class DataManagementController {
                                              @RequestParam(required = false, defaultValue = "consumer") String role) {
         log.info("[产品选择] 查询产品 - 关键词: {}, 角色: {}", keyword, role);
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            if (companyId != null) {
-                if (keyword != null && !keyword.trim().isEmpty()) {
-                    return ResponseEntity.ok(productRepository.findByNameContainingAndCompanyIdAndIsDeletedFalse(keyword.trim(), companyId));
-                }
-                return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
-            }
             if (keyword != null && !keyword.trim().isEmpty()) {
                 return ResponseEntity.ok(productService.searchProducts(keyword.trim()));
             }
@@ -131,10 +116,6 @@ public class DataManagementController {
     public ResponseEntity<?> getProductsForInsert() {
         log.info("[数据导入] 获取产品列表");
         try {
-            Long companyId = securityUtils.getCurrentCompanyId();
-            if (companyId != null) {
-                return ResponseEntity.ok(productRepository.findByCompanyIdAndIsDeletedFalse(companyId));
-            }
             return ResponseEntity.ok(productService.listAllProducts());
         } catch (Exception e) {
             log.error("[数据导入] 获取产品列表失败 - {}", e.getMessage());
@@ -153,6 +134,7 @@ public class DataManagementController {
 
     // ============ 防伪码 ============
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @PostMapping("/batches/{id}/security-codes")
     @OperationLog(entityType = "SECURITY_CODE", action = "CREATE")
     public ResponseEntity<?> generateSecurityCodes(@PathVariable Long id, @RequestBody GenerateSecurityCodeRequest request) {
@@ -166,6 +148,7 @@ public class DataManagementController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @GetMapping("/batches/{id}/security-codes")
     public ResponseEntity<?> listSecurityCodes(@PathVariable Long id) {
         try {
@@ -175,6 +158,7 @@ public class DataManagementController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN') or hasAuthority('AGENT_TYPE_PRODUCTION')")
     @GetMapping("/security-codes/export/{batchId}")
     public ResponseEntity<?> exportSecurityCodes(@PathVariable Long batchId) {
         try {

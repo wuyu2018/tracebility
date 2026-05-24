@@ -1,8 +1,16 @@
 <template>
   <div class="page-container">
+    <el-alert
+      v-if="isReadonly"
+      title="当前角色仅有查看权限，无法新增/编辑/删除产品"
+      type="warning"
+      show-icon
+      :closable="false"
+      style="margin-bottom: 16px"
+    />
     <div class="page-header">
       <h3>产品管理</h3>
-      <el-button type="primary" @click="openDialog()">
+      <el-button v-if="!isReadonly" type="primary" @click="openDialog()">
         <el-icon><Plus /></el-icon>新增产品
       </el-button>
     </div>
@@ -26,7 +34,7 @@
       <el-table-column prop="name" label="产品名称" />
       <el-table-column prop="specification" label="规格" />
       <el-table-column prop="shelfLife" label="保质期" />
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right" v-if="!isReadonly">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
           <el-popconfirm title="确定删除？" @confirm="handleDelete(row.id)">
@@ -70,10 +78,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '@/api/admin'
+import { useAuth } from '@/stores/auth'
 import { Plus, Search } from '@element-plus/icons-vue'
+
+const { hasWriteAccess } = useAuth()
 
 const list = ref([])
 const loading = ref(false)
@@ -82,6 +93,7 @@ const dialogVisible = ref(false)
 const editingId = ref(null)
 const saving = ref(false)
 const formRef = ref(null)
+const isReadonly = computed(() => !hasWriteAccess('products'))
 
 const form = reactive({
   name: '',

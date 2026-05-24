@@ -14,9 +14,6 @@ public interface ProductionBatchRepository extends JpaRepository<ProductionBatch
     List<ProductionBatch> findByIsDeletedFalse();
 
     @EntityGraph(attributePaths = {"product"})
-    List<ProductionBatch> findByCompanyIdAndIsDeletedFalse(Long companyId);
-
-    @EntityGraph(attributePaths = {"product"})
     List<ProductionBatch> findByProductIdAndIsDeletedFalse(Long productId);
 
     Optional<ProductionBatch> findByBatchNumberAndIsDeletedFalse(String batchNumber);

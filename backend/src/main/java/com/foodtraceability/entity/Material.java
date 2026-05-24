@@ -29,9 +29,6 @@ public class Material {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "company_id")
-    private Long companyId;
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
