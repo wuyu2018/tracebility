@@ -82,6 +82,10 @@ public class MaterialPurchaseController {
     public ResponseEntity<?> deleteMaterialPurchase(@PathVariable Long id) {
         log.info("[V2] 删除采购单: id={}", id);
         try {
+            if (!securityUtils.checkDataAccess("blockchain_log:" + id, "DELETE")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "无权限删除该采购单数据"));
+            }
             appService.deleteMaterialPurchase(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {

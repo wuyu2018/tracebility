@@ -63,6 +63,10 @@ public class ProductionBatchController {
     @DeleteMapping("/batches/{id}")
     public ResponseEntity<?> deleteBatch(@PathVariable Long id) {
         try {
+            if (!securityUtils.checkDataAccess("blockchain_log:" + id, "DELETE")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "无权限删除该批次数据"));
+            }
             appService.deleteBatch(id);
             return ResponseEntity.ok(Map.of("success", true, "message", "删除成功"));
         } catch (Exception e) {

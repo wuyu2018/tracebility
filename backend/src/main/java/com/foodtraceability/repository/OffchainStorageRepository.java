@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface OffchainStorageRepository extends JpaRepository<OffchainStorage, Long> {
@@ -20,4 +21,6 @@ public interface OffchainStorageRepository extends JpaRepository<OffchainStorage
     
     @Query("SELECT o FROM OffchainStorage o WHERE o.ownerAgentId = :ownerId ORDER BY o.createdAt DESC")
     java.util.List<OffchainStorage> findByOwnerId(@Param("ownerId") Long ownerId);
+
+    List<OffchainStorage> findByStorageKey(String storageKey);
 }

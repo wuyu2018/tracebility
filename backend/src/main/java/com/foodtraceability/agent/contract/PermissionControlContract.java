@@ -71,7 +71,24 @@ public class PermissionControlContract implements SmartContract {
     }
     
     private boolean hasRequiredPermission(String agentId, String requiredPermission) {
-        return true;
+        if (requiredPermission == null) return false;
+
+        String prefix = agentId.split("-")[0];
+
+        switch (requiredPermission) {
+            case "WRITE":
+                boolean canWrite = "P".equals(prefix) || "C".equals(prefix)
+                        || "S".equals(prefix) || "CA".equals(prefix) || "O".equals(prefix);
+                if (!canWrite) {
+                    log.warn("Agent {} (type={}) not allowed to WRITE", agentId, prefix);
+                }
+                return canWrite;
+            case "READ":
+                return true;
+            default:
+                log.warn("Unknown permission type: {} requested by agent {}", requiredPermission, agentId);
+                return false;
+        }
     }
     
     private static class PermissionContext {

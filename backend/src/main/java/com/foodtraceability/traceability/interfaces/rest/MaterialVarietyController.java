@@ -83,6 +83,10 @@ public class MaterialVarietyController {
     public ResponseEntity<?> deleteMaterialVariety(@PathVariable Long id) {
         log.info("[V2] 删除物料品种: id={}", id);
         try {
+            if (!securityUtils.checkDataAccess("blockchain_log:" + id, "DELETE")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "无权限删除该物料数据"));
+            }
             appService.deleteMaterial(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {

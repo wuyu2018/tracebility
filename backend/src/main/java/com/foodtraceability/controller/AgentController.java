@@ -5,6 +5,7 @@ import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.agent.ledger.AgentReputation;
 import com.foodtraceability.agent.consensus.PbftConsensus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/agent")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class AgentController {
     
     private final MultiAgentCoordinator agentCoordinator;
