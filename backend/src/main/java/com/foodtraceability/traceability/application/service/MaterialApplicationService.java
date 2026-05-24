@@ -38,6 +38,32 @@ public class MaterialApplicationService {
         entity.setIsActive(true);
         entity = repository.save(entity);
 
+        eventPublisher.publish(new MaterialChanged(entity.getId(), "CREATE"));
+        log.info("[V2 物料品种] 创建 - ID: {}, 名称: {}", entity.getId(), entity.getName());
+        return toResponse(entity);
+    }
+
+    public MaterialResponse updateMaterial(Long id, UpdateMaterialRequest req) {
+        Material entity = repository.findById(id)
+                .orElseThrow(() -> new BusinessException("原料品种不存在: " + id));
+        if (!entity.isActive()) {
+            throw new BusinessException("原料品种已停用，禁止修改: " + id);
+        }
+
+        String action = "UPDATE";
+        if (req.name() != null) {
+            entity.changeName(req.name());
+        }
+        if (req.isActive() != null) {
+            if (req.isActive() && !entity.isActive()) {
+                action = "ACTIVATE";
+            } else if (!req.isActive() && entity.isActive()) {
+                action = "DEACTIVATE";
+            }
+            entity.setActiveStatus(req.isActive());
+        }
+        entity = repository.save(entity);
+
         eventPublisher.publish(new MaterialChanged(entity.getId(), action));
         log.info("[V2 物料品种] 更新 - ID: {}, action: {}", entity.getId(), action);
         return toResponse(entity);

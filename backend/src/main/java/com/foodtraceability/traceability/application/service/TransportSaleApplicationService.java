@@ -114,6 +114,15 @@ public class TransportSaleApplicationService {
                 })
                 .toList();
     }
+
+    private void publishAfterCommit(TransportSaleRecorded event) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            eventPublisher.publish(event);
+                        }
                     });
         } else {
             eventPublisher.publish(event);

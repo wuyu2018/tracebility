@@ -45,6 +45,24 @@ public class MaterialPurchaseApplicationService {
                 req.purchaseDate(), req.quantity(), req.unit());
         entity = repository.save(entity);
 
+        eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "CREATE"));
+        log.info("[V2 采购单] 创建 - ID: {}, 物料: {}", entity.getId(), material.getName());
+        return toResponse(entity);
+    }
+
+    public MaterialPurchaseResponse updateMaterialPurchase(Long id, UpdateMaterialPurchaseRequest req) {
+        MaterialPurchase entity = repository.findById(id)
+                .orElseThrow(() -> new BusinessException("采购单不存在: " + id));
+        if (entity.isDeleted()) {
+            throw new BusinessException("采购单已删除，禁止修改: " + id);
+        }
+
+        entity.updatePurchaseDetails(
+                req.batchNumber(), req.supplierName(),
+                req.producerName(), req.producerAddress(),
+                req.purchaseDate(), req.quantity(), req.unit());
+        entity = repository.save(entity);
+
         eventPublisher.publish(new MaterialPurchaseChanged(entity.getId(), "UPDATE"));
         log.info("[V2 采购单] 更新 - ID: {}", entity.getId());
         return toResponse(entity);
