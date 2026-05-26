@@ -1,6 +1,5 @@
 package com.foodtraceability.util;
 
-import com.foodtraceability.entity.Admin;
 import com.foodtraceability.entity.AgentIdentity;
 import com.foodtraceability.entity.OffchainStorage;
 import com.foodtraceability.repository.AdminRepository;
