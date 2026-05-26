@@ -25,6 +25,8 @@ services:
       resources:
         limits:
           memory: 256M
+    ports:
+      - "3306:3306"
 
   redis:
     image: redis:7-alpine

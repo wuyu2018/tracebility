@@ -7,6 +7,8 @@ import com.foodtraceability.entity.SecurityCode;
 import com.foodtraceability.repository.ProductionBatchRepository;
 import com.foodtraceability.repository.SecurityCodeRepository;
 import com.foodtraceability.service.SecurityCodeService;
+import com.foodtraceability.traceability.domain.event.SecurityCodesGenerated;
+import com.foodtraceability.traceability.infrastructure.messaging.DomainEventPublisherImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +19,14 @@ import java.util.List;
 public class SecurityCodeServiceImpl implements SecurityCodeService {
     private final SecurityCodeRepository codeRepository;
     private final ProductionBatchRepository batchRepository;
+    private final DomainEventPublisherImpl eventPublisher;
 
     public SecurityCodeServiceImpl(SecurityCodeRepository codeRepository,
-                                 ProductionBatchRepository batchRepository) {
+                                 ProductionBatchRepository batchRepository,
+                                 DomainEventPublisherImpl eventPublisher) {
         this.codeRepository = codeRepository;
         this.batchRepository = batchRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -31,6 +36,8 @@ public class SecurityCodeServiceImpl implements SecurityCodeService {
                 .orElseThrow(() -> new RuntimeException("生产批次不存在"));
 
         List<String> codes = generateCodesForBatch(batch, quantity);
+
+        eventPublisher.publish(new SecurityCodesGenerated(batchId, quantity));
 
         SecurityCodeGenerateResponse response = new SecurityCodeGenerateResponse();
         response.setCodes(codes);

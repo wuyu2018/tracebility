@@ -3,7 +3,6 @@ package com.foodtraceability.controller;
 import com.foodtraceability.aop.OperationLog;
 import com.foodtraceability.dto.*;
 import com.foodtraceability.entity.Product;
-import com.foodtraceability.repository.*;
 import com.foodtraceability.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
