@@ -15,6 +15,12 @@ fi
 # Load environment variables
 source .env
 
+# Determine if distributed mode is needed
+COMPOSE_PROFILE=""
+if [ "${CONSENSUS_GRPC_ENABLED}" = "true" ]; then
+    COMPOSE_PROFILE="--profile distributed"
+fi
+
 # Validate required variables
 required_vars=("JWT_SECRET" "MYSQL_ROOT_PASSWORD" "MYSQL_DATABASE" "MYSQL_USER" "MYSQL_PASSWORD")
 for var in "${required_vars[@]}"; do
@@ -27,13 +33,13 @@ done
 COMPOSE_FILE="docker-compose.prod.yml"
 
 echo "Stopping existing containers..."
-docker-compose -f $COMPOSE_FILE down || true
+docker-compose -f $COMPOSE_FILE $COMPOSE_PROFILE down || true
 
 echo "Building images..."
 docker-compose -f $COMPOSE_FILE build --no-cache
 
 echo "Starting services..."
-docker-compose -f $COMPOSE_FILE up -d
+docker-compose -f $COMPOSE_FILE $COMPOSE_PROFILE up -d
 
 echo "Waiting for backend to be ready..."
 for i in {1..30}; do
@@ -50,6 +56,11 @@ echo "Deployment completed!"
 echo "Frontend: http://localhost:${FRONTEND_EXPOSED_PORT:-80}"
 echo "Backend:  http://localhost:8080"
 echo "======================================"
+
+# 设置每日数据库备份 cron（凌晨 3 点，保留 7 天）
+CRON_BACKUP="0 3 * * * cd $(pwd) && bash scripts/backup.sh >/dev/null 2>&1"
+(crontab -l 2>/dev/null | grep -v "backup.sh"; echo "$CRON_BACKUP") | crontab -
+echo "[deploy] Daily database backup cron installed"
 
 echo ""
 echo "Useful commands:"
