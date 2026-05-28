@@ -15,22 +15,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class InProcessConsensusTransport implements ConsensusTransport {
 
     private static final Logger log = LoggerFactory.getLogger(InProcessConsensusTransport.class);
 
-    private final List<Agent> agents;
+    private final Supplier<List<Agent>> agentsSupplier;
     private final PermissionControlContract permissionContract;
     private final DataOnChainContract dataContract;
     private final BlockchainService blockchainService;
     private final Map<PbftMessage.MessageType, Consumer<PbftMessage>> handlers;
 
-    public InProcessConsensusTransport(List<Agent> agents,
+    public InProcessConsensusTransport(Supplier<List<Agent>> agentsSupplier,
                                         PermissionControlContract permissionContract,
                                         DataOnChainContract dataContract,
                                         BlockchainService blockchainService) {
-        this.agents = agents;
+        this.agentsSupplier = agentsSupplier;
         this.permissionContract = permissionContract;
         this.dataContract = dataContract;
         this.blockchainService = blockchainService;
@@ -41,7 +42,7 @@ public class InProcessConsensusTransport implements ConsensusTransport {
     public CompletableFuture<List<Endorsement>> endorseAll(String context, String digest, List<String> agentIds) {
         return CompletableFuture.supplyAsync(() -> {
             List<Endorsement> results = new ArrayList<>();
-            for (Agent agent : agents) {
+            for (Agent agent : agentsSupplier.get()) {
                 boolean approved = true;
                 String reason = "";
 

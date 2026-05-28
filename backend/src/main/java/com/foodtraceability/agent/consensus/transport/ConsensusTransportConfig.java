@@ -7,6 +7,7 @@ import com.foodtraceability.agent.core.MultiAgentCoordinator;
 import com.foodtraceability.service.BlockchainService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 @Configuration
 public class ConsensusTransportConfig {
@@ -14,30 +15,27 @@ public class ConsensusTransportConfig {
     private final ConsensusPeerConfig peerConfig;
     private final PermissionControlContract permissionControlContract;
     private final DataOnChainContract dataOnChainContract;
-    private final MultiAgentCoordinator agentCoordinator;
     private final BlockchainService blockchainService;
 
     public ConsensusTransportConfig(ConsensusPeerConfig peerConfig,
                                      PermissionControlContract permissionControlContract,
                                      DataOnChainContract dataOnChainContract,
-                                     MultiAgentCoordinator agentCoordinator,
                                      BlockchainService blockchainService) {
         this.peerConfig = peerConfig;
         this.permissionControlContract = permissionControlContract;
         this.dataOnChainContract = dataOnChainContract;
-        this.agentCoordinator = agentCoordinator;
         this.blockchainService = blockchainService;
     }
 
     @Bean
-    public ConsensusTransport consensusTransport() {
+    public ConsensusTransport consensusTransport(@Lazy MultiAgentCoordinator agentCoordinator) {
         if (peerConfig.isGrpcEnabled()) {
             return new GrpcConsensusTransport(
                     peerConfig, permissionControlContract, dataOnChainContract,
                     null, null, null);
         }
         return new InProcessConsensusTransport(
-                agentCoordinator.getAllAgents().stream().toList(),
+                () -> agentCoordinator.getAllAgents().stream().toList(),
                 permissionControlContract,
                 dataOnChainContract,
                 blockchainService);
