@@ -38,6 +38,9 @@ docker-compose -f $COMPOSE_FILE $COMPOSE_PROFILE down || true
 echo "Building images..."
 docker-compose -f $COMPOSE_FILE build --no-cache
 
+echo "Cleaning up old images and build cache..."
+docker system prune -f
+
 echo "Starting services..."
 docker-compose -f $COMPOSE_FILE $COMPOSE_PROFILE up -d
 

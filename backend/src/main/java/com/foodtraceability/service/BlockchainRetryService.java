@@ -121,4 +121,12 @@ public class BlockchainRetryService {
     public long getFailedCount() {
         return retryTaskRepo.countByStatus(BlockchainRetryTask.RetryStatus.FAILED);
     }
+
+    @Scheduled(cron = "0 0 4 * * ?")
+    @Transactional
+    public void cleanupOldTasks() {
+        LocalDateTime threeDaysAgo = LocalDateTime.now().minusDays(3);
+        retryTaskRepo.deleteByUpdatedAtBefore(threeDaysAgo);
+        log.info("[RetryTask] Cleaned up tasks older than 3 days (before {})", threeDaysAgo);
+    }
 }

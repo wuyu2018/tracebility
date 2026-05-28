@@ -3,6 +3,7 @@ services:
     image: mysql:8.0
     container_name: food-traceability-mysql
     restart: unless-stopped
+    command: --binlog-expire-logs-seconds=604800
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

@@ -16,4 +16,6 @@ public interface BlockchainRetryTaskRepository extends JpaRepository<BlockchainR
     List<BlockchainRetryTask> findByStatus(BlockchainRetryTask.RetryStatus status);
 
     long countByStatus(BlockchainRetryTask.RetryStatus status);
+
+    void deleteByUpdatedAtBefore(LocalDateTime dateTime);
 }
